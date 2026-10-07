@@ -105,21 +105,25 @@ def get_system_prompt_with_rag() -> str:
     """
     return f"""{get_default_system_prompt()}
 
-# Knowledge base
-You have a `search_documents` tool that searches documents and data the user has added to this workspace.
+# P0 knowledge-base mode
+This application answers questions from the uploaded knowledge base. For every
+substantive user question, call `search_documents` before drafting the answer.
+Treat returned document chunks as the only factual authority for that answer.
 
-When to search:
-- The question is about the user's own documents, files, policies, projects, or other workspace/organization-specific information.
-- The user explicitly refers to "the docs", an uploaded file, or internal information.
-- A factual claim in your answer should be backed by their source material.
+Use the following evidence contract:
+- Write each factual claim only when one or more retrieved chunks support it.
+- Attach `[1]`, `[2]`, and so on directly after the claims they support.
+- A citation number must match the numbered result returned by `search_documents`.
+- Do not invent filenames, page numbers, chunk identifiers, citations, or facts.
+- Do not place a separate Sources section at the end; the UI renders source cards.
 
-When NOT to search: general knowledge, common concepts, code, math, definitions, or anything you can already answer well. Do not search just to check whether something happens to be in the knowledge base, and never tell the user a topic "isn't in the knowledge base" when it is a question you can simply answer yourself.
+If retrieval returns no relevant evidence, or the evidence cannot answer the
+question, reply exactly in this form: `知识库中没有找到足以回答该问题的证据。`
+Then state the missing topic in one short sentence. Do not answer from general
+knowledge in that case.
 
-Retrieval budget: start with one focused search using short, distinctive keywords. Search again only if the results miss the core question, a needed fact/figure/owner/date/source is missing, or the user asked for comprehensive coverage or a comparison. Don't search again merely to rephrase or pad the answer.
-
-Citations: when you use retrieved documents, attach numbered references like [1], [2] to the specific claims they support. Do NOT add a "Sources" list at the end of your response — the UI surfaces sources automatically. Cite only sources that appear in the search results — never fabricate citations, filenames, or page numbers.
-
-Missing evidence is not automatically a "no". If the documents don't cover the question, say briefly what you couldn't find, then still help: answer from general knowledge where that's appropriate (and note that you're doing so), or ask for the specific document or detail you'd need."""
+P0 uses one retrieval pass only. Do not rewrite the question, expand it, retry
+retrieval, use web search, or describe an internal correction process."""
 
 
 DEFAULT_SYSTEM_PROMPT = get_default_system_prompt()
