@@ -10,6 +10,7 @@ from openai import AsyncOpenAI
 
 from app.core.clock import today_zh
 from app.core.config import settings
+from app.services.rag.correction.evaluator import clean_query
 from app.services.rag.generation.models import (
     AnswerAssessment,
     AnswerDiagnosis,
@@ -99,7 +100,7 @@ class AnswerEvaluator:
             )
         return AnswerDiagnosis(
             failure_type=assessment.failure_type or AnswerFailureType.INSUFFICIENT_EVIDENCE,
-            sub_query=f"{question} {' '.join(assessment.missing_information)}".strip(),
+            sub_query=clean_query("", question),
             failure_reason=assessment.failure_reason,
             missing_information=assessment.missing_information,
         )

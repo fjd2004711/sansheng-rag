@@ -178,3 +178,19 @@ def test_summarize_results_is_bounded() -> None:
 
     docs = [SearchResult(content=str(i), score=1.0) for i in range(25)]
     assert len(summarize_results(docs)) == 10
+
+
+def test_clean_query_keeps_short_phrases_and_drops_trailing_reasoning() -> None:
+    from app.services.rag.correction.evaluator import clean_query
+
+    assert clean_query("退休金 发放标准", "学校的退休金每月发多少？") == "退休金 发放标准"
+    assert clean_query("退休金 发放标准\n因为证据里没有提到", "q") == "退休金 发放标准"
+    long = "知识库内容概览 " + "证据中没有关于知识库内容概览的主题和范围的信息，" * 5
+    assert len(clean_query(long, "q")) <= 60
+
+
+def test_clean_query_falls_back_to_the_question_when_empty() -> None:
+    from app.services.rag.correction.evaluator import clean_query
+
+    assert clean_query("", "学校的退休金每月发多少？") == "学校的退休金每月发多少？ 具体规定"
+    assert clean_query("   ", "q") == "q 具体规定"
