@@ -140,7 +140,7 @@ export default function KnowledgeBasePage() {
 
   useEffect(() => {
     apiClient
-      .get<{ formats: string[] }>("/rag/supported-formats")
+      .get<{ formats: string[] }>("/v1/rag/supported-formats")
       .then((data) => data?.formats?.length && setFormats(data.formats))
       .catch(() => {});
   }, []);

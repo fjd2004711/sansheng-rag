@@ -117,29 +117,6 @@ export function getDocumentDownloadUrl(docId: string): string {
   return `/api/v1/rag/documents/${docId}/download`;
 }
 
-export async function downloadKBDocument(
-  kbId: string,
-  doc: { id: string; filename: string },
-  mode: "download" | "view" = "download",
-): Promise<void> {
-  const res = await fetch(`/api/kb/${kbId}/documents/${doc.id}/download`);
-  if (!res.ok) throw new Error(`下载失败：${res.status}`);
-  const blob = await res.blob();
-  const url = URL.createObjectURL(blob);
-  if (mode === "view") {
-    window.open(url, "_blank", "noopener,noreferrer");
-    setTimeout(() => URL.revokeObjectURL(url), 60_000);
-  } else {
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = doc.filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }
-}
-
 export interface RAGTrackedDocumentList {
   items: RAGTrackedDocument[];
   total: number;
