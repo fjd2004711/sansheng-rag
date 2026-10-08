@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import { RagShowcase } from "@/components/showcase/rag-showcase";
 
 export default function HomePage() {
-  redirect("/evaluation");
+  return <RagShowcase />;
 }
