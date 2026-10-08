@@ -258,11 +258,7 @@ class AgentSession:
         config = settings.rag.generation_correction_config
         if not config.enabled or not answer:
             return answer
-        evidence = (chr(10) * 2).join(
-            str(call["result"])
-            for call in collected_tool_calls
-            if call.get("tool_name") == "search_documents" and call.get("result")
-        )
+        evidence = await self._collect_evidence(question, collected_tool_calls)
         result = await GenerationCorrector(
             evidence_search=search_knowledge_base,
             max_corrections=config.max_corrections,
@@ -270,6 +266,25 @@ class AgentSession:
         for event in result.trace:
             await send_event(self.websocket, "agent_trace", event.model_dump(mode="json"))
         return result.answer
+
+    async def _collect_evidence(
+        self, question: str, collected_tool_calls: list[dict[str, Any]]
+    ) -> str:
+        """Gather the turn's retrieval evidence, forcing a search if the model skipped the tool.
+
+        ``tool_choice="required"`` is not honoured by every OpenAI-compatible provider (Ollama
+        included), so a turn can finish without any ``search_documents`` call. Verifying such an
+        answer against empty evidence would wrongly report that the knowledge base has no answer,
+        so run the same corrective retrieval here and let P3 verify against its evidence.
+        """
+        searched = [call for call in collected_tool_calls if call.get("tool_name") == "search_documents"]
+        if not searched:
+            logger.warning("agent_skipped_search_tool: forcing retrieval for verification")
+            visible, trace = extract_rag_trace(await search_knowledge_base(question))
+            for event in trace:
+                await send_event(self.websocket, "agent_trace", event)
+            return visible
+        return (chr(10) * 2).join(str(call["result"]) for call in searched if call.get("result"))
 
     async def _stream_verified_output(self, output: str) -> None:
         """Stream only post-verification text, preserving the chat rendering contract."""
