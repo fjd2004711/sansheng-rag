@@ -158,6 +158,8 @@ class Settings(BaseSettings):
     RAG_RERANKER_CANDIDATE_LIMIT: int = 12
     RAG_CORRECTION_ENABLED: bool = False
     RAG_MAX_CORRECTION_ROUNDS: int = 2
+    RAG_GENERATION_CORRECTION_ENABLED: bool = False
+    RAG_MAX_GENERATION_CORRECTIONS: int = 1
 
     CORS_ORIGINS: list[str] = [
         "http://localhost:3000",
@@ -202,6 +204,10 @@ class Settings(BaseSettings):
                 enabled=self.RAG_CORRECTION_ENABLED,
                 max_rounds=self.RAG_MAX_CORRECTION_ROUNDS,
             ),
+            generation_correction_config=GenerationCorrectionConfig(
+                enabled=self.RAG_GENERATION_CORRECTION_ENABLED,
+                max_corrections=self.RAG_MAX_GENERATION_CORRECTIONS,
+            ),
             embeddings_config=EmbeddingsConfig(
                 model=self.EMBEDDING_MODEL,
                 dim=self.EMBEDDING_DIMENSION,
@@ -216,6 +222,7 @@ from app.services.rag.config import (
     CorrectionConfig,
     DocumentParser,
     EmbeddingsConfig,
+    GenerationCorrectionConfig,
     PdfParser,
     RAGSettings,
     RerankerConfig,

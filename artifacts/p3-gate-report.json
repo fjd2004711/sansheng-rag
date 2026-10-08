@@ -1,0 +1,160 @@
+{
+  "hallucination": {
+    "answer": "Atlas compliance requires the CRIMSON-SEAL credential before release [1].",
+    "evidence": "[1] Atlas compliance requires the CRIMSON-SEAL credential before release.",
+    "assessment": {
+      "groundedness": 1.0,
+      "completeness": 1.0,
+      "answer_relevance": 0.5,
+      "citation_coverage": 1.0,
+      "sufficient": true,
+      "failure_type": null,
+      "failure_reason": "",
+      "missing_information": [],
+      "claims": [
+        {
+          "claim": "Atlas compliance requires the CRIMSON-SEAL credential before release [1].",
+          "supported": true,
+          "citation_indices": [
+            1
+          ],
+          "reason": "Lexical fallback used because structured answer assessment was unavailable."
+        }
+      ]
+    },
+    "correction_round": 1,
+    "abstained": false,
+    "trace": [
+      {
+        "step": "answer_verify",
+        "round": 0,
+        "status": "FAIL",
+        "detail": {
+          "groundedness": 0.0,
+          "completeness": 0.0,
+          "answer_relevance": 1.0,
+          "citation_coverage": 0.0,
+          "failure_type": "hallucination",
+          "failure_reason": "The answer incorrectly states that Atlas requires a BLUE-SEAL credential, while the evidence clearly states it requires a CRIMSON-SEAL credential. This is a direct factual mismatch.",
+          "missing_information": [],
+          "claim_count": 1
+        }
+      },
+      {
+        "step": "regenerate",
+        "round": 0,
+        "status": "COMPLETE",
+        "detail": {
+          "evidence_reused": true
+        }
+      },
+      {
+        "step": "answer_reverify",
+        "round": 1,
+        "status": "PASS",
+        "detail": {
+          "groundedness": 1.0,
+          "completeness": 1.0,
+          "answer_relevance": 0.5,
+          "citation_coverage": 1.0,
+          "failure_type": null,
+          "failure_reason": "",
+          "missing_information": [],
+          "claim_count": 1
+        }
+      }
+    ]
+  },
+  "incomplete": {
+    "answer": "Atlas compliance requires the CRIMSON-SEAL credential before release [1].",
+    "evidence": "[1] Atlas compliance requires the CRIMSON-SEAL credential before release.",
+    "assessment": {
+      "groundedness": 1.0,
+      "completeness": 1.0,
+      "answer_relevance": 0.4444444444444444,
+      "citation_coverage": 1.0,
+      "sufficient": true,
+      "failure_type": null,
+      "failure_reason": "",
+      "missing_information": [],
+      "claims": [
+        {
+          "claim": "Atlas compliance requires the CRIMSON-SEAL credential before release [1].",
+          "supported": true,
+          "citation_indices": [
+            1
+          ],
+          "reason": "Lexical fallback used because structured answer assessment was unavailable."
+        }
+      ]
+    },
+    "correction_round": 1,
+    "abstained": false,
+    "trace": [
+      {
+        "step": "answer_verify",
+        "round": 0,
+        "status": "FAIL",
+        "detail": {
+          "groundedness": 1.0,
+          "completeness": 1.0,
+          "answer_relevance": 0.2222222222222222,
+          "citation_coverage": 1.0,
+          "failure_type": "incomplete",
+          "failure_reason": "The answer could not be fully verified against cited evidence.",
+          "missing_information": [],
+          "claim_count": 1
+        }
+      },
+      {
+        "step": "answer_diagnose",
+        "round": 0,
+        "status": "RETRIEVE",
+        "detail": {
+          "failure_type": "incomplete",
+          "failure_reason": "The answer could not be fully verified against cited evidence.",
+          "missing_information": [],
+          "sub_query": "What credential and release condition does Atlas compliance require?"
+        }
+      },
+      {
+        "step": "retrieve_missing",
+        "round": 0,
+        "status": "COMPLETE",
+        "detail": {
+          "query": "What credential and release condition does Atlas compliance require?",
+          "has_evidence": true
+        }
+      },
+      {
+        "step": "regenerate",
+        "round": 0,
+        "status": "COMPLETE",
+        "detail": {
+          "evidence_reused": true
+        }
+      },
+      {
+        "step": "answer_reverify",
+        "round": 1,
+        "status": "PASS",
+        "detail": {
+          "groundedness": 1.0,
+          "completeness": 1.0,
+          "answer_relevance": 0.4444444444444444,
+          "citation_coverage": 1.0,
+          "failure_type": null,
+          "failure_reason": "",
+          "missing_information": [],
+          "claim_count": 1
+        }
+      }
+    ]
+  },
+  "pass": {
+    "hallucination_regenerated_without_search": true,
+    "incomplete_uses_subquery": true,
+    "bounded": true
+  },
+  "all_pass": true
+}

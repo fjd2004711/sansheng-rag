@@ -10,8 +10,11 @@ from langchain.messages import AIMessage, AIMessageChunk, HumanMessage, ToolMess
 from langchain_core.messages.ai import add_usage
 
 from app.agents.langchain_assistant import AgentContext, get_agent
+from app.agents.tools.rag_tool import search_knowledge_base
+from app.core.config import settings
 from app.core.exceptions import AuthorizationError, NotFoundError
 from app.db.models.user import User
+from app.graph.generation_correction import GenerationCorrector
 from app.services.agent import (
     build_message_history,
     persist_assistant_turn,
@@ -48,6 +51,7 @@ class AgentSession:
         # persist_assistant_turn(thinking=...) like the PydanticAI session does.
         self._thinking_streamed: bool = False
         self._turn_task: asyncio.Task[None] | None = None
+        self._buffer_text_for_verification = False
 
     async def handle_frame(self, data: dict[str, Any]) -> None:
         """Dispatch one incoming WebSocket frame.
@@ -158,6 +162,12 @@ class AgentSession:
             final_output = await self._stream_agent_response(
                 assistant, model_history, collected_tool_calls
             )
+            final_output = await self._correct_answer_if_enabled(
+                user_message, final_output, collected_tool_calls
+            )
+            if self._buffer_text_for_verification and final_output:
+                await self._stream_verified_output(final_output)
+            await send_event(self.websocket, "final_result", {"output": final_output})
 
             # Update in-memory history only after the agent produced output
             if final_output:
@@ -212,6 +222,7 @@ class AgentSession:
         # If not, _stream_update_event falls back to the final message's
         # reasoning so thinking is shown for providers that don't stream it.
         self._thinking_streamed = False
+        self._buffer_text_for_verification = settings.rag.generation_correction_config.enabled
 
         await send_event(self.websocket, "model_request_start", {})
 
@@ -235,8 +246,35 @@ class AgentSession:
                     data, seen_tool_call_ids, pending, collected_tool_calls
                 )
 
-        await send_event(self.websocket, "final_result", {"output": final_output})
         return final_output
+
+    async def _correct_answer_if_enabled(
+        self,
+        question: str,
+        answer: str,
+        collected_tool_calls: list[dict[str, Any]],
+    ) -> str:
+        """Apply P3 verification after generation, before final text reaches the client."""
+        config = settings.rag.generation_correction_config
+        if not config.enabled or not answer:
+            return answer
+        evidence = (chr(10) * 2).join(
+            str(call["result"])
+            for call in collected_tool_calls
+            if call.get("tool_name") == "search_documents" and call.get("result")
+        )
+        result = await GenerationCorrector(
+            evidence_search=search_knowledge_base,
+            max_corrections=config.max_corrections,
+        ).run(question, answer, evidence)
+        for event in result.trace:
+            await send_event(self.websocket, "agent_trace", event.model_dump(mode="json"))
+        return result.answer
+
+    async def _stream_verified_output(self, output: str) -> None:
+        """Stream only post-verification text, preserving the chat rendering contract."""
+        for start in range(0, len(output), 80):
+            await send_event(self.websocket, "text_delta", {"content": output[start : start + 80]})
 
     @staticmethod
     def _extract_reasoning(message: Any) -> str:
@@ -286,7 +324,7 @@ class AgentSession:
                         text_content += block
                     elif isinstance(block, dict) and block.get("type") == "text":
                         text_content += block.get("text", "")
-            if text_content:
+            if text_content and not self._buffer_text_for_verification:
                 await send_event(self.websocket, "text_delta", {"content": text_content})
 
         reasoning_content = self._extract_reasoning(token)

@@ -105,10 +105,12 @@ def get_system_prompt_with_rag() -> str:
     """
     return f"""{get_default_system_prompt()}
 
-# P0 knowledge-base mode
-This application answers questions from the uploaded knowledge base. For every
-substantive user question, call `search_documents` before drafting the answer.
-Treat returned document chunks as the only factual authority for that answer.
+# Knowledge-base evidence mode
+This application answers every user prompt from the uploaded knowledge base.
+Your first action for every turn must be exactly one `search_documents` tool call.
+Do not write any answer, refusal, explanation, or fallback sentence before that
+call completes. Treat returned chunks as the only factual authority for the
+answer. Only after the tool result may you decide that evidence is unavailable.
 
 Use the following evidence contract:
 - Write each factual claim only when one or more retrieved chunks support it.
@@ -117,13 +119,14 @@ Use the following evidence contract:
 - Do not invent filenames, page numbers, chunk identifiers, citations, or facts.
 - Do not place a separate Sources section at the end; the UI renders source cards.
 
-If retrieval returns no relevant evidence, or the evidence cannot answer the
-question, reply exactly in this form: `知识库中没有找到足以回答该问题的证据。`
-Then state the missing topic in one short sentence. Do not answer from general
-knowledge in that case.
+If the tool returns `KNOWLEDGE_BASE_ABSTAIN`, reply exactly in this form:
+`知识库中没有找到足以回答该问题的证据。` Then state the missing topic in one
+short sentence. Do not answer from general knowledge in that case.
 
-P0 uses one retrieval pass only. Do not rewrite the question, expand it, retry
-retrieval, use web search, or describe an internal correction process."""
+The retrieval and answer-verification control plane may diagnose and correct
+failures after a tool call. Do not describe that internal process to the user,
+and do not invent a retry yourself: answer only from the final evidence it
+provides."""
 
 
 DEFAULT_SYSTEM_PROMPT = get_default_system_prompt()

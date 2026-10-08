@@ -134,6 +134,13 @@ class CorrectionConfig(BaseModel):
     max_rounds: int = Field(default=2, ge=1)
 
 
+class GenerationCorrectionConfig(BaseModel):
+    """P3 bounded answer verification and correction configuration."""
+
+    enabled: bool = False
+    max_corrections: int = Field(default=1, ge=1)
+
+
 class RAGSettings(BaseModel):
     """RAG pipeline configuration."""
 
@@ -150,6 +157,9 @@ class RAGSettings(BaseModel):
     enable_ocr: bool = False
     reranker_config: RerankerConfig = Field(default_factory=RerankerConfig)
     correction_config: CorrectionConfig = Field(default_factory=CorrectionConfig)
+    generation_correction_config: GenerationCorrectionConfig = Field(
+        default_factory=GenerationCorrectionConfig
+    )
 
     embeddings_config: EmbeddingsConfig = Field(default_factory=EmbeddingsConfig)
 
