@@ -34,7 +34,7 @@ export default async function PrivacyPage({ params }: { params: Promise<{ locale
       lastUpdated={LAST_UPDATED}
       locale={locale}
     >
-      {locale === "pl" ? <PrivacyBodyPl /> : <PrivacyBodyEn />}
+      {String(locale) === "pl" ? <PrivacyBodyPl /> : <PrivacyBodyEn />}
     </LegalPage>
   );
 }

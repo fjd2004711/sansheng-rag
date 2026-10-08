@@ -155,9 +155,11 @@ class QdrantVectorStore(BaseVectorStore):
         self.client = AsyncQdrantClient(
             host=app_settings.QDRANT_HOST,
             port=app_settings.QDRANT_PORT,
-            # QDRANT_API_KEY is str | None; pass directly without `or None`
+            https=app_settings.QDRANT_HTTPS,
+            timeout=app_settings.QDRANT_TIMEOUT_SECONDS,
+            # Empty API keys must become None; Qdrant otherwise enables HTTPS implicitly.
             # to avoid silently coercing empty strings to None.
-            api_key=app_settings.QDRANT_API_KEY,
+            api_key=app_settings.QDRANT_API_KEY or None,
         )
 
     async def _ensure_collection(self, name: str) -> None:
@@ -201,9 +203,9 @@ class QdrantVectorStore(BaseVectorStore):
                 qdrant_filter = Filter(
                     must=[FieldCondition(key="parent_doc_id", match=MatchValue(value=m.group(1)))]
                 )
-        results = await self.client.search(
+        query_response = await self.client.query_points(
             collection_name=collection_name,
-            query_vector=query_vector,
+            query=query_vector,
             limit=limit,
             query_filter=qdrant_filter,
         )
@@ -214,7 +216,7 @@ class QdrantVectorStore(BaseVectorStore):
                 metadata=hit.payload.get("metadata", {}),
                 parent_doc_id=hit.payload.get("parent_doc_id"),
             )
-            for hit in results
+            for hit in query_response.points
         ]
 
     async def get_collection_info(self, collection_name: str) -> CollectionInfo:

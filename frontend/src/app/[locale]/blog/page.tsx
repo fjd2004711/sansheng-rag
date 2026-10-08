@@ -27,7 +27,7 @@ export async function generateMetadata({
 function formatDate(iso: string, locale: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString(locale === "pl" ? "pl-PL" : "en-US", {
+  return d.toLocaleDateString(String(locale) === "pl" ? "pl-PL" : "en-US", {
     year: "numeric",
     month: "short",
     day: "numeric",

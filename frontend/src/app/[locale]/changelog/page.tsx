@@ -32,7 +32,7 @@ const TYPE_STYLES: Record<ChangeType, string> = {
 export default async function ChangelogPage({ params }: { params: Promise<{ locale: Locale }> }) {
   const { locale } = await params;
   const t = await getTranslations("marketing.changelog");
-  const isPl = locale === "pl";
+  const isPl = String(locale) === "pl";
 
   const formatDate = (iso: string) => {
     const d = new Date(iso);

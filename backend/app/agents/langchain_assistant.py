@@ -74,7 +74,7 @@ class LangChainAssistant:
         )
         self.system_prompt = system_prompt or get_system_prompt_with_rag()
         self._agent: CompiledStateGraph | None = None
-        self._tools = [current_datetime]
+        self._tools = []
         self._tools.append(search_documents)
 
     def _create_agent(self) -> CompiledStateGraph:
@@ -94,6 +94,8 @@ class LangChainAssistant:
             base_url=settings.OPENAI_BASE_URL,
             **openai_kwargs,
         )
+
+        model = model.bind_tools(self._tools, tool_choice="required")
 
         return create_agent(
             model=model,

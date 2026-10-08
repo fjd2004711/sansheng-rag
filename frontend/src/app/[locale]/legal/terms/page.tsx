@@ -34,7 +34,7 @@ export default async function TermsPage({ params }: { params: Promise<{ locale: 
       lastUpdated={LAST_UPDATED}
       locale={locale}
     >
-      {locale === "pl" ? <TermsBodyPl /> : <TermsBodyEn />}
+      {String(locale) === "pl" ? <TermsBodyPl /> : <TermsBodyEn />}
     </LegalPage>
   );
 }

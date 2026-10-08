@@ -104,5 +104,5 @@ export const TEASER_PLANS_PL: TeaserPlan[] = [
 ];
 
 export function getTeaserPlans(locale: string): TeaserPlan[] {
-  return locale === "pl" ? TEASER_PLANS_PL : TEASER_PLANS;
+  return String(locale) === "pl" ? TEASER_PLANS_PL : TEASER_PLANS;
 }
