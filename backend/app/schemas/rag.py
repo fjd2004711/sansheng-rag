@@ -93,6 +93,21 @@ class RAGTrackedDocumentItem(BaseSchema):
     completed_at: str | None = None
 
 
+class RAGLibraryDocument(BaseSchema):
+    """A document the assistant can answer from (name only, no storage details)."""
+
+    filename: str
+    filetype: str
+    chunk_count: int = 0
+
+
+class RAGLibrary(BaseSchema):
+    """What the chat answers from: the default collection and its ready documents."""
+
+    collection: str
+    documents: list[RAGLibraryDocument]
+
+
 class RAGTrackedDocumentList(BaseSchema):
     """List of tracked RAG documents."""
 

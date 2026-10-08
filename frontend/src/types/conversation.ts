@@ -1,4 +1,4 @@
-import type { ChatMessageFile } from "./chat";
+import type { AgentTraceEvent, ChatMessageFile } from "./chat";
 
 export interface Conversation {
   id: string;
@@ -21,6 +21,8 @@ export interface ConversationMessage {
   tokens_used?: number;
   tool_calls?: ConversationToolCall[];
   files?: ChatMessageFile[];
+  /** Structured self-correction trace saved with an assistant answer. */
+  agent_trace?: AgentTraceEvent[] | null;
 }
 
 export interface ConversationToolCall {

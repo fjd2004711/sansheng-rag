@@ -201,6 +201,18 @@ export function useChat(options: UseChatOptions = {}) {
           break;
         }
 
+        case "suggestions": {
+          const { message_id, items } = wsEvent.data as { message_id: string | null; items: string[] };
+          const all = useChatStore.getState().messages;
+          const target =
+            all.find((msg) => msg.id === message_id) ??
+            [...all].reverse().find((msg) => msg.role === "assistant");
+          if (target && Array.isArray(items) && items.length > 0) {
+            updateMessage(target.id, (msg) => ({ ...msg, suggestions: items }));
+          }
+          break;
+        }
+
         case "agent_trace": {
           if (currentMessageIdRef.current) {
             addAgentTrace(currentMessageIdRef.current, wsEvent.data as AgentTraceEvent);
@@ -392,6 +404,10 @@ export function useChat(options: UseChatOptions = {}) {
 
   const doSend = useCallback(
     (content: string, fileIds?: string[], files?: ChatMessageFile[]) => {
+      // Suggestions belong to the previous answer; drop them once the user moves on.
+      for (const previous of useChatStore.getState().messages) {
+        if (previous.suggestions?.length) updateMessage(previous.id, (msg) => ({ ...msg, suggestions: undefined }));
+      }
       const userMessageId = nanoid();
       addMessage({
         id: userMessageId,
@@ -413,7 +429,7 @@ export function useChat(options: UseChatOptions = {}) {
       if (thinkingEffortRef.current !== null) payload.thinking_effort = thinkingEffortRef.current;
       sendMessage(payload);
     },
-    [addMessage, sendMessage, conversationId],
+    [addMessage, updateMessage, sendMessage, conversationId],
   );
 
   const sendChatMessage = useCallback(

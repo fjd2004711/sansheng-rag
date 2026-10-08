@@ -163,6 +163,7 @@ async def create_message(
     thinking: str | None = None,
     model_name: str | None = None,
     tokens_used: int | None = None,
+    agent_trace: list[dict[str, Any]] | None = None,
 ) -> Message:
     """Create a new message."""
     message = Message(
@@ -172,6 +173,7 @@ async def create_message(
         thinking=thinking,
         model_name=model_name,
         tokens_used=tokens_used,
+        agent_trace=agent_trace,
     )
     db.add(message)
     await db.flush()

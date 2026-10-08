@@ -21,6 +21,7 @@ from app.services.agent import (
     persist_user_turn,
     send_event,
 )
+from app.services.rag.generation.followups import suggest_followups
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +53,10 @@ class AgentSession:
         self._thinking_streamed: bool = False
         self._turn_task: asyncio.Task[None] | None = None
         self._buffer_text_for_verification = False
+        # Structured trace events of the turn in progress; stored with the assistant message.
+        self._turn_trace: list[dict[str, Any]] = []
+        self._turn_evidence = ""
+        self._followup_task: asyncio.Task[None] | None = None
 
     async def handle_frame(self, data: dict[str, Any]) -> None:
         """Dispatch one incoming WebSocket frame.
@@ -119,6 +124,8 @@ class AgentSession:
 
     async def shutdown(self) -> None:
         """Cancel any in-flight turn."""
+        if self._followup_task and not self._followup_task.done():
+            self._followup_task.cancel()
         await self._cancel_turn()
 
     async def process_message(self, data: dict[str, Any]) -> None:
@@ -150,6 +157,9 @@ class AgentSession:
             )
 
         await send_event(self.websocket, "user_prompt", {"content": user_message})
+        self._turn_trace = []
+        if self._followup_task and not self._followup_task.done():
+            self._followup_task.cancel()
 
         try:
             assistant = get_agent(
@@ -180,6 +190,7 @@ class AgentSession:
                     final_output,
                     getattr(assistant, "model_name", None),
                     collected_tool_calls,
+                    agent_trace=self._turn_trace,
                 )
 
             if assistant_msg_id:
@@ -197,6 +208,7 @@ class AgentSession:
                 "complete",
                 {"conversation_id": self.current_conversation_id},
             )
+            self._start_followups(user_message, final_output, assistant_msg_id)
         except WebSocketDisconnect:
             raise
         except Exception as e:
@@ -259,13 +271,33 @@ class AgentSession:
         if not config.enabled or not answer:
             return answer
         evidence = await self._collect_evidence(question, collected_tool_calls)
+        self._turn_evidence = evidence
         result = await GenerationCorrector(
             evidence_search=search_knowledge_base,
             max_corrections=config.max_corrections,
         ).run(question, answer, evidence)
         for event in result.trace:
-            await send_event(self.websocket, "agent_trace", event.model_dump(mode="json"))
+            await self._send_trace(event.model_dump(mode="json"))
         return result.answer
+
+    def _start_followups(self, question: str, answer: str, message_id: str | None) -> None:
+        """Suggest follow-up questions outside the turn so the next question is never blocked."""
+
+        async def run() -> None:
+            suggestions = await suggest_followups(question, answer, self._turn_evidence)
+            if suggestions:
+                await send_event(
+                    self.websocket, "suggestions", {"message_id": message_id, "items": suggestions}
+                )
+
+        if self._followup_task and not self._followup_task.done():
+            self._followup_task.cancel()
+        self._followup_task = asyncio.create_task(run(), name="followup-suggestions")
+
+    async def _send_trace(self, event: dict[str, Any]) -> None:
+        """Record a trace event for persistence and push it to the client."""
+        self._turn_trace.append(event)
+        await send_event(self.websocket, "agent_trace", event)
 
     async def _collect_evidence(
         self, question: str, collected_tool_calls: list[dict[str, Any]]
@@ -282,7 +314,7 @@ class AgentSession:
             logger.warning("agent_skipped_search_tool: forcing retrieval for verification")
             visible, trace = extract_rag_trace(await search_knowledge_base(question))
             for event in trace:
-                await send_event(self.websocket, "agent_trace", event)
+                await self._send_trace(event)
             return visible
         return (chr(10) * 2).join(str(call["result"]) for call in searched if call.get("result"))
 
@@ -371,7 +403,7 @@ class AgentSession:
                         if tc is not None:
                             tc["result"] = visible_content
                         for trace_event in trace:
-                            await send_event(self.websocket, "agent_trace", trace_event)
+                            await self._send_trace(trace_event)
                         await send_event(
                             self.websocket,
                             "tool_result",

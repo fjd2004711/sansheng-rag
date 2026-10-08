@@ -92,6 +92,9 @@ select = [
     "RUF", # ruff-specific rules
 ]
 ignore = [
+    "RUF001",  # full-width Chinese punctuation is intentional
+    "RUF002",
+    "RUF003",
     "E501", # line too long (handled by formatter)
     "E402", # module level import not at top (needed for conditional Jinja2 imports)
     "B008", # function call in default argument (needed for FastAPI Depends)

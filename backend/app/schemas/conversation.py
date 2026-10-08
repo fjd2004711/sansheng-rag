@@ -59,6 +59,9 @@ class MessageCreate(MessageBase):
 
     model_name: str | None = Field(default=None, max_length=100, description="AI model used")
     tokens_used: int | None = Field(default=None, ge=0, description="Token count")
+    agent_trace: list[dict[str, Any]] | None = Field(
+        default=None, description="Structured self-correction trace events"
+    )
 
 
 class MessageFileRead(BaseSchema):
@@ -79,6 +82,7 @@ class MessageRead(MessageBase, TimestampSchema):
     tokens_used: int | None = None
     tool_calls: list[ToolCallRead] = Field(default_factory=list)
     files: list[MessageFileRead] = Field(default_factory=list)
+    agent_trace: list[dict[str, Any]] | None = None
 
 
 class MessageReadSimple(MessageBase, TimestampSchema):

@@ -196,6 +196,7 @@ class ConversationService:
             thinking=data.thinking,
             model_name=data.model_name,
             tokens_used=data.tokens_used,
+            agent_trace=data.agent_trace,
         )
 
     async def delete_message(self, message_id: UUID) -> bool:

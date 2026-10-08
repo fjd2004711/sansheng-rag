@@ -27,6 +27,8 @@ from app.schemas.rag import (
     RAGCollectionList,
     RAGDocumentList,
     RAGIngestResponse,
+    RAGLibrary,
+    RAGLibraryDocument,
     RAGMessageResponse,
     RAGRetryResponse,
     RAGSearchRequest,
@@ -200,6 +202,24 @@ async def ingest_file(
         filename=file.filename or "unknown",
         replace=replace,
         vector_store=vector_store,
+    )
+
+
+@router.get("/library", response_model=RAGLibrary)
+async def get_library(
+    rag_doc_svc: RAGDocumentSvc,
+    _: CurrentUser,
+) -> Any:
+    """List the documents the chat answers from, visible to every signed-in user."""
+    collection = settings.rag.collection_name
+    tracked = await rag_doc_svc.list_documents(collection)
+    return RAGLibrary(
+        collection=collection,
+        documents=[
+            RAGLibraryDocument(filename=d.filename, filetype=d.filetype, chunk_count=d.chunk_count)
+            for d in tracked.items
+            if d.status == "done"
+        ],
     )
 
 

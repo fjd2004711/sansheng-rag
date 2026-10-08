@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useChat } from "@/hooks";
 import { AgentTracePanel } from "./agent-trace-panel";
 import { ChatEmptyState } from "./chat-empty-state";
+import { LibraryPopover } from "./library-popover";
 import { ChatInput } from "./chat-input";
 import { FilePreviewPanel } from "./file-preview-panel";
 import { SourcesPanel } from "./sources-panel";
@@ -115,6 +116,7 @@ export function ChatContainer() {
           role: msg.role,
           content: msg.content,
           thinking: msg.thinking ?? undefined,
+          agentTrace: msg.agent_trace?.length ? msg.agent_trace : undefined,
           timestamp: new Date(msg.created_at),
           conversationId: msg.conversation_id,
           toolCalls,
@@ -160,10 +162,30 @@ export function ChatContainer() {
     [messages, sendMessage],
   );
 
+  // Which answer's operation flow the side panel shows: the one the user picked, else the latest.
+  const [selectedTraceId, setSelectedTraceId] = useState<string | null>(null);
+  useEffect(() => {
+    setSelectedTraceId(null);
+  }, [messages.length, currentConversationId]);
+  const withTrace = messages.filter((message) => message.agentTrace?.length);
+  const shownTrace =
+    withTrace.find((message) => message.id === selectedTraceId) ?? withTrace[withTrace.length - 1];
+  const traceQuestion = (() => {
+    if (!shownTrace) return undefined;
+    const at = messages.findIndex((message) => message.id === shownTrace.id);
+    for (let i = at - 1; i >= 0; i--) {
+      if (messages[i]?.role === "user") return messages[i]!.content;
+    }
+    return undefined;
+  })();
+
   return (
     <ChatUI
       messages={messages}
-      trace={( [...messages].reverse().find((message) => message.agentTrace?.length)?.agentTrace ?? [] )}
+      trace={shownTrace?.agentTrace ?? []}
+      traceTitle={traceQuestion}
+      selectedTraceId={selectedTraceId}
+      onShowTrace={(id) => setSelectedTraceId((current) => (current === id ? null : id))}
       isConnected={isConnected}
       isProcessing={isProcessing}
       isLoadingConversation={
@@ -187,6 +209,9 @@ export function ChatContainer() {
 interface ChatUIProps {
   messages: import("@/types").ChatMessage[];
   trace: AgentTraceEvent[];
+  traceTitle?: string;
+  selectedTraceId?: string | null;
+  onShowTrace?: (messageId: string) => void;
   isConnected: boolean;
   isProcessing: boolean;
   /** True while a saved conversation is being loaded — show a skeleton, not empty state. */
@@ -211,6 +236,9 @@ interface ChatUIProps {
 function ChatUI({
   messages,
   trace,
+  traceTitle,
+  selectedTraceId,
+  onShowTrace,
   isConnected,
   isProcessing,
   isLoadingConversation,
@@ -241,7 +269,13 @@ function ChatUI({
               <ChatEmptyState onPick={(prompt) => sendMessage(prompt)} />
             </div>
           ) : (
-            <MessageList messages={messages} onRegenerate={onRegenerate} />
+            <MessageList
+              messages={messages}
+              onRegenerate={onRegenerate}
+              onShowTrace={onShowTrace}
+              selectedTraceId={selectedTraceId}
+              onAsk={(question) => sendMessage(question)}
+            />
           )}
           <div ref={messagesEndRef} />
         </div>{" "}
@@ -293,6 +327,7 @@ function ChatUI({
                   />
                   {isConnected ? tc("live") : tc("offline")}
                 </span>
+                <LibraryPopover />
               </div>
             </div>
           </div>
@@ -301,7 +336,7 @@ function ChatUI({
           </p>
         </div>
       </div>
-      <AgentTracePanel trace={trace} />
+      <AgentTracePanel trace={trace} title={traceTitle} />
       <FilePreviewPanel />
       <SourcesPanel />
     </div>

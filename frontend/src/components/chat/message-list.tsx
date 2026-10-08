@@ -1,14 +1,18 @@
 "use client";
 
 import type { ChatMessage } from "@/types";
+import { FollowupChips } from "./followup-chips";
 import { MessageItem } from "./message-item";
 
 interface MessageListProps {
   messages: ChatMessage[];
   onRegenerate?: (messageId: string) => void;
+  onShowTrace?: (messageId: string) => void;
+  selectedTraceId?: string | null;
+  onAsk?: (question: string) => void;
 }
 
-export function MessageList({ messages, onRegenerate }: MessageListProps) {
+export function MessageList({ messages, onRegenerate, onShowTrace, selectedTraceId, onAsk }: MessageListProps) {
     const getGroupPosition = (
     message: ChatMessage,
   ): "first" | "middle" | "last" | "single" | undefined => {
@@ -35,16 +39,24 @@ export function MessageList({ messages, onRegenerate }: MessageListProps) {
   return (
     <div className="space-y-0">
       {messages.map((message, index) => (
-        <MessageItem
-          key={message.id}
-          message={message}
-          groupPosition={getGroupPosition(message)}
-          onRegenerate={
-            onRegenerate && index === lastAssistantIndex && !message.isStreaming
-              ? () => onRegenerate(message.id)
-              : undefined
-          }
-        />
+        <div key={message.id}>
+          <MessageItem
+            message={message}
+            groupPosition={getGroupPosition(message)}
+            onRegenerate={
+              onRegenerate && index === lastAssistantIndex && !message.isStreaming
+                ? () => onRegenerate(message.id)
+                : undefined
+            }
+            onShowTrace={onShowTrace && message.agentTrace?.length ? () => onShowTrace(message.id) : undefined}
+            traceSelected={selectedTraceId === message.id}
+          />
+          {onAsk && index === lastAssistantIndex && !message.isStreaming && message.suggestions?.length ? (
+            <div className="pb-4 pl-10 sm:pl-[3.25rem]">
+              <FollowupChips items={message.suggestions} onAsk={onAsk} />
+            </div>
+          ) : null}
+        </div>
       ))}
     </div>
   );
