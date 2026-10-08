@@ -192,3 +192,18 @@ async def test_delete_user_by_id_not_found(
 
     response = await superuser_client.delete(f"{settings.API_V1_STR}/users/{uuid4()}")
     assert response.status_code == 404
+
+
+@pytest.mark.anyio
+async def test_regular_user_cannot_change_own_role_or_status(
+    auth_client: AsyncClient, mock_user_service: MagicMock
+):
+    """PATCH /users/me ignores role and is_active for non-admins instead of failing or applying them."""
+    response = await auth_client.patch(
+        f"{settings.API_V1_STR}/users/me",
+        json={"full_name": "新名字", "role": "admin", "is_active": False},
+    )
+
+    assert response.status_code == 200
+    sent = mock_user_service.update.await_args.args[1]
+    assert sent.model_dump(exclude_unset=True) == {"full_name": "新名字"}

@@ -16,7 +16,8 @@ import { MessageList } from "./message-list";
 import { PendingMessages } from "./pending-messages";
 import { ToolApprovalDialog } from "./tool-approval-dialog";
 import { QuestionPrompt } from "@/components/ui";
-import type { AgentTraceEvent, PendingApproval, AskUserQuestion, AskUserAnswer, Decision } from "@/types";
+import type { AgentTraceEvent, AnswerFeedback, PendingApproval, AskUserQuestion, AskUserAnswer, Decision } from "@/types";
+import { apiClient } from "@/lib/api-client";
 import { buildAssistantParts } from "@/lib/conversation-to-chat";
 import { useConversationStore, useChatStore } from "@/stores";
 import { useConversations } from "@/hooks";
@@ -164,6 +165,23 @@ export function ChatContainer() {
     },
     [messages, sendMessage],
   );
+
+  // Restore the user's earlier ratings when a saved conversation is opened.
+  const updateChatMessage = useChatStore((state) => state.updateMessage);
+  const ratedConversationRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!currentConversationId || messages.length === 0) return;
+    if (ratedConversationRef.current === currentConversationId) return;
+    ratedConversationRef.current = currentConversationId;
+    apiClient
+      .get<{ items: Array<AnswerFeedback & { message_id: string }> }>(`/conversations/${currentConversationId}/feedback`)
+      .then(({ items }) => {
+        for (const item of items) {
+          updateChatMessage(item.message_id, (message) => ({ ...message, feedback: { rating: item.rating, reason: item.reason, comment: item.comment } }));
+        }
+      })
+      .catch(() => {});
+  }, [currentConversationId, messages.length, updateChatMessage]);
 
   // Which answer's operation flow the side panel shows: the one the user picked, else the latest.
   const [selectedTraceId, setSelectedTraceId] = useState<string | null>(null);

@@ -1,188 +1,57 @@
-
 import { test, expect } from "@playwright/test";
 
-test.describe("AI Chat", () => {
-  // Use authenticated state
-  test.use({
-    storageState: ".playwright/.auth/user.json",
-  });
+const VERDICT = /已核对|纠错后通过|仅部分有依据|没有找到答案/;
 
-  test.beforeEach(async ({ page }) => {
+test.describe("对话", () => {
+  test("空状态：示例问题、能做/不能做的说明、资料库入口", async ({ page }) => {
     await page.goto("/chat");
+    await expect(page.getByRole("button", { name: /返聘教师每周最多/ })).toBeVisible();
+    await expect(page.getByText("不能回答资料以外的内容")).toBeVisible();
+    await expect(page.getByText(/回答依据：\d+ 份资料/)).toBeVisible();
+    await expect(page.getByText("运作流程")).toBeVisible();
   });
 
-  test.describe("Chat Interface", () => {
-    test("should display chat container", async ({ page }) => {
-      // Chat container should be visible
-      await expect(page.getByRole("main")).toBeVisible();
-
-      // Input should be present
-      const input = page.getByRole("textbox", { name: /message|type|ask/i }).or(
-        page.getByPlaceholder(/message|type|ask/i)
-      );
-      await expect(input).toBeVisible();
-    });
-
-    test("should have send button", async ({ page }) => {
-      const sendButton = page.getByRole("button", { name: /send|submit/i }).or(
-        page.locator('button[type="submit"]')
-      );
-      await expect(sendButton).toBeVisible();
-    });
-
-    test("should allow typing a message", async ({ page }) => {
-      const input = page.getByRole("textbox").first();
-      await input.fill("Hello, AI assistant!");
-      await expect(input).toHaveValue("Hello, AI assistant!");
-    });
-  });
-
-  test.describe("Chat Functionality", () => {
-    test("should send message and receive response", async ({ page }) => {
-      const input = page.getByRole("textbox").first();
-      const sendButton = page.getByRole("button", { name: /send|submit/i }).or(
-        page.locator('button[type="submit"]')
-      );
-
-      // Send a message
-      await input.fill("Hello!");
-      await sendButton.click();
-
-      // User message should appear in chat
-      await expect(page.getByText("Hello!")).toBeVisible();
-
-      // Wait for AI response (with reasonable timeout)
-      await expect(
-        page.locator("[data-role='assistant']").or(
-          page.getByText(/thinking|processing/i)
-        )
-      ).toBeVisible({ timeout: 30000 });
-    });
-
-    test("should show loading state while waiting for response", async ({ page }) => {
-      const input = page.getByRole("textbox").first();
-      const sendButton = page.getByRole("button", { name: /send|submit/i }).or(
-        page.locator('button[type="submit"]')
-      );
-
-      // Send a message
-      await input.fill("What is 2 + 2?");
-      await sendButton.click();
-
-      // Should show some loading indicator
-      await expect(
-        page.getByText(/thinking|loading|processing/i).or(
-          page.locator(".animate-pulse, .animate-spin")
-        )
-      ).toBeVisible();
-    });
-
-    test("should clear input after sending", async ({ page }) => {
-      const input = page.getByRole("textbox").first();
-      const sendButton = page.getByRole("button", { name: /send|submit/i }).or(
-        page.locator('button[type="submit"]')
-      );
-
-      await input.fill("Test message");
-      await sendButton.click();
-
-      // Input should be cleared
-      await expect(input).toHaveValue("");
-    });
-  });
-
-  test.describe("Message Display", () => {
-    test("should display user messages correctly", async ({ page }) => {
-      const input = page.getByRole("textbox").first();
-      const sendButton = page.getByRole("button", { name: /send|submit/i }).or(
-        page.locator('button[type="submit"]')
-      );
-
-      await input.fill("My test message");
-      await sendButton.click();
-
-      // Message should be styled as user message
-      const userMessage = page.locator("[data-role='user']").or(
-        page.getByText("My test message")
-      );
-      await expect(userMessage).toBeVisible();
-    });
-
-    test("should support multiple messages", async ({ page }) => {
-      const input = page.getByRole("textbox").first();
-      const sendButton = page.getByRole("button", { name: /send|submit/i }).or(
-        page.locator('button[type="submit"]')
-      );
-
-      // Send first message
-      await input.fill("First message");
-      await sendButton.click();
-      await expect(page.getByText("First message")).toBeVisible();
-
-      // Wait for response
-      await page.waitForTimeout(1000);
-
-      // Send second message
-      await input.fill("Second message");
-      await sendButton.click();
-      await expect(page.getByText("Second message")).toBeVisible();
-
-      // Both messages should be visible
-      await expect(page.getByText("First message")).toBeVisible();
-      await expect(page.getByText("Second message")).toBeVisible();
-    });
-  });
-
-  test.describe("Keyboard Navigation", () => {
-    test("should send message on Enter key", async ({ page }) => {
-      const input = page.getByRole("textbox").first();
-
-      await input.fill("Keyboard test");
-      await input.press("Enter");
-
-      // Message should be sent
-      await expect(page.getByText("Keyboard test")).toBeVisible();
-    });
-
-    test("should support Shift+Enter for new line", async ({ page }) => {
-      const input = page.getByRole("textbox").first();
-
-      await input.fill("Line 1");
-      await input.press("Shift+Enter");
-      await input.type("Line 2");
-
-      // Should contain multiline text (behavior may vary)
-      const value = await input.inputValue();
-      expect(value).toContain("Line 1");
-    });
-  });
-});
-
-test.describe("Conversation Persistence", () => {
-  test.use({
-    storageState: ".playwright/.auth/user.json",
-  });
-
-  test("should show conversation list", async ({ page }) => {
+  test("输入法组词时回车不会发送", async ({ page }) => {
     await page.goto("/chat");
-
-    // Should have some way to view conversation history.
-    // List may or may not be visible depending on UI — just ensure the
-    // locator resolves without throwing.
-    void page.getByRole("list").or(page.locator("[data-testid='conversation-list']"));
-  });
-
-  test("should create new conversation", async ({ page }) => {
-    await page.goto("/chat");
-
-    // Find new conversation button
-    const newChatButton = page.getByRole("button", { name: /new|create/i }).or(
-      page.getByText(/new chat/i)
+    const box = page.getByLabel("输入你的问题");
+    await box.fill("退休");
+    // The Enter that confirms a pinyin candidate arrives flagged as composing (keyCode 229).
+    await box.evaluate((el) =>
+      el.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", keyCode: 229, isComposing: true, bubbles: true, cancelable: true })),
     );
+    await expect(box).toHaveValue("退休");
+    await expect(page.getByText("正在检索资料")).toHaveCount(0);
+    // A normal Enter afterwards does send, and clears the box.
+    await box.press("Enter");
+    await expect(box).toHaveValue("");
+  });
 
-    if (await newChatButton.isVisible()) {
-      await newChatButton.click();
-      // Should start a new conversation
-    }
+  test("提问 → 核对结论 → 详细过程 → 追问建议 → 反馈，刷新后仍在", async ({ page }) => {
+    test.setTimeout(240_000);
+    await page.goto("/chat");
+    await page.getByRole("button", { name: /超课时津贴每节多少钱/ }).click();
+
+    // The answer text only appears after verification; a progress line is shown meanwhile.
+    await expect(page.getByText(/正在(检索资料|判断|撰写|核对|换个问法)/).first()).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText(VERDICT).first()).toBeVisible({ timeout: 180_000 });
+
+    await page.getByRole("button", { name: "搜了什么、为什么" }).first().click();
+    const drawer = page.getByText("详细运作过程");
+    await expect(drawer).toBeVisible();
+    await expect(page.getByText("一句话总结")).toBeVisible();
+    await expect(page.getByText("搜索词").first()).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(drawer).toBeHidden();
+
+    await page.getByRole("button", { name: "有问题" }).click();
+    await page.getByRole("button", { name: "答错了" }).click();
+    await page.getByPlaceholder(/补充说明/).fill("e2e 自动测试反馈");
+    await page.getByRole("button", { name: "提交" }).click();
+    await expect(page.getByText("你反馈了这个回答有问题")).toBeVisible();
+
+    await page.reload();
+    await expect(page.getByText("你反馈了这个回答有问题")).toBeVisible({ timeout: 20_000 });
+    // The operation flow is saved with the answer too.
+    await expect(page.locator(".react-flow__node").first()).toBeVisible({ timeout: 20_000 });
   });
 });

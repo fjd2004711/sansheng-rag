@@ -7,6 +7,8 @@ import { deriveVerdict } from "@/lib/answer-verdict";
 import { AnswerVerdictBar } from "./answer-verdict";
 import { isAppAdmin } from "@/lib/utils";
 import { useTraceDetailStore } from "@/stores/trace-detail-store";
+import { useConversationStore } from "@/stores/conversation-store";
+import { FeedbackBar } from "./feedback-bar";
 import { ToolCallCard } from "./tool-call-card";
 import { MarkdownContent } from "./markdown-content";
 import { CopyButton } from "./copy-button";
@@ -130,6 +132,7 @@ export function MessageItem({ message, groupPosition, onRegenerate, onShowTrace,
   const isGrouped = groupPosition && groupPosition !== "single";
 
   const openTraceDetail = useTraceDetailStore((state) => state.open);
+  const activeConversationId = useConversationStore((state) => state.currentConversationId) ?? message.conversationId;
   const verdict = !isUser ? deriveVerdict(message.agentTrace, message.content) : null;
   const sources = !isUser ? extractSources(message) : [];
   const hasSources = sources.length > 0 && !message.isStreaming;
@@ -355,6 +358,10 @@ export function MessageItem({ message, groupPosition, onRegenerate, onShowTrace,
             onShowTrace={onShowTrace}
             onShowDetail={() => openTraceDetail(message.id)}
           />
+        )}
+
+        {!isUser && !message.isStreaming && message.content && !message.isTemporaryId && activeConversationId && (
+          <FeedbackBar conversationId={activeConversationId} messageId={message.id} feedback={message.feedback} />
         )}
 
         {hasSources && !isUser && (

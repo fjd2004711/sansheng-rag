@@ -1,0 +1,48 @@
+"use client";
+
+import Link from "next/link";
+import { ShieldAlert } from "lucide-react";
+
+import { FeedbackPanel } from "@/components/admin/feedback-panel";
+import { UsersPanel } from "@/components/admin/users-panel";
+import { Button, Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui";
+import { useAuth } from "@/hooks";
+import { ROUTES } from "@/lib/constants";
+import { isAppAdmin } from "@/lib/utils";
+
+export default function AdminPage() {
+  const { user } = useAuth();
+
+  if (user && !isAppAdmin(user)) {
+    return (
+      <div className="mx-auto mt-16 max-w-md px-6 text-center">
+        <ShieldAlert className="text-muted-foreground mx-auto mb-3 h-8 w-8" />
+        <p className="text-sm font-medium">这个页面需要管理员权限</p>
+        <Button asChild variant="outline" className="mt-4">
+          <Link href={ROUTES.CHAT}>回到对话</Link>
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 sm:px-6">
+      <header>
+        <h1 className="text-2xl font-semibold tracking-tight">管理</h1>
+        <p className="text-muted-foreground mt-1 text-sm">管理账号，查看用户对回答的反馈。</p>
+      </header>
+      <Tabs defaultValue="feedback">
+        <TabsList>
+          <TabsTrigger value="feedback">用户反馈</TabsTrigger>
+          <TabsTrigger value="users">账号</TabsTrigger>
+        </TabsList>
+        <TabsContent value="feedback" className="mt-4">
+          <FeedbackPanel />
+        </TabsContent>
+        <TabsContent value="users" className="mt-4">
+          <UsersPanel />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}

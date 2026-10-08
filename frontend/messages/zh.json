@@ -139,6 +139,7 @@
   "nav": {
     "chat": "对话",
     "knowledge": "知识库",
-    "evaluation": "评测"
+    "evaluation": "评测",
+    "admin": "管理"
   }
 }

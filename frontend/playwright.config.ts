@@ -9,13 +9,13 @@ import { defineConfig, devices } from "@playwright/test";
 export default defineConfig({
   testDir: "./e2e",
   /* Run tests in files in parallel */
-  fullyParallel: true,
+  fullyParallel: false,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
   /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 1 : undefined,
+  workers: 1,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [
     ["list"],
@@ -36,51 +36,19 @@ export default defineConfig({
     video: "on-first-retry",
   },
 
-  /* Configure projects for major browsers */
+  /* Chrome (the installed browser; set PW_CHANNEL=chrome) plus a phone viewport for the smoke test. */
   projects: [
-    /* Authentication setup - runs first */
-    {
-      name: "setup",
-      testMatch: /.*\.setup\.ts/,
-    },
-
+    { name: "setup", testMatch: /.*\.setup\.ts/, use: { channel: process.env.PW_CHANNEL || undefined } },
     {
       name: "chromium",
-      use: {
-        ...devices["Desktop Chrome"],
-      },
-      dependencies: ["setup"],
-    },
-
-    {
-      name: "firefox",
-      use: {
-        ...devices["Desktop Firefox"],
-      },
-      dependencies: ["setup"],
-    },
-
-    {
-      name: "webkit",
-      use: {
-        ...devices["Desktop Safari"],
-      },
-      dependencies: ["setup"],
-    },
-
-    /* Test against mobile viewports. */
-    {
-      name: "Mobile Chrome",
-      use: {
-        ...devices["Pixel 5"],
-      },
+      testIgnore: /mobile\.spec\.ts/,
+      use: { ...devices["Desktop Chrome"], channel: process.env.PW_CHANNEL || undefined, storageState: ".playwright/.auth/user.json" },
       dependencies: ["setup"],
     },
     {
-      name: "Mobile Safari",
-      use: {
-        ...devices["iPhone 12"],
-      },
+      name: "mobile",
+      testMatch: /mobile\.spec\.ts/,
+      use: { ...devices["Pixel 5"], channel: process.env.PW_CHANNEL || undefined, storageState: ".playwright/.auth/user.json" },
       dependencies: ["setup"],
     },
   ],
@@ -89,7 +57,7 @@ export default defineConfig({
   webServer: process.env.CI
     ? undefined
     : {
-        command: "bun run dev",
+        command: "npm run dev",
         url: "http://localhost:3010",
         reuseExistingServer: !process.env.CI,
         timeout: 120 * 1000,

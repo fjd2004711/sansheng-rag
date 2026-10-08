@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChartNoAxesCombined, Database, LogOut, MessageSquare, Workflow } from "lucide-react";
+import { ChartNoAxesCombined, Database, LogOut, MessageSquare, ShieldCheck, Workflow } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { ThemeToggle } from "@/components/theme";
@@ -9,12 +9,13 @@ import { Button } from "@/components/ui";
 import { useAuth } from "@/hooks";
 import { useActiveRoute } from "@/lib/active-route";
 import { APP_NAME, ROUTES } from "@/lib/constants";
-import { cn } from "@/lib/utils";
+import { cn, isAppAdmin } from "@/lib/utils";
 
 const NAV = [
   { key: "chat", href: ROUTES.CHAT, icon: MessageSquare },
   { key: "knowledge", href: ROUTES.RAG, icon: Database },
   { key: "evaluation", href: ROUTES.EVALUATION, icon: ChartNoAxesCombined },
+  { key: "admin", href: ROUTES.ADMIN, icon: ShieldCheck, adminOnly: true },
 ] as const;
 
 export function Header() {
@@ -37,7 +38,7 @@ export function Header() {
           </Link>
 
           <nav className="flex items-center gap-0.5" aria-label="主导航">
-            {NAV.map((item) => (
+            {NAV.filter((item) => !("adminOnly" in item) || isAppAdmin(user)).map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
