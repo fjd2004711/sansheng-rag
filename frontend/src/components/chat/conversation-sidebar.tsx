@@ -30,6 +30,25 @@ interface ConversationItemProps {
   onRename: (title: string) => void;
 }
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Group conversations the way mature chat products do: today / yesterday / last 7 days / earlier. */
+function groupByRecency<T extends { updated_at?: string; created_at?: string }>(items: T[]): Array<{ label: string; items: T[] }> {
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const buckets: Array<{ label: string; min: number; items: T[] }> = [
+    { label: "今天", min: startOfToday.getTime(), items: [] },
+    { label: "昨天", min: startOfToday.getTime() - DAY_MS, items: [] },
+    { label: "最近 7 天", min: startOfToday.getTime() - 7 * DAY_MS, items: [] },
+    { label: "更早", min: Number.NEGATIVE_INFINITY, items: [] },
+  ];
+  for (const item of items) {
+    const at = new Date(item.updated_at ?? item.created_at ?? 0).getTime();
+    buckets.find((bucket) => at >= bucket.min)!.items.push(item);
+  }
+  return buckets.filter((bucket) => bucket.items.length > 0);
+}
+
 function ConversationItem({
   conversation,
   isActive,
@@ -285,18 +304,23 @@ function ConversationList({
             </p>
           </div>
         ) : (
-          <div className="space-y-1">
-            {visible.map((conversation) => (
-              <ConversationItem
-                key={conversation.id}
-                conversation={conversation}
-                isActive={conversation.id === currentConversationId}
-                onSelect={() => handleSelect(conversation.id)}
-                onDelete={() => onDelete(conversation.id)}
-                onArchive={() => onArchive(conversation.id)}
-                onUnarchive={() => onUnarchive(conversation.id)}
-                onRename={(title) => onRename(conversation.id, title)}
-              />
+          <div className="space-y-3">
+            {groupByRecency(visible).map((group) => (
+              <section key={group.label} className="space-y-1">
+                <h3 className="text-muted-foreground px-3 pt-1 text-xs font-medium">{group.label}</h3>
+                {group.items.map((conversation) => (
+                  <ConversationItem
+                    key={conversation.id}
+                    conversation={conversation}
+                    isActive={conversation.id === currentConversationId}
+                    onSelect={() => handleSelect(conversation.id)}
+                    onDelete={() => onDelete(conversation.id)}
+                    onArchive={() => onArchive(conversation.id)}
+                    onUnarchive={() => onUnarchive(conversation.id)}
+                    onRename={(title) => onRename(conversation.id, title)}
+                  />
+                ))}
+              </section>
             ))}
           </div>
         )}

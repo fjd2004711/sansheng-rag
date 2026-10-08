@@ -1,6 +1,6 @@
 "use client";
 
-import { Background, Controls, Handle, Position, ReactFlow, type Edge, type Node } from "@xyflow/react";
+import { Background, Handle, Position, ReactFlow, type Edge, type Node } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { Activity, Check, CircleAlert, Search, ShieldCheck, WandSparkles } from "lucide-react";
 import type { AgentTraceEvent } from "@/types";
@@ -11,6 +11,13 @@ import { TRACE_FAILURE_LABELS, TRACE_STATUS_LABELS, TRACE_STEP_LABELS } from "@/
 const LABELS = TRACE_STEP_LABELS;
 const STATUS_LABELS = TRACE_STATUS_LABELS;
 const FAILURE_LABELS = TRACE_FAILURE_LABELS;
+
+const HOW_IT_WORKS = [
+  { icon: Search, title: "检索资料", text: "在资料库里找出和问题最相关的几段原文" },
+  { icon: ShieldCheck, title: "判断够不够用", text: "不够就分析原因，换个问法再找（最多两轮）" },
+  { icon: WandSparkles, title: "写出回答", text: "只依据找到的资料作答，并标明出处" },
+  { icon: Check, title: "核对回答", text: "逐条检查说法有没有依据；没有就纠正，或如实说查不到" },
+];
 
 function iconFor(step: string) {
   if (step.includes("retriev")) return Search;
@@ -151,8 +158,23 @@ export function AgentTracePanel({
         )}
       </div>
       {trace.length === 0 ? (
-        <div className="text-muted-foreground m-4 rounded-xl border border-dashed p-4 text-sm leading-relaxed">
-          提出问题后，这里会逐步显示系统如何检索资料、判断够不够用、发现问题时如何改正。
+        <div className="m-4 space-y-3 text-sm">
+          <p className="text-muted-foreground text-xs">提出问题后，这里会实时显示系统是怎么答的。大致有四步：</p>
+          <ol className="space-y-2.5">
+            {HOW_IT_WORKS.map(({ icon: StepIcon, title, text }, index) => (
+              <li key={title} className="flex gap-3">
+                <span className="bg-muted text-muted-foreground flex h-7 w-7 shrink-0 items-center justify-center rounded-full">
+                  <StepIcon className="h-3.5 w-3.5" />
+                </span>
+                <span className="leading-relaxed">
+                  <span className="font-medium">
+                    {index + 1}. {title}
+                  </span>
+                  <span className="text-muted-foreground block text-xs">{text}</span>
+                </span>
+              </li>
+            ))}
+          </ol>
         </div>
       ) : (
         <div className="min-h-0 flex-1">
@@ -168,9 +190,10 @@ export function AgentTracePanel({
             zoomOnDoubleClick={false}
             panOnDrag
             proOptions={{ hideAttribution: true }}
+            preventScrolling={false}
+            zoomOnScroll={false}
           >
             <Background gap={16} size={1} />
-            <Controls showInteractive={false} />
           </ReactFlow>
         </div>
       )}

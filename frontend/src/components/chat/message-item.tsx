@@ -39,6 +39,9 @@ function ThinkingBlock({ text, open, isStreaming }: { text: string; open: boolea
   );
 }
 
+/** The knowledge-base search is shown as the live progress line and the process drawer, not as a tool card. */
+const isRetrievalTool = (name: string) => name === "search_documents" || name === "search_knowledge_base";
+
 function TextBubble({
   text,
   showCursor,
@@ -289,7 +292,7 @@ export function MessageItem({ message, groupPosition, onRegenerate, onShowTrace,
                       />
                     );
                   }
-                  if (part.type === "tool" && part.toolCall) {
+                  if (part.type === "tool" && part.toolCall && !isRetrievalTool(part.toolCall.name)) {
                     return (
                       <div key={part.id} className="w-full">
                         <ToolCallCard toolCall={part.toolCall} />
@@ -332,6 +335,7 @@ export function MessageItem({ message, groupPosition, onRegenerate, onShowTrace,
                   {message.toolCalls && message.toolCalls.length > 0 && (
                     <div className="w-full space-y-2">
                       {message.toolCalls
+                        .filter((toolCall) => !isRetrievalTool(toolCall.name))
                         .map((toolCall) => (
                           <ToolCallCard key={toolCall.id} toolCall={toolCall} />
                         ))}

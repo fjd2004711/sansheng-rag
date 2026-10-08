@@ -1,720 +1,354 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Database, FolderPlus, Layers, MessageSquare, Trash2 } from "lucide-react";
+import Link from "next/link";
 import { toast } from "sonner";
-import { useAuth } from "@/hooks";
+
+import { KbDocuments, type KbDocument } from "@/components/rag/kb-documents";
+import { KbSearch } from "@/components/rag/kb-search";
+import { KbUpload } from "@/components/rag/kb-upload";
 import {
   Button,
+  ConfirmDialog,
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
   Input,
-  Badge,
-  Skeleton,
-  Spinner,
   Select,
-  SelectTrigger,
-  SelectValue,
   SelectContent,
   SelectItem,
-  AlertDialog,
-  AlertDialogTrigger,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogAction,
-  AlertDialogCancel,
+  SelectTrigger,
+  SelectValue,
+  Skeleton,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
 } from "@/components/ui";
+import { useAuth } from "@/hooks";
+import { useLibrary } from "@/hooks/use-library";
+import { apiClient } from "@/lib/api-client";
+import { ROUTES } from "@/lib/constants";
 import {
-  Database,
-  Search,
-  Trash2,
-  FileText,
-  Plus,
-  Upload,
-  CheckCircle,
-  XCircle,
-  Eye,
-} from "lucide-react";
-import {
-  listCollections,
-  getCollectionInfo,
   createCollection,
   deleteCollection,
-  listTrackedDocuments,
+  deleteDocument,
   deleteTrackedDocument,
-  ingestFile,
-  searchDocuments,
+  getCollectionInfo,
   getDocumentDownloadUrl,
+  listCollections,
+  listDocuments,
+  listTrackedDocuments,
   type RAGCollectionInfo,
-  type RAGTrackedDocument,
-  type RAGSearchResult,
 } from "@/lib/rag-api";
-import { DragDropOverlay } from "@/components/rag/drag-drop-overlay";
-import { apiClient } from "@/lib/api-client";
+import { getErrorMessage, isAppAdmin } from "@/lib/utils";
 
-import { getErrorMessage, isAppAdmin, MAX_UPLOAD_SIZE_MB } from "@/lib/utils";
+const DEFAULT_FORMATS = [".pdf", ".docx", ".md", ".txt"];
 
-interface CollectionWithInfo {
-  name: string;
-  info: RAGCollectionInfo | null;
-}
-
-function StatusIcon({ status }: { status: string }) {
-  const label = status === "done" ? "已完成" : status === "error" ? "失败" : "处理中";
+function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
-    <span role="status" aria-label={label}>
-      {status === "done" && <CheckCircle className="text-foreground h-4 w-4" />}
-      {status === "error" && <XCircle className="text-destructive h-4 w-4" />}
-      {status !== "done" && status !== "error" && (
-        <Spinner className="text-muted-foreground h-4 w-4" />
-      )}
-    </span>
+    <div className="bg-card rounded-xl border px-4 py-3">
+      <p className="text-muted-foreground text-xs">{label}</p>
+      <p className="mt-0.5 text-xl font-semibold tabular-nums">{value}</p>
+      {hint && <p className="text-muted-foreground mt-0.5 text-xs">{hint}</p>}
+    </div>
   );
 }
 
-export default function RAGPage() {
+export default function KnowledgeBasePage() {
   const { user } = useAuth();
-  const [collections, setCollections] = useState<CollectionWithInfo[]>([]);
-  const [selected, setSelected] = useState<string>("");
-  const [docs, setDocs] = useState<RAGTrackedDocument[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<RAGSearchResult[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [docsLoading, setDocsLoading] = useState(false);
-  const [searching, setSearching] = useState(false);
-  const [searchDone, setSearchDone] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState<{
-    current: number;
-    total: number;
-    filename: string;
-  } | null>(null);
-  const [newName, setNewName] = useState("");
-  const [showCreate, setShowCreate] = useState(false);
-  const [tab, setTabState] = useState<"documents" | "search">(() => {
-    if (typeof window !== "undefined") {
-      const t = new URLSearchParams(window.location.search).get("tab");
-      if (t === "search") return t;
-    }
-    return "documents";
-  });
-  const setTab = (t: "documents" | "search") => {
-    setTabState(t);
-    const url = new URL(window.location.href);
-    if (t === "documents") url.searchParams.delete("tab");
-    else url.searchParams.set("tab", t);
-    window.history.replaceState({}, "", url.toString());
-  };
-  const [supportedFormats, setSupportedFormats] = useState<string[]>([
-    ".pdf",
-    ".docx",
-    ".txt",
-    ".md",
-  ]);
-  const fileRef = useRef<HTMLInputElement>(null);
+  const { library, loading: libraryLoading } = useLibrary();
+  const chatCollection = library?.collection;
 
-  const fetchCollections = useCallback(async () => {
-    setLoading(true);
+  const [collections, setCollections] = useState<string[]>([]);
+  const [selected, setSelected] = useState("");
+  const [info, setInfo] = useState<RAGCollectionInfo | null>(null);
+  const [documents, setDocuments] = useState<KbDocument[]>([]);
+  const [untracked, setUntracked] = useState(false);
+  const [formats, setFormats] = useState(DEFAULT_FORMATS);
+  const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [confirmDrop, setConfirmDrop] = useState(false);
+
+  const loadCollections = useCallback(async () => {
     try {
       const data = await listCollections();
-      const items: CollectionWithInfo[] = [];
-      for (const name of data.items) {
-        try {
-          items.push({ name, info: await getCollectionInfo(name) });
-        } catch {
-          items.push({ name, info: null });
-        }
-      }
-      setCollections(items);
-      setSelected((prev) => (items.length > 0 && !prev ? (items[0]?.name ?? "") : prev));
+      setCollections(data.items);
+      return data.items;
     } catch {
-      toast.error("加载集合失败");
-    } finally {
-      setLoading(false);
+      toast.error("加载资料集失败");
+      return [] as string[];
     }
   }, []);
 
-  const fetchDocs = async (col: string) => {
-    if (!col) {
-      setDocs([]);
-      return;
-    }
-    setDocsLoading(true);
+  const loadSelected = useCallback(async (name: string) => {
+    if (!name) return;
     try {
-      const data = await listTrackedDocuments(col);
-      setDocs(data.items || []);
+      const [collectionInfo, tracked] = await Promise.all([getCollectionInfo(name), listTrackedDocuments(name)]);
+      setInfo(collectionInfo);
+      if (tracked.items.length > 0) {
+        setUntracked(false);
+        setDocuments(
+          tracked.items.map((doc) => ({
+            key: doc.id,
+            name: doc.filename,
+            type: doc.filetype,
+            sizeBytes: doc.filesize,
+            chunks: doc.chunk_count,
+            status: doc.status,
+            error: doc.error_message,
+            createdAt: doc.created_at,
+            viewUrl: doc.has_file ? getDocumentDownloadUrl(doc.id) : undefined,
+          })),
+        );
+        return;
+      }
+      // Imported by a script: no upload records, but the vector store still knows the files.
+      const stored = collectionInfo.total_vectors > 0 ? await listDocuments(name).catch(() => null) : null;
+      setUntracked(Boolean(stored?.items.length));
+      setDocuments(
+        (stored?.items ?? []).map((doc) => ({
+          key: `vector:${doc.document_id}`,
+          name: doc.filename ?? doc.document_id,
+          type: doc.filetype ?? "",
+          sizeBytes: doc.filesize || undefined,
+          chunks: doc.chunk_count,
+          status: "done" as const,
+        })),
+      );
     } catch {
-      setDocs([]);
-    } finally {
-      setDocsLoading(false);
+      toast.error("加载资料失败");
     }
-  };
-
+  }, []);
 
   useEffect(() => {
-    fetchCollections();
+    // Wait for the chat's collection so it can be the default selection.
+    if (libraryLoading) return;
+    void loadCollections().then((items) => {
+      setLoading(false);
+      setSelected((current) => current || (chatCollection && items.includes(chatCollection) ? chatCollection : (items[0] ?? "")));
+    });
+  }, [loadCollections, chatCollection, libraryLoading]);
+
+  useEffect(() => {
+    void loadSelected(selected);
+  }, [selected, loadSelected]);
+
+  useEffect(() => {
     apiClient
       .get<{ formats: string[] }>("/rag/supported-formats")
-      .then((data) => {
-        if (data?.formats) setSupportedFormats(data.formats);
-      })
+      .then((data) => data?.formats?.length && setFormats(data.formats))
       .catch(() => {});
-  }, [fetchCollections]);
-  useEffect(() => {
-    if (selected) fetchDocs(selected);
-  }, [selected]);
+  }, []);
 
-  // Poll while any document is still being ingested (the backend has no push channel for status).
-  const hasProcessing = docs.some((d) => d.status === "processing");
+  // The backend has no push channel for ingestion status, so poll while anything is still parsing.
+  const hasProcessing = documents.some((doc) => doc.status === "processing");
   useEffect(() => {
     if (!hasProcessing || !selected) return;
-    const timer = setInterval(async () => {
-      try {
-        const data = await listTrackedDocuments(selected);
-        const next = data.items || [];
-        setDocs((prev) => {
-          for (const doc of next) {
-            const before = prev.find((d) => d.id === doc.id);
-            if (before?.status === "processing" && doc.status === "done") {
-              toast.success(`${doc.filename}：入库完成`);
-            } else if (before?.status === "processing" && doc.status === "error") {
-              toast.error(`${doc.filename}：入库失败`);
-            }
-          }
-          return next;
-        });
-        if (next.every((d) => d.status !== "processing")) fetchCollections();
-      } catch {}
-    }, 3000);
+    const timer = setInterval(() => void loadSelected(selected), 3000);
     return () => clearInterval(timer);
-  }, [hasProcessing, selected, fetchCollections]);
+  }, [hasProcessing, selected, loadSelected]);
+
+  const totals = useMemo(
+    () => ({ files: documents.filter((doc) => doc.status === "done").length, chunks: info?.total_vectors ?? 0 }),
+    [documents, info],
+  );
+
+  const refresh = useCallback(async () => {
+    await Promise.all([loadCollections(), loadSelected(selected)]);
+  }, [loadCollections, loadSelected, selected]);
 
   const handleCreate = async () => {
     const name = newName.trim().toLowerCase().replace(/\s+/g, "_");
     if (!name) return;
     try {
       await createCollection(name);
-      toast.success(`已创建集合「${name}」`);
+      toast.success(`已创建资料集「${name}」`);
+      setCreating(false);
       setNewName("");
-      setShowCreate(false);
-      await fetchCollections();
+      await loadCollections();
       setSelected(name);
-    } catch {
-      toast.error("创建集合失败");
+    } catch (error) {
+      toast.error(getErrorMessage(error, "创建失败，名称只能包含字母、数字和下划线"));
     }
   };
 
-  const handleDelete = async (name: string) => {
+  const handleDeleteDocument = async (doc: KbDocument) => {
     try {
-      await deleteCollection(name);
-      toast.success(`已删除集合「${name}」`);
-      setCollections((prev) => prev.filter((c) => c.name !== name));
-      if (selected === name) {
-        setSelected("");
-        setDocs([]);
-        setSearchResults([]);
-      }
-    } catch {
-      toast.error("删除失败");
+      if (doc.key.startsWith("vector:")) await deleteDocument(selected, doc.key.slice("vector:".length));
+      else await deleteTrackedDocument(doc.key);
+      toast.success("已删除");
+      await refresh();
+    } catch (error) {
+      toast.error(getErrorMessage(error, "删除失败"));
     }
   };
 
-  const handleDeleteDoc = async (docId: string) => {
+  const handleDropCollection = async () => {
     try {
-      await deleteTrackedDocument(docId);
-      toast.success("文档已删除");
-      setDocs((prev) => prev.filter((d) => d.id !== docId));
-      fetchCollections();
-    } catch {
-      toast.error("删除失败");
+      await deleteCollection(selected);
+      toast.success(`已删除资料集「${selected}」`);
+      setSelected("");
+      setConfirmDrop(false);
+      const items = await loadCollections();
+      setSelected(items[0] ?? "");
+    } catch (error) {
+      toast.error(getErrorMessage(error, "删除失败"));
     }
   };
-
-  const processFiles = useCallback(
-    async (fileList: File[]) => {
-      if (!selected || fileList.length === 0) return;
-      const allowedExts = supportedFormats.map((f) => f.toLowerCase());
-      let successCount = 0;
-      let errorCount = 0;
-
-      setUploading(true);
-      for (let i = 0; i < fileList.length; i++) {
-        const file: File | undefined = fileList[i];
-        if (!file) continue;
-        setUploadProgress({ current: i + 1, total: fileList.length, filename: file.name });
-
-        const ext = "." + (file.name.split(".").pop()?.toLowerCase() ?? "");
-        if (allowedExts.length > 0 && !allowedExts.includes(ext)) {
-          toast.error(`${file.name}: 不支持的格式（${ext}）`);
-          errorCount++;
-          continue;
-        }
-        if (file.size > MAX_UPLOAD_SIZE_MB * 1024 * 1024) {
-          toast.error(`${file.name}: 文件过大（上限 ${MAX_UPLOAD_SIZE_MB}MB）`);
-          errorCount++;
-          continue;
-        }
-
-        try {
-          await ingestFile(selected, file);
-          successCount++;
-        } catch (err) {
-          toast.error(`${file.name}: ${getErrorMessage(err, "失败")}`);
-          errorCount++;
-        }
-      }
-
-      setUploading(false);
-      setUploadProgress(null);
-
-      if (successCount > 0) {
-        toast.success(
-          `${successCount} 个文件已提交入库${errorCount > 0 ? `，${errorCount} 个失败` : ""}`,
-        );
-      }
-
-      await fetchDocs(selected);
-      await fetchCollections();
-    },
-    [selected, supportedFormats, fetchCollections],
-  );
-
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files) return;
-    // Copy before resetting: the FileList is live and is emptied by clearing the input value.
-    const files = Array.from(e.target.files);
-    e.target.value = "";
-    await processFiles(files);
-  };
-
-  const handleDrop = useCallback(
-    (files: File[]) => {
-      if (!selected) {
-        toast.error("请先选择集合再拖入文件");
-        return;
-      }
-      processFiles(files);
-    },
-    [selected, processFiles],
-  );
-
-  const handleSearch = async () => {
-    if (!searchQuery.trim() || !selected) return;
-    setSearching(true);
-    try {
-      const data = await searchDocuments({
-        query: searchQuery,
-        collection_name: selected,
-        limit: 10,
-      });
-      setSearchResults(data.results);
-      setSearchDone(true);
-    } catch {
-      toast.error("检索失败");
-    } finally {
-      setSearching(false);
-    }
-  };
-
-  const info = collections.find((c) => c.name === selected)?.info;
 
   if (user && !isAppAdmin(user)) {
     return (
-      <div className="border-border bg-card text-muted-foreground mx-auto mt-10 max-w-md rounded-xl border p-8 text-center">
-        <Database className="mx-auto mb-3 h-8 w-8" />
-        <p className="text-foreground text-sm font-medium">知识库管理需要管理员权限</p>
-        <p className="mt-1 text-xs">你仍可以在「对话」中向已入库的知识库提问。</p>
+      <div className="mx-auto mt-16 max-w-md px-6 text-center">
+        <Database className="text-muted-foreground mx-auto mb-3 h-8 w-8" />
+        <p className="text-sm font-medium">知识库管理需要管理员权限</p>
+        <p className="text-muted-foreground mt-1 text-xs">你仍可以在「对话」中向已入库的资料提问。</p>
+        <Button asChild variant="outline" className="mt-4">
+          <Link href={ROUTES.CHAT}>去对话</Link>
+        </Button>
       </div>
     );
   }
 
-  const tabs: { key: "documents" | "search"; label: string }[] = [
-    { key: "documents", label: docs.length > 0 ? `文档（${docs.length}）` : "文档" },
-    { key: "search", label: "检索验证" },
-  ];
+  const isChatCollection = selected !== "" && selected === chatCollection;
 
   return (
-    <div className="space-y-6">
-      <DragDropOverlay
-        onDrop={handleDrop}
-        disabled={!selected || uploading}
-        title={selected ? `将文件拖入「${selected}」` : "拖入文件上传"}
-        description={
-          selected
-            ? "文件将入库到当前集合"
-            : "请先选择集合"
-        }
-        acceptedFormats={supportedFormats}
-      />
-
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">知识库</h1>
-        <p className="text-muted-foreground mt-1 text-sm">
-          管理文档集合、上传 PDF / Word / Markdown / 文本文件，并在「检索验证」里查看系统能找到哪些资料。
-        </p>
-      </div>
-
-      <div className="border-border bg-card rounded-xl border p-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-1 flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2">
-              <Database className="text-muted-foreground h-4 w-4 shrink-0" />
-              <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-                集合
-              </span>
-            </div>
-            {loading ? (
-              <Skeleton className="h-9 w-56 rounded-xl" />
-            ) : collections.length === 0 ? (
-              <span className="text-muted-foreground text-sm">还没有集合，请先新建一个</span>
-            ) : (
-              <Select
-                value={selected}
-                onValueChange={(v) => {
-                  setSelected(v);
-                  setSearchResults([]);
-                  setSearchDone(false);
-                  setTab("documents");
-                }}
-              >
-                <SelectTrigger className="h-9 w-full rounded-xl sm:w-72">
-                  <SelectValue placeholder="选择集合" />
-                </SelectTrigger>
-                <SelectContent>
-                  {collections.map((col) => (
-                    <SelectItem key={col.name} value={col.name}>
-                      {col.name}
-                      {col.info ? ` · ${col.info.total_vectors.toLocaleString()} 向量` : ""}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-            {info && (
-              <span className="text-muted-foreground font-mono text-xs">
-                {info.total_vectors.toLocaleString()} 向量 · {info.dim} 维
-              </span>
-            )}
-          </div>
-
-          <div className="flex shrink-0 items-center gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              className="rounded-xl"
-              onClick={() => setShowCreate((v) => !v)}
-            >
-              <Plus className="mr-1.5 h-3.5 w-3.5" />
-              新建集合
-            </Button>
-            {uploadProgress ? (
-              <div
-                className="text-muted-foreground flex items-center gap-2 text-xs"
-                role="status"
-                aria-live="polite"
-              >
-                <Spinner className="text-muted-foreground h-3.5 w-3.5" aria-hidden="true" />
-                <span className="font-mono">
-                  {uploadProgress.current}/{uploadProgress.total}
-                </span>
-                <span className="max-w-[120px] truncate">{uploadProgress.filename}</span>
-              </div>
-            ) : (
-              <Button
-                size="sm"
-                variant="outline"
-                className="rounded-xl"
-                onClick={() => fileRef.current?.click()}
-                disabled={uploading || !selected}
-              >
-                <Upload className="mr-1.5 h-3.5 w-3.5" />
-                上传文件
-              </Button>
-            )}
-            {selected && (
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="text-destructive hover:text-destructive rounded-xl"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>删除集合「{selected}」？</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      该集合内所有文档和向量将被永久删除。
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>取消</AlertDialogCancel>
-                    <AlertDialogAction
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                      onClick={() => handleDelete(selected)}
-                    >
-                      删除
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            )}
-            <input
-              ref={fileRef}
-              type="file"
-              onChange={handleUpload}
-              accept={supportedFormats.join(",")}
-              multiple
-              className="hidden"
-            />
-          </div>
+    <div className="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 sm:px-6">
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">知识库</h1>
+          <p className="text-muted-foreground mt-1 text-sm">系统只根据这里的资料回答问题。上传文件后，马上就能在「对话」里提问。</p>
         </div>
+        <Button asChild variant="outline" size="sm" className="gap-1.5">
+          <Link href={ROUTES.CHAT}>
+            <MessageSquare className="h-4 w-4" />
+            去对话试试
+          </Link>
+        </Button>
+      </header>
 
-        {showCreate && (
-          <div className="border-border mt-3 flex gap-2 border-t pt-3">
-            <Input
-              placeholder="collection_name"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleCreate()}
-              className="h-9 max-w-xs rounded-xl"
-            />
-            <Button size="sm" className="h-9 rounded-xl" onClick={handleCreate}>
-              创建
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-9 rounded-xl"
-              onClick={() => {
-                setShowCreate(false);
-                setNewName("");
-              }}
-            >
-              Cancel
-            </Button>
-          </div>
-        )}
-
-        {uploadProgress && (
-          <div className="mt-3">
-            <div className="bg-muted h-1 w-full overflow-hidden rounded-full">
-              <div
-                className="bg-foreground h-full rounded-full transition-all"
-                style={{ width: `${(uploadProgress.current / uploadProgress.total) * 100}%` }}
-              />
-            </div>
-          </div>
-        )}
-      </div>
-
-      {!selected ? (
-        <div className="border-border bg-card text-muted-foreground flex flex-col items-center justify-center rounded-xl border py-16 text-center">
-          <Database className="mb-3 h-8 w-8" />
-          <p className="text-sm">请选择或新建一个集合开始使用。</p>
+      {loading ? (
+        <Skeleton className="h-24 w-full rounded-xl" />
+      ) : collections.length === 0 ? (
+        <div className="rounded-xl border border-dashed py-14 text-center">
+          <Database className="text-muted-foreground mx-auto mb-3 h-8 w-8" />
+          <p className="text-sm font-medium">还没有资料集</p>
+          <p className="text-muted-foreground mt-1 text-xs">资料集是一组相关文件的集合，先建一个再上传文件。</p>
+          <Button className="mt-4 gap-1.5" onClick={() => setCreating(true)}>
+            <FolderPlus className="h-4 w-4" />
+            新建资料集
+          </Button>
         </div>
       ) : (
         <>
-          <div className="border-border flex gap-1 border-b">
-            {tabs.map((t) => (
-              <button
-                key={t.key}
-                onClick={() => {
-                  setTab(t.key);
-                }}
-                className={`-mb-px border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
-                  tab === t.key
-                    ? "border-foreground text-foreground"
-                    : "text-muted-foreground hover:text-foreground border-transparent"
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
+          <div className="flex flex-wrap items-center gap-2">
+            <Select value={selected} onValueChange={setSelected}>
+              <SelectTrigger className="h-10 w-64 rounded-xl">
+                <SelectValue placeholder="选择资料集" />
+              </SelectTrigger>
+              <SelectContent>
+                {collections.map((name) => (
+                  <SelectItem key={name} value={name}>
+                    {name}
+                    {name === chatCollection ? "（对话在用）" : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {isChatCollection ? (
+              <span className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-400">对话正在使用这个资料集</span>
+            ) : (
+              <span className="text-muted-foreground text-xs">对话不会使用这个资料集；对话使用的是「{chatCollection ?? "—"}」</span>
+            )}
+            <span className="ml-auto flex gap-2">
+              <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setCreating(true)}>
+                <FolderPlus className="h-4 w-4" />
+                新建资料集
+              </Button>
+              <Button variant="outline" size="sm" className="text-destructive gap-1.5" onClick={() => setConfirmDrop(true)} disabled={!selected}>
+                <Trash2 className="h-4 w-4" />
+                删除资料集
+              </Button>
+            </span>
           </div>
 
-          {tab === "documents" &&
-            (docsLoading ? (
-              <div className="space-y-2">
-                {[1, 2, 3].map((i) => (
-                  <Skeleton key={i} className="h-16 w-full rounded-xl" />
-                ))}
-              </div>
-            ) : docs.length === 0 ? (
-              <div className="border-border bg-card flex flex-col items-center justify-center rounded-xl border py-16 text-center">
-                <FileText className="text-muted-foreground mb-3 h-8 w-8" />
-                <p className="text-foreground text-sm font-medium">暂无文档</p>
-                <p className="text-muted-foreground mt-1 text-xs">上传 PDF、DOCX、TXT 或 MD</p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-4 rounded-xl"
-                  onClick={() => fileRef.current?.click()}
-                >
-                  <Upload className="mr-2 h-4 w-4" /> 上传文件
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {docs.map((doc) => (
-                  <div
-                    key={doc.id}
-                    className="border-border bg-card hover:bg-accent flex items-center justify-between rounded-xl border p-3 transition-colors"
-                  >
-                    <div className="flex items-center gap-3 overflow-hidden">
-                      <StatusIcon status={doc.status} />
-                      <div className="min-w-0">
-                        <p className="text-foreground truncate text-sm font-medium">
-                          {doc.filename}
-                        </p>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="font-mono text-[10px]">
-                            {doc.filetype.toUpperCase()}
-                          </Badge>
-                          {doc.status === "done" && (
-                            <span className="text-muted-foreground font-mono text-xs">
-                              {(doc.filesize / 1024).toFixed(0)} KB
-                            </span>
-                          )}
-                          {doc.status === "processing" && (
-                            <span className="text-muted-foreground text-xs">处理中...</span>
-                          )}
-                          {doc.status === "error" && (
-                            <span className="text-destructive max-w-[200px] truncate text-xs">
-                              {doc.error_message}
-                            </span>
-                          )}
-                          {doc.created_at && (
-                            <span className="text-muted-foreground text-[10px]">
-                              {new Date(doc.created_at).toLocaleDateString()}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex shrink-0 items-center gap-0.5">
-                      {doc.has_file && (
-                        <a
-                          href={getDocumentDownloadUrl(doc.id)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg p-1.5 transition-colors"
-                          title="查看原文件"
-                        >
-                          <Eye className="h-3.5 w-3.5" />
-                        </a>
-                      )}
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <button className="text-destructive hover:bg-accent rounded-lg p-1.5 transition-colors">
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>删除「{doc.filename}」？</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              将从向量库和存储中移除该文档。
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>取消</AlertDialogCancel>
-                            <AlertDialogAction
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                              onClick={() => handleDeleteDoc(doc.id)}
-                            >
-                              删除
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ))}
+          <div className="grid gap-3 sm:grid-cols-3">
+            <Stat label="已入库文件" value={String(totals.files)} />
+            <Stat label="资料段数" value={String(totals.chunks)} hint="文件会被切成若干段，回答时按段引用" />
+            <Stat label="处理中" value={String(documents.filter((doc) => doc.status === "processing").length)} />
+          </div>
 
-          {tab === "search" && (
-            <div className="space-y-4">
-              <div className="border-border bg-card rounded-xl border p-4">
-                <div className="flex gap-2">
-                  <Input
-                    placeholder={`在「${selected}」中检索...`}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                    className="rounded-xl"
-                  />
-                  <Button
-                    onClick={handleSearch}
-                    disabled={searching || !searchQuery.trim()}
-                    className="rounded-xl"
-                  >
-                    <Search className="mr-2 h-4 w-4" />
-                    {searching ? "..." : "检索"}
-                  </Button>
-                </div>
-              </div>
-
-              {searchDone && searchResults.length === 0 && !searching && (
-                <div className="border-border bg-card flex flex-col items-center justify-center rounded-xl border py-12 text-center">
-                  <Search className="text-muted-foreground mb-3 h-8 w-8" />
-                  <p className="text-foreground text-sm font-medium">没有检索到结果</p>
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    换一个问法，或检查其他集合
-                  </p>
+          <Tabs defaultValue="files">
+            <TabsList>
+              <TabsTrigger value="files" className="gap-1.5">
+                <Layers className="h-4 w-4" />
+                文件
+              </TabsTrigger>
+              <TabsTrigger value="search">检索验证</TabsTrigger>
+            </TabsList>
+            <TabsContent value="files" className="mt-4 space-y-4">
+              {selected && <KbUpload collection={selected} formats={formats} onUploaded={() => void refresh()} />}
+              {untracked && (
+                <p className="text-muted-foreground rounded-lg border border-dashed px-3 py-2 text-xs leading-relaxed">
+                  这些文件是用脚本导入的，没有上传记录，所以看不到上传时间，也不能下载原文件，但可以正常用于回答。
+                </p>
+              )}
+              {documents.length > 0 ? (
+                <KbDocuments documents={documents} onDelete={handleDeleteDocument} />
+              ) : (
+                <div className="text-muted-foreground rounded-xl border border-dashed py-10 text-center text-sm">
+                  {info && info.total_vectors > 0 ? "这个资料集里有内容，但无法列出文件。" : "这个资料集还是空的，先上传几个文件吧。"}
                 </div>
               )}
-
-              {searchResults.length > 0 && (
-                <div className="space-y-2">
-                  {searchResults.map((r, i) => {
-                    // Try to find the source document for "View source" link
-                    const sourceDoc = docs.find(
-                      (d) => d.filename === r.metadata?.filename && d.has_file,
-                    );
-                    return (
-                      <div
-                        key={i}
-                        className="border-border bg-card rounded-xl border p-4 transition-colors"
-                      >
-                        <div className="mb-2 flex flex-wrap items-center gap-2">
-                          <FileText className="text-muted-foreground h-3.5 w-3.5" />
-                          <span className="text-foreground text-xs font-medium">
-                            {String(r.metadata?.filename ?? "?")}
-                          </span>
-                          {r.metadata?.page_num != null && (
-                            <Badge variant="outline" className="font-mono text-[10px]">
-                              p.{String(r.metadata.page_num)}
-                            </Badge>
-                          )}
-                          <Badge variant="secondary" className="ml-auto font-mono text-[10px]">
-                            {r.score.toFixed(3)}
-                          </Badge>
-                          {sourceDoc && (
-                            <a
-                              href={getDocumentDownloadUrl(sourceDoc.id)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-[10px] font-medium"
-                            >
-                              <Eye className="h-3 w-3" /> 查看来源
-                            </a>
-                          )}
-                        </div>
-                        <p className="text-muted-foreground text-sm leading-relaxed">{r.content}</p>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
+            </TabsContent>
+            <TabsContent value="search" className="mt-4">
+              {selected && <KbSearch collection={selected} />}
+            </TabsContent>
+          </Tabs>
         </>
       )}
+
+      <Dialog open={creating} onOpenChange={setCreating}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>新建资料集</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-1.5">
+            <Input
+              value={newName}
+              onChange={(event) => setNewName(event.target.value)}
+              onKeyDown={(event) => event.key === "Enter" && !event.nativeEvent.isComposing && void handleCreate()}
+              placeholder="例如 teacher_handbook"
+              autoFocus
+            />
+            <p className="text-muted-foreground text-xs">名称只能用英文字母、数字和下划线。</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreating(false)}>
+              取消
+            </Button>
+            <Button onClick={() => void handleCreate()} disabled={!newName.trim()}>
+              创建
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <ConfirmDialog
+        open={confirmDrop}
+        onOpenChange={setConfirmDrop}
+        title={`删除资料集「${selected}」？`}
+        description="集合里的所有文件和段落都会被永久删除。如果对话正在使用它，之后将无法回答。"
+        confirmText={selected}
+        confirmLabel="永久删除"
+        cancelLabel="取消"
+        destructive
+        onConfirm={handleDropCollection}
+      />
     </div>
   );
 }
-
