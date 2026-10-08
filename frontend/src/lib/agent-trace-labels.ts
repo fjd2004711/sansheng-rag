@@ -11,6 +11,7 @@ export const TRACE_STEP_LABELS: Record<string, string> = {
   retrieve_missing: "补充检索",
   regenerate: "依据资料重新作答",
   answer_reverify: "再次核对回答",
+  partial_answer: "先给出能确认的部分",
   abstain: "如实告知查不到",
   max_rounds_reached: "已达纠错次数上限",
 };
@@ -59,6 +60,7 @@ export function progressText(last: AgentTraceEvent | undefined): string {
     case "regenerate":
       return "正在再次核对修改后的回答…";
     case "answer_reverify":
+    case "partial_answer":
     case "abstain":
       return "正在输出回答…";
     default:

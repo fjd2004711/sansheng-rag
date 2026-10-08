@@ -133,3 +133,70 @@ async def test_failed_corrective_generation_stops_at_the_configured_bound() -> N
     assert result.abstained
     assert result.correction_round == 1
     assert result.trace[-1].step == "abstain"
+
+
+def partial_assessment(groundedness: float, citation_coverage: float = 1.0) -> AnswerAssessment:
+    return AnswerAssessment(
+        groundedness=groundedness,
+        completeness=0.4,
+        answer_relevance=0.9,
+        citation_coverage=citation_coverage,
+        sufficient=False,
+        failure_type=AnswerFailureType.INCOMPLETE,
+        failure_reason="part of the question is not covered",
+        missing_information=["consequence of missing a class observation"],
+    )
+
+
+@pytest.mark.anyio
+async def test_faithful_but_incomplete_regeneration_is_kept_as_a_partial_answer() -> None:
+    evaluator = FakeEvaluator(
+        assessment(False, AnswerFailureType.HALLUCINATION), partial_assessment(0.95)
+    )
+
+    async def search(query: str) -> str:
+        raise AssertionError("hallucination correction uses existing evidence")
+
+    result = await GenerationCorrector(search, evaluator, max_corrections=1).run(
+        "Question", "Unsupported", "[1] Evidence"
+    )
+
+    assert not result.abstained
+    assert result.answer == "Corrected, evidence-grounded answer [1]."
+    assert result.trace[-1].step == "partial_answer"
+    assert result.trace[-1].detail["missing_information"] == [
+        "consequence of missing a class observation"
+    ]
+
+
+@pytest.mark.anyio
+async def test_regeneration_that_is_not_faithful_still_abstains() -> None:
+    evaluator = FakeEvaluator(
+        assessment(False, AnswerFailureType.HALLUCINATION), partial_assessment(0.4)
+    )
+
+    async def search(query: str) -> str:
+        raise AssertionError("hallucination correction uses existing evidence")
+
+    result = await GenerationCorrector(search, evaluator, max_corrections=1).run(
+        "Question", "Unsupported", "[1] Evidence"
+    )
+
+    assert result.abstained
+    assert result.trace[-1].step == "abstain"
+
+
+@pytest.mark.anyio
+async def test_regeneration_without_citations_still_abstains() -> None:
+    evaluator = FakeEvaluator(
+        assessment(False, AnswerFailureType.HALLUCINATION), partial_assessment(0.95, 0.0)
+    )
+
+    async def search(query: str) -> str:
+        raise AssertionError("hallucination correction uses existing evidence")
+
+    result = await GenerationCorrector(search, evaluator, max_corrections=1).run(
+        "Question", "Unsupported", "[1] Evidence"
+    )
+
+    assert result.abstained

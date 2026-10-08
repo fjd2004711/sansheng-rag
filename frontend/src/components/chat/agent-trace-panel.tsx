@@ -47,6 +47,8 @@ function describe(event: AgentTraceEvent): string | undefined {
       return `补查：「${str(d.query) ?? ""}」`;
     case "regenerate":
       return event.status === "ABSTAIN" ? "没有可用资料，不再作答" : "只依据已找到的资料重新写回答";
+    case "partial_answer":
+      return "资料只覆盖了问题的一部分：先给出有依据的内容，并说明哪些没有规定";
     case "abstain":
       return "资料库里没有足够依据，如实告知而不编造";
     case "max_rounds_reached":

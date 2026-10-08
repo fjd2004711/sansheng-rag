@@ -8,6 +8,7 @@ from typing import Any
 
 from openai import AsyncOpenAI
 
+from app.core.clock import today_zh
 from app.core.config import settings
 from app.services.rag.generation.models import (
     AnswerAssessment,
@@ -17,6 +18,11 @@ from app.services.rag.generation.models import (
 )
 
 _ABSTAIN_MESSAGE = "知识库中没有找到足以回答该问题的证据。"
+_DATE_RULE = (
+    "When a conclusion depends on dates or deadlines, first write out the exact interval from today "
+    "to the target date, then compare it with the required lead time: an interval LONGER than the "
+    "required lead time means the deadline has NOT been missed yet."
+)
 
 
 class AnswerEvaluator:
@@ -47,8 +53,14 @@ class AnswerEvaluator:
             "out_of_scope|null), failure_reason, missing_information (string array), claims "
             "(array of {claim, supported, citation_indices, reason}). A claim without support or "
             "a matching inline [n] citation is not fully grounded. Use out_of_scope only when "
-            "the knowledge base is unlikely to contain the needed answer.\n"
-            f"Question: {question}\nAnswer: {answer}\nEvidence:\n{evidence[:9000]}"
+            "the knowledge base is unlikely to contain the needed answer. A claim that only applies "
+            "the evidence to the question (arithmetic, comparing dates, deciding whether a stated "
+            "rule is met) is supported when the reasoning is correct given today's date. An answer "
+            "that is faithful to the evidence but openly says some part is not covered by the "
+            "knowledge base is grounded; mark it incomplete, not hallucination. Independently recompute "
+            "any date or deadline conclusion from today's date; if the answer's conclusion contradicts "
+            "your own computation, mark it hallucination.\n"
+            f"Today's date: {today_zh()}\nQuestion: {question}\nAnswer: {answer}\nEvidence:\n{evidence[:9000]}"
         )
         parsed = _json_object(await self._complete(prompt))
         if parsed:
@@ -95,8 +107,12 @@ class AnswerEvaluator:
         prompt = (
             "Answer the question using only the numbered RAG evidence below. Every factual claim "
             "needs an inline citation like [1]. Do not invent facts, sources, or citation numbers. "
-            f"If the evidence is insufficient, reply exactly: {_ABSTAIN_MESSAGE}\n"
-            f"Question: {question}\nEvidence:\n{evidence[:9000]}"
+            "Answer every part the evidence supports; for a part it does not cover, say plainly "
+            "that the knowledge base has no information about that part, instead of guessing. "
+            f"Only if the evidence contains nothing relevant, reply exactly: {_ABSTAIN_MESSAGE}\n"
+            "Reply in the language of the question. Use today's date for relative times. "
+            f"{_DATE_RULE}\n"
+            f"Today's date: {today_zh()}\nQuestion: {question}\nEvidence:\n{evidence[:9000]}"
         )
         answer = (await self._complete(prompt)).strip()
         return answer or _ABSTAIN_MESSAGE
