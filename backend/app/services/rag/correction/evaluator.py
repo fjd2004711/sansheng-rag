@@ -72,6 +72,7 @@ class EvidenceEvaluator:
             '(rewrite|expand|abstain), rewritten_query (string or null), missing_information '
             '(string array), failure_type (insufficient_evidence|ambiguous_query|out_of_scope|'
             'irrelevant_evidence), failure_reason (string). '
+            'rewritten_query must be ONE short search phrase (under 30 characters, keywords only, no sentence, no explanation). '
             'Write failure_reason and every missing_information item in Chinese, as plain sentences a non-technical reader understands (say what is missing or wrong, not internal terms). Prefer abstain only when the '
             "knowledge base is unlikely to contain the answer.\n"
             f"Question: {question}\nCurrent query: {query}\nAssessment: {assessment.model_dump_json()}"
@@ -87,10 +88,7 @@ class EvidenceEvaluator:
                     # P2 must try a bounded corrective search before refusing to answer.
                     return Diagnosis(
                         action=CorrectionAction.REWRITE,
-                        rewritten_query=(
-                            diagnosis.rewritten_query
-                            or f"{question} {' '.join(assessment.missing_information)}"
-                        ).strip(),
+                        rewritten_query=clean_query(diagnosis.rewritten_query or "", question),
                         missing_information=(
                             diagnosis.missing_information or assessment.missing_information
                         ),
@@ -98,6 +96,7 @@ class EvidenceEvaluator:
                         failure_reason=diagnosis.failure_reason,
                     )
                 if diagnosis.rewritten_query:
+                    diagnosis.rewritten_query = clean_query(diagnosis.rewritten_query, question)
                     return diagnosis
             except Exception:
                 pass
@@ -110,7 +109,7 @@ class EvidenceEvaluator:
             )
         return Diagnosis(
             action=CorrectionAction.REWRITE,
-            rewritten_query=f"{question} {', '.join(assessment.missing_information)}".strip(),
+            rewritten_query=clean_query("", question),
             failure_type=assessment.failure_type or FailureType.INSUFFICIENT_EVIDENCE,
             failure_reason=assessment.failure_reason or "找到的资料不足以回答这个问题。",
             missing_information=assessment.missing_information,
@@ -124,6 +123,24 @@ class EvidenceEvaluator:
             extra_body=settings.llm_extra_body,
         )
         return response.choices[0].message.content or ""
+
+
+MAX_QUERY_CHARS = 60
+
+
+def clean_query(candidate: str, question: str) -> str:
+    """A search query must be a short phrase: keep the first line, bounded; fall back to the question.
+
+    Models sometimes return a sentence or append their reasoning to the query; sending that to
+    retrieval pollutes the second round. When nothing usable is left, ask again with the question
+    plus a generic "具体规定" so the retry still differs from the first search.
+    """
+    first_line = (candidate or "").strip().splitlines()[0].strip() if (candidate or "").strip() else ""
+    if first_line and len(first_line) <= MAX_QUERY_CHARS:
+        return first_line
+    if first_line:
+        return first_line[:MAX_QUERY_CHARS].rstrip()
+    return f"{question.strip()} 具体规定"[: MAX_QUERY_CHARS + 8]
 
 
 def _json_object(text: str) -> dict[str, Any] | None:
