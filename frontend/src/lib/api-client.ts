@@ -74,14 +74,17 @@ class ApiClient {
       url += `?${searchParams.toString()}`;
     }
 
+    // FormData must go out as-is: the browser sets the multipart Content-Type (with boundary) itself.
+    const isForm = typeof FormData !== "undefined" && body instanceof FormData;
     const doFetch = () =>
       fetch(url, {
         ...fetchOptions,
+        credentials: "include",
         headers: {
-          "Content-Type": "application/json",
+          ...(isForm ? {} : { "Content-Type": "application/json" }),
           ...fetchOptions.headers,
         },
-        body: body ? JSON.stringify(body) : undefined,
+        body: isForm ? (body as FormData) : body ? JSON.stringify(body) : undefined,
       });
 
     let response = await doFetch();
