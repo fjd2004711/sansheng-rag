@@ -6,9 +6,9 @@ import { BarChart3, Loader2, RefreshCw } from "lucide-react";
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui";
 
 type MetricMap = Record<string, number>;
-type Mode = { name: string; metrics: MetricMap; rows: Array<Record<string, unknown>> };
+type 模式 = { name: string; metrics: MetricMap; rows: Array<Record<string, unknown>> };
 type Ablation = { component: string; metric: string; with_component: number; without_component: number };
-type Report = { methodology: string; scenario_count: number; corpus_document_count: number; modes: Mode[]; ablations: Ablation[] };
+type Report = { methodology: string; scenario_count: number; corpus_document_count: number; modes: 模式[]; ablations: Ablation[] };
 
 const comparisonKeys = ["Recall@5", "MRR", "nDCG", "Groundedness", "Completeness", "Corrective Success Rate"];
 
@@ -53,7 +53,7 @@ export function EvaluationDashboard() {
   useEffect(() => { load(); }, []);
 
   if (error) return <div className="rounded-xl border border-destructive/30 p-6 text-destructive">{error}</div>;
-  if (!report) return <div className="flex h-72 items-center justify-center gap-2 text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin" /> Loading evaluation report…</div>;
+  if (!report) return <div className="flex h-72 items-center justify-center gap-2 text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin" /> 正在加载评测报告…</div>;
 
   const names = report.modes.map((mode) => mode.name);
   const comparisonOption = {
@@ -71,8 +71,8 @@ export function EvaluationDashboard() {
     xAxis: { type: "category", data: report.ablations.map((item) => item.component), axisLabel: { interval: 0, rotate: 22 } },
     yAxis: { type: "value", min: 0, max: 1 },
     series: [
-      { name: "With component", type: "bar", data: report.ablations.map((item) => item.with_component) },
-      { name: "Without component", type: "bar", data: report.ablations.map((item) => item.without_component) },
+      { name: "保留组件", type: "bar", data: report.ablations.map((item) => item.with_component) },
+      { name: "移除组件", type: "bar", data: report.ablations.map((item) => item.without_component) },
     ],
   };
   const operationalOption = {
@@ -81,32 +81,32 @@ export function EvaluationDashboard() {
     grid: { left: 52, right: 16, top: 30, bottom: 54 },
     xAxis: { type: "category", data: names, axisLabel: { interval: 0, rotate: 14 } },
     yAxis: [
-      { type: "value", name: "Latency (ms)" },
-      { type: "value", name: "Rounds", min: 0 },
+      { type: "value", name: "延迟（毫秒）" },
+      { type: "value", name: "检索轮次", min: 0 },
     ],
     series: [
-      { name: "Latency (ms)", type: "bar", data: report.modes.map((mode) => mode.metrics["Latency (ms)"] ?? 0) },
-      { name: "Average Retrieval Rounds", type: "line", yAxisIndex: 1, data: report.modes.map((mode) => mode.metrics["Average Retrieval Rounds"] ?? 0) },
+      { name: "延迟（毫秒）", type: "bar", data: report.modes.map((mode) => mode.metrics["延迟（毫秒）"] ?? 0) },
+      { name: "Average Retrieval 检索轮次", type: "line", yAxisIndex: 1, data: report.modes.map((mode) => mode.metrics["Average Retrieval 检索轮次"] ?? 0) },
     ],
   };
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div><h1 className="text-2xl font-bold tracking-tight">Evaluation Dashboard</h1><p className="text-muted-foreground">P5 reproducible comparison and ablation report.</p></div>
-        <Button variant="outline" onClick={load}><RefreshCw className="mr-2 h-4 w-4" />Refresh report</Button>
+        <div><h1 className="text-2xl font-bold tracking-tight">评测看板</h1><p className="text-muted-foreground">P5 可复现对比与消融实验报告。</p></div>
+        <Button variant="outline" onClick={load}><RefreshCw className="mr-2 h-4 w-4" />刷新报告</Button>
       </div>
       <div className="grid gap-4 sm:grid-cols-3">
-        <Card><CardHeader className="pb-2"><CardDescription>Scenarios</CardDescription><CardTitle>{report.scenario_count}</CardTitle></CardHeader></Card>
-        <Card><CardHeader className="pb-2"><CardDescription>Evaluation corpus</CardDescription><CardTitle>{report.corpus_document_count} documents</CardTitle></CardHeader></Card>
-        <Card><CardHeader className="pb-2"><CardDescription>Modes compared</CardDescription><CardTitle>{report.modes.length}</CardTitle></CardHeader></Card>
+        <Card><CardHeader className="pb-2"><CardDescription>评测场景</CardDescription><CardTitle>{report.scenario_count}</CardTitle></CardHeader></Card>
+        <Card><CardHeader className="pb-2"><CardDescription>评测语料</CardDescription><CardTitle>{report.corpus_document_count} 份文档</CardTitle></CardHeader></Card>
+        <Card><CardHeader className="pb-2"><CardDescription>对比模式</CardDescription><CardTitle>{report.modes.length}</CardTitle></CardHeader></Card>
       </div>
-      <Card><CardHeader><CardTitle className="flex items-center gap-2"><BarChart3 className="h-5 w-5" />Quality comparison</CardTitle><CardDescription>Retrieval and answer-quality metrics, calculated by the evaluation runner.</CardDescription></CardHeader><CardContent><Chart option={comparisonOption} /></CardContent></Card>
+      <Card><CardHeader><CardTitle className="flex items-center gap-2"><BarChart3 className="h-5 w-5" />质量对比</CardTitle><CardDescription>由评测脚本自动计算的检索与回答质量指标。</CardDescription></CardHeader><CardContent><Chart option={comparisonOption} /></CardContent></Card>
       <div className="grid gap-6 xl:grid-cols-2">
-        <Card><CardHeader><CardTitle>Ablation study</CardTitle><CardDescription>Measured impact of each required component.</CardDescription></CardHeader><CardContent><Chart option={ablationOption} /></CardContent></Card>
-        <Card><CardHeader><CardTitle>Cost and correction depth</CardTitle><CardDescription>Latency includes local-model grading and bounded correction passes.</CardDescription></CardHeader><CardContent><Chart option={operationalOption} /></CardContent></Card>
+        <Card><CardHeader><CardTitle>消融实验</CardTitle><CardDescription>各核心组件的实际测得影响。</CardDescription></CardHeader><CardContent><Chart option={ablationOption} /></CardContent></Card>
+        <Card><CardHeader><CardTitle>成本与纠错深度</CardTitle><CardDescription>延迟包含本地模型评估和受限纠错轮次。</CardDescription></CardHeader><CardContent><Chart option={operationalOption} /></CardContent></Card>
       </div>
-      <Card><CardHeader><CardTitle>Scenario outcomes</CardTitle><CardDescription>{report.methodology}</CardDescription></CardHeader><CardContent><div className="overflow-x-auto"><table className="w-full text-sm"><thead className="border-b text-left text-muted-foreground"><tr><th className="p-2">Mode</th><th className="p-2">Scenario</th><th className="p-2">Initial rank</th><th className="p-2">Final rank</th><th className="p-2">Rounds</th><th className="p-2">Abstained</th></tr></thead><tbody>{report.modes.flatMap((mode) => mode.rows.map((row) => <tr className="border-b last:border-0" key={mode.name + String(row.id)}><td className="p-2 font-medium">{mode.name}</td><td className="p-2">{String(row.id)}</td><td className="p-2">{String(row.initial_rank ?? "—")}</td><td className="p-2">{String(row.rank ?? "—")}</td><td className="p-2">{String(row.rounds)}</td><td className="p-2">{row.abstained ? "Yes" : "No"}</td></tr>))}</tbody></table></div></CardContent></Card>
+      <Card><CardHeader><CardTitle>逐场景结果</CardTitle><CardDescription>{report.methodology}</CardDescription></CardHeader><CardContent><div className="overflow-x-auto"><table className="w-full text-sm"><thead className="border-b text-left text-muted-foreground"><tr><th className="p-2">模式</th><th className="p-2">场景</th><th className="p-2">初始排名</th><th className="p-2">最终排名</th><th className="p-2">检索轮次</th><th className="p-2">已拒答</th></tr></thead><tbody>{report.modes.flatMap((mode) => mode.rows.map((row) => <tr className="border-b last:border-0" key={mode.name + String(row.id)}><td className="p-2 font-medium">{mode.name}</td><td className="p-2">{String(row.id)}</td><td className="p-2">{String(row.initial_rank ?? "—")}</td><td className="p-2">{String(row.rank ?? "—")}</td><td className="p-2">{String(row.rounds)}</td><td className="p-2">{row.abstained ? "是" : "否"}</td></tr>))}</tbody></table></div></CardContent></Card>
     </div>
   );
 }
