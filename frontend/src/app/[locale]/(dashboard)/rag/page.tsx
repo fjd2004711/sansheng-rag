@@ -1,10 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { useAuth } from "@/hooks";
-import { ROUTES } from "@/lib/constants";
 import {
   Button,
   Input,
@@ -36,7 +33,6 @@ import {
   CheckCircle,
   XCircle,
   Eye,
-  RefreshCw,
 } from "lucide-react";
 import {
   listCollections,
@@ -48,28 +44,15 @@ import {
   ingestFile,
   searchDocuments,
   getDocumentDownloadUrl,
-  listSyncLogs,
-  cancelSync,
-  listSyncSources,
-  createSyncSource,
-  deleteSyncSource,
-  triggerSyncSource,
-  listConnectors,
   type RAGCollectionInfo,
   type RAGTrackedDocument,
   type RAGSearchResult,
-  type RAGSyncLog,
-  type SyncSourceRead,
-  type SyncSourceCreate,
-  type ConnectorInfo,
 } from "@/lib/rag-api";
 import { DragDropOverlay } from "@/components/rag/drag-drop-overlay";
-import { SyncSourceWizard } from "@/components/rag/sync-source-wizard";
 import { apiClient } from "@/lib/api-client";
-import { PageHeader } from "@/components/dashboard/page-header";
 
 import { BACKEND_URL } from "@/lib/constants";
-import { getErrorMessage, isAppAdmin, MAX_UPLOAD_SIZE_MB, timeAgo } from "@/lib/utils";
+import { getErrorMessage, MAX_UPLOAD_SIZE_MB } from "@/lib/utils";
 
 interface CollectionWithInfo {
   name: string;
@@ -90,14 +73,6 @@ function StatusIcon({ status }: { status: string }) {
 }
 
 export default function RAGPage() {
-  const { user } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (user && !isAppAdmin(user)) {
-      router.replace(ROUTES.CHAT);
-    }
-  }, [user, router]);
 
   const [collections, setCollections] = useState<CollectionWithInfo[]>([]);
   const [selected, setSelected] = useState<string>("");
@@ -116,27 +91,20 @@ export default function RAGPage() {
   } | null>(null);
   const [newName, setNewName] = useState("");
   const [showCreate, setShowCreate] = useState(false);
-  const [tab, setTabState] = useState<"documents" | "search" | "sync">(() => {
+  const [tab, setTabState] = useState<"documents" | "search">(() => {
     if (typeof window !== "undefined") {
       const t = new URLSearchParams(window.location.search).get("tab");
-      if (t === "search" || t === "sync") return t;
+      if (t === "search") return t;
     }
     return "documents";
   });
-  const setTab = (t: "documents" | "search" | "sync") => {
+  const setTab = (t: "documents" | "search") => {
     setTabState(t);
     const url = new URL(window.location.href);
     if (t === "documents") url.searchParams.delete("tab");
     else url.searchParams.set("tab", t);
     window.history.replaceState({}, "", url.toString());
   };
-  const [syncLogs, setSyncLogs] = useState<RAGSyncLog[]>([]);
-  const [syncLogsLoading, setSyncLogsLoading] = useState(false);
-  const [syncSources, setSyncSources] = useState<SyncSourceRead[]>([]);
-  const [syncSourcesLoading, setSyncSourcesLoading] = useState(false);
-  const [connectors, setConnectors] = useState<ConnectorInfo[]>([]);
-  const [addSourceOpen, setAddSourceOpen] = useState(false);
-  const [addSourceSubmitting, setAddSourceSubmitting] = useState(false);
   const [supportedFormats, setSupportedFormats] = useState<string[]>([
     ".pdf",
     ".docx",
@@ -182,77 +150,6 @@ export default function RAGPage() {
     }
   };
 
-  const fetchSyncLogs = async () => {
-    setSyncLogsLoading(true);
-    try {
-      const data = await listSyncLogs(selected || undefined);
-      setSyncLogs(data.items || []);
-    } catch {
-      setSyncLogs([]);
-    } finally {
-      setSyncLogsLoading(false);
-    }
-  };
-
-  const fetchSyncSources = async () => {
-    setSyncSourcesLoading(true);
-    try {
-      const data = await listSyncSources();
-      setSyncSources(data.items || []);
-    } catch {
-      setSyncSources([]);
-    } finally {
-      setSyncSourcesLoading(false);
-    }
-  };
-
-  const fetchConnectors = async () => {
-    try {
-      const data = await listConnectors();
-      setConnectors(data.items || []);
-    } catch {
-      setConnectors([]);
-    }
-  };
-
-  const handleAddSource = async (data: SyncSourceCreate) => {
-    if (!data.name || !data.connector_type || !data.collection_name) {
-      toast.error("Name, connector type, and collection are required");
-      return;
-    }
-    setAddSourceSubmitting(true);
-    try {
-      await createSyncSource(data);
-      toast.success(`Source "${data.name}" created`);
-      setAddSourceOpen(false);
-      fetchSyncSources();
-    } catch (err) {
-      toast.error(getErrorMessage(err, "Failed to create source"));
-    } finally {
-      setAddSourceSubmitting(false);
-    }
-  };
-
-  const handleDeleteSource = async (sourceId: string) => {
-    try {
-      await deleteSyncSource(sourceId);
-      toast.success("Source deleted");
-      setSyncSources((prev) => prev.filter((s) => s.id !== sourceId));
-    } catch {
-      toast.error("Failed to delete source");
-    }
-  };
-
-  const handleTriggerSync = async (sourceId: string) => {
-    try {
-      await triggerSyncSource(sourceId);
-      toast.success("Sync triggered");
-      fetchSyncLogs();
-      fetchSyncSources();
-    } catch {
-      toast.error("Failed to trigger sync");
-    }
-  };
 
   useEffect(() => {
     fetchCollections();
@@ -417,10 +314,9 @@ export default function RAGPage() {
 
   const info = collections.find((c) => c.name === selected)?.info;
 
-  const tabs: { key: "documents" | "search" | "sync"; label: string }[] = [
+  const tabs: { key: "documents" | "search"; label: string }[] = [
     { key: "documents", label: docs.length > 0 ? `Documents (${docs.length})` : "Documents" },
     { key: "search", label: "Search" },
-    { key: "sync", label: "Sync" },
   ];
 
   return (
@@ -436,21 +332,13 @@ export default function RAGPage() {
         }
         acceptedFormats={supportedFormats}
       />
-      <SyncSourceWizard
-        open={addSourceOpen}
-        onOpenChange={setAddSourceOpen}
-        connectors={connectors}
-        collections={collections.map((c) => ({ name: c.name }))}
-        defaultCollection={selected}
-        onSubmit={handleAddSource}
-        submitting={addSourceSubmitting}
-      />
 
-      <PageHeader
-        eyebrow="Knowledge"
-        title="RAG"
-        description="Manage knowledge-base collections, ingest documents, run semantic search, and configure automated sync sources."
-      />
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">知识库</h1>
+        <p className="text-muted-foreground mt-1 text-sm">
+          管理文档集合、上传 PDF / DOCX / Markdown / TXT，并用混合检索（Dense + BM25 + RRF + Reranker）验证召回。
+        </p>
+      </div>
 
       <div className="border-border bg-card rounded-xl border p-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -620,11 +508,6 @@ export default function RAGPage() {
               <button
                 key={t.key}
                 onClick={() => {
-                  if (t.key === "sync") {
-                    fetchSyncSources();
-                    fetchConnectors();
-                    if (syncLogs.length === 0 && !syncLogsLoading) fetchSyncLogs();
-                  }
                   setTab(t.key);
                 }}
                 className={`-mb-px border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
@@ -813,202 +696,6 @@ export default function RAGPage() {
                   })}
                 </div>
               )}
-            </div>
-          )}
-
-          {tab === "sync" && (
-            <div className="space-y-6">
-              <div>
-                <div className="mb-3 flex items-center justify-between">
-                  <h3 className="text-foreground text-sm font-semibold">Sync sources</h3>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="rounded-xl"
-                    onClick={() => {
-                      setAddSourceOpen(true);
-                      if (connectors.length === 0) fetchConnectors();
-                    }}
-                  >
-                    <Plus className="mr-1 h-3.5 w-3.5" /> Add source
-                  </Button>
-                </div>
-
-                {syncSourcesLoading ? (
-                  <div className="space-y-2">
-                    {[1, 2, 3].map((i) => (
-                      <Skeleton key={i} className="h-28 w-full rounded-xl" />
-                    ))}
-                  </div>
-                ) : syncSources.length === 0 ? (
-                  <div className="border-border bg-card flex flex-col items-center justify-center rounded-xl border py-8 text-center">
-                    <Database className="text-muted-foreground mb-2 h-6 w-6" />
-                    <p className="text-foreground text-sm font-medium">No sync sources configured</p>
-                    <p className="text-muted-foreground mt-1 text-xs">
-                      Add a source to start syncing documents automatically
-                    </p>
-                  </div>
-                ) : (
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    {syncSources.map((source) => (
-                      <div
-                        key={source.id}
-                        className="border-border bg-card rounded-xl border p-4"
-                      >
-                        <div className="mb-2 flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Database className="text-muted-foreground h-4 w-4" />
-                            <span className="text-foreground text-sm font-medium">
-                              {source.name}
-                            </span>
-                          </div>
-                          <Badge variant={source.is_active ? "default" : "secondary"}>
-                            {source.is_active ? "Active" : "Disabled"}
-                          </Badge>
-                        </div>
-                        <div className="text-muted-foreground space-y-1 text-sm">
-                          <p>
-                            {source.connector_type} &rarr; {source.collection_name}
-                          </p>
-                          <p>
-                            {source.schedule_minutes
-                              ? `Every ${source.schedule_minutes}min`
-                              : "Manual"}{" "}
-                            &bull; {source.sync_mode}
-                          </p>
-                          {source.last_sync_at && (
-                            <p className="text-xs">
-                              Last sync: {timeAgo(source.last_sync_at)} &mdash;{" "}
-                              {source.last_sync_status}
-                            </p>
-                          )}
-                          {source.last_error && (
-                            <p className="text-destructive truncate text-xs">{source.last_error}</p>
-                          )}
-                        </div>
-                        <div className="mt-3 flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="rounded-xl"
-                            onClick={() => handleTriggerSync(source.id)}
-                          >
-                            <RefreshCw className="mr-1 h-3 w-3" /> Sync now
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="text-destructive hover:text-destructive rounded-xl"
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>
-                                  Delete source &ldquo;{source.name}&rdquo;?
-                                </AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  This will remove the sync source configuration. Existing documents
-                                  will not be affected.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                  onClick={() => handleDeleteSource(source.id)}
-                                >
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <h3 className="text-foreground mb-3 text-sm font-semibold">History</h3>
-                {syncLogsLoading ? (
-                  <div className="space-y-2">
-                    {[1, 2, 3].map((i) => (
-                      <Skeleton key={i} className="h-16 w-full rounded-xl" />
-                    ))}
-                  </div>
-                ) : syncLogs.length === 0 ? (
-                  <p className="text-muted-foreground text-sm">No sync history yet</p>
-                ) : (
-                  <div className="space-y-2">
-                    {syncLogs.map((log) => (
-                      <div key={log.id} className="border-border bg-card rounded-xl border p-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <StatusIcon
-                              status={log.status === "running" ? "processing" : log.status}
-                            />
-                            <span className="text-foreground text-sm font-medium">
-                              {log.collection_name}
-                            </span>
-                            <Badge variant="outline" className="font-mono text-[10px]">
-                              {log.source}
-                            </Badge>
-                            <Badge variant="secondary" className="font-mono text-[10px]">
-                              {log.mode}
-                            </Badge>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {log.started_at && (
-                              <span className="text-muted-foreground font-mono text-[10px]">
-                                {new Date(log.started_at).toLocaleString()}
-                              </span>
-                            )}
-                            {log.status === "running" && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-destructive h-6 rounded-lg px-2 text-[10px]"
-                                onClick={async () => {
-                                  try {
-                                    await cancelSync(log.id);
-                                    toast.success("Sync cancelled");
-                                    fetchSyncLogs();
-                                  } catch {
-                                    toast.error("Failed to cancel");
-                                  }
-                                }}
-                              >
-                                Cancel
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                        <div className="text-muted-foreground mt-2 flex flex-wrap gap-3 font-mono text-xs">
-                          <span>{log.total_files} total</span>
-                          {log.ingested > 0 && <span className="text-foreground">{log.ingested} new</span>}
-                          {log.updated > 0 && (
-                            <span className="text-foreground">{log.updated} updated</span>
-                          )}
-                          {log.skipped > 0 && <span>{log.skipped} skipped</span>}
-                          {log.failed > 0 && (
-                            <span className="text-destructive">{log.failed} failed</span>
-                          )}
-                        </div>
-                        {log.error_message && (
-                          <p className="text-destructive mt-1 truncate text-xs">
-                            {log.error_message}
-                          </p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
             </div>
           )}
         </>

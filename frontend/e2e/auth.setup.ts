@@ -18,18 +18,14 @@ setup("authenticate", async ({ page }) => {
   await page.goto("/login");
 
   // Fill in login form
-  await page.getByLabel(/email/i).fill(testEmail);
-  await page.getByLabel(/password/i).fill(testPassword);
+  await page.getByLabel("邮箱").fill(testEmail);
+  await page.getByLabel("密码").fill(testPassword);
 
   // Submit and wait for redirect
-  await page.getByRole("button", { name: /sign in|log in|login/i }).click();
+  await page.getByRole("button", { name: /登录/ }).click();
 
-  // Wait for authentication to complete - adjust selector based on your app
-  await expect(
-    page.getByRole("link", { name: /dashboard|home/i }).or(
-      page.getByText(/welcome/i)
-    )
-  ).toBeVisible({ timeout: 10000 });
+  // Successful login lands on the chat page
+  await expect(page).toHaveURL(/\/chat/, { timeout: 10000 });
 
   // Save authentication state
   await page.context().storageState({ path: authFile });

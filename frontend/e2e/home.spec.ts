@@ -1,67 +1,33 @@
-
 import { test, expect } from "@playwright/test";
 
-test.describe("Home Page", () => {
-  test("should load the home page", async ({ page }) => {
+test.describe("公开首页", () => {
+  test("展示标题、主入口和评测指标", async ({ page }) => {
     await page.goto("/");
-    await expect(page).toHaveTitle(/self_correcting_rag/i);
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("自纠错 RAG Agent");
+    await expect(page.getByRole("link", { name: /进入对话/ })).toBeVisible();
+    await expect(page.getByRole("link", { name: "登录" })).toBeVisible();
+    await expect(page.locator("#evaluation")).toContainText("Recall@5");
   });
 
-  test("should have navigation elements", async ({ page }) => {
+  test("切换样例会更新回答", async ({ page }) => {
     await page.goto("/");
-
-    // Check for main navigation elements
-    const nav = page.getByRole("navigation");
-    await expect(nav).toBeVisible();
+    await page.getByRole("button", { name: /Orion/ }).click();
+    await expect(page.getByText("ORION-RECOVER-17").first()).toBeVisible();
   });
 
-  test("should be accessible", async ({ page }) => {
-    await page.goto("/");
-
-    // Basic accessibility checks
-    // Main landmark should exist
-    await expect(page.getByRole("main")).toBeVisible();
-
-    // Page should have a heading
-    const heading = page.getByRole("heading", { level: 1 });
-    await expect(heading).toBeVisible();
-  });
-});
-
-test.describe("Navigation", () => {
-  test("unauthenticated user should see login link", async ({ page }) => {
-    // Clear any stored auth state
-    await page.context().clearCookies();
-    await page.goto("/");
-
-    // Should have login/sign in link
-    const loginLink = page.getByRole("link", { name: /log in|sign in/i });
-    await expect(loginLink).toBeVisible();
-  });
-
-  test("should navigate between pages", async ({ page }) => {
-    await page.goto("/");
-
-    // Test navigation to different sections
-    const links = await page.getByRole("link").all();
-    expect(links.length).toBeGreaterThan(0);
-  });
-});
-
-test.describe("Responsive Design", () => {
-  test("should work on mobile viewport", async ({ page }) => {
+  test("移动端可用", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
     await page.goto("/");
-
-    // Page should still be functional
     await expect(page.getByRole("main")).toBeVisible();
   });
+});
 
-  test("should work on tablet viewport", async ({ page }) => {
-    await page.setViewportSize({ width: 768, height: 1024 });
-    await page.goto("/");
-
-    // Page should still be functional
-    await expect(page.getByRole("main")).toBeVisible();
+test.describe("鉴权重定向", () => {
+  test("未登录访问 /chat 会跳转到登录页", async ({ browser }) => {
+    const context = await browser.newContext({ storageState: undefined });
+    const page = await context.newPage();
+    await page.goto("/chat");
+    await expect(page).toHaveURL(/\/login/);
+    await context.close();
   });
 });

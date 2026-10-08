@@ -17,7 +17,6 @@ import type { AgentTraceEvent, PendingApproval, AskUserQuestion, AskUserAnswer, 
 import { buildAssistantParts } from "@/lib/conversation-to-chat";
 import { useConversationStore, useChatStore } from "@/stores";
 import { useConversations } from "@/hooks";
-import { useSlashCommands } from "@/hooks";
 
 const SCROLL_NEAR_BOTTOM_THRESHOLD_PX = 150;
 
@@ -151,7 +150,6 @@ export function ChatContainer() {
     if (userScrolledUpRef.current) return;
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
-  const { commands: slashCommands } = useSlashCommands();
 
   const handleRegenerate = useCallback(
     (assistantMessageId: string) => {
@@ -168,24 +166,6 @@ export function ChatContainer() {
     [messages, sendMessage],
   );
 
-  // Slash command handlers — passed down to ChatInput so the / palette can
-  // run them locally without going through the agent.
-  const slashContext = {
-    clearChat: clearMessages,
-    regenerateLast: () => {
-      for (let i = messages.length - 1; i >= 0; i--) {
-        const m = messages[i];
-        if (m && m.role === "assistant") {
-          handleRegenerate(m.id);
-          return;
-        }
-      }
-    },
-    openSettings: () => {
-      document.querySelector<HTMLButtonElement>("[data-chat-settings-trigger]")?.click();
-    },
-  };
-
   return (
     <ChatUI
       messages={messages}
@@ -200,8 +180,6 @@ export function ChatContainer() {
       onTemperatureChange={setTemperature}
       onThinkingEffortChange={setThinkingEffort}
       onRegenerate={handleRegenerate}
-      slashContext={slashContext}
-      slashCommands={slashCommands}
       queuedMessages={queuedMessages}
       onCancelQueued={cancelQueued}
       messagesEndRef={messagesEndRef}
@@ -231,8 +209,6 @@ interface ChatUIProps {
   onTemperatureChange?: (temperature: number | null) => void;
   onThinkingEffortChange?: (effort: "low" | "medium" | "high" | null) => void;
   onRegenerate?: (messageId: string) => void;
-  slashContext?: import("./slash-commands").SlashCommandContext;
-  slashCommands?: import("./slash-commands").SlashCommand[];
   queuedMessages?: import("@/hooks/use-chat").QueuedMessage[];
   onCancelQueued?: (id: string) => void;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
@@ -255,8 +231,6 @@ function ChatUI({
   onTemperatureChange,
   onThinkingEffortChange,
   onRegenerate,
-  slashContext,
-  slashCommands,
   queuedMessages,
   onCancelQueued,
   messagesEndRef,
@@ -320,8 +294,6 @@ function ChatUI({
                 }
                 isProcessing={isProcessing}
                 onStop={onStop}
-                slashContext={slashContext}
-                commands={slashCommands}
               />
             </div>
             <div className="border-foreground/8 flex items-center justify-between border-t px-3 py-2 sm:px-4">

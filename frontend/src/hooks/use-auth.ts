@@ -89,7 +89,7 @@ export function useAuth() {
         setUser(response.user);
         useAuthStore.getState().setAccessToken(response.access_token);
         authChecked = true; // login already populated user + token; skip /auth/me
-        router.push(isAppAdmin(response.user) ? ROUTES.DASHBOARD : ROUTES.CHAT);
+        router.push(isAppAdmin(response.user) ? ROUTES.CHAT : ROUTES.CHAT);
         return response;
       } finally {
         setLoading(false);

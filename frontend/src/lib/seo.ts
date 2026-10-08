@@ -16,10 +16,10 @@ import { defaultLocale, locales } from "@/i18n";
 export const SITE = {
   name: APP_NAME,
   /** Tagline used in title templates + OG defaults. */
-  tagline: "AI assistant for modern teams",
+  tagline: "可解释的自纠错 RAG Agent",
   /** One-paragraph default description (≤160 chars for SERP truncation). */
   description:
-    "Plug in your docs, your tools, and your data. Ask anything — get answers grounded in everything your team has ever shipped.",
+    "Dense + BM25 + RRF + Reranker 混合检索，先诊断失败类型再有界纠错，回答可追溯到 claim → evidence → source。",
   /** Canonical absolute origin. NO trailing slash. */
   url:
     (process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") as string | undefined) ??
@@ -29,16 +29,7 @@ export const SITE = {
   /** Theme color used in PWA manifest + browser chrome. */
   themeColor: "#0E0E0C",
   /** Long-form keywords. Light SEO weight today; useful for clarity. */
-  keywords: [
-    "AI assistant",
-    "team knowledge",
-    "AI agent",
-    "RAG",
-    "team productivity",
-    "knowledge base",
-    "internal search",
-    "B2B SaaS",
-  ],
+  keywords: ["RAG", "自纠错", "LangChain", "LangGraph", "混合检索", "可解释 AI"],
   /** Locale defaults — pulls from your i18n config. */
   defaultLocale,
   locales: [...locales],
