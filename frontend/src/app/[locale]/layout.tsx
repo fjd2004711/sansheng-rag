@@ -3,7 +3,6 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 
-import { CookieBanner } from "@/components/marketing/cookie-banner";
 import { locales, type Locale } from "@/i18n";
 import { OG_LOCALE, SITE } from "@/lib/seo";
 
@@ -61,7 +60,6 @@ export default async function LocaleLayout({
           {t("skipToContent")}
         </a>
         {children}
-        <CookieBanner />
       </NextIntlClientProvider>
     </Providers>
   );
