@@ -7,23 +7,23 @@ import { useAuth } from "@/hooks";
 const PROMPTS = [
   {
     icon: FileSearch,
-    title: "查找事实",
-    prompt: "知识库里关于系统发布前置条件的规定是什么？",
+    title: "退休返聘",
+    prompt: "返聘教师每周最多可以上几节课？",
   },
   {
     icon: BookOpen,
-    title: "归纳要点",
-    prompt: "请归纳知识库中最近入库文档的关键内容，并标注来源。",
+    title: "退休手续",
+    prompt: "办理退休手续要提前多久申请？",
   },
   {
     icon: GitBranch,
-    title: "观察自纠错",
-    prompt: "用一个比较含糊的说法询问某个具体凭证或代码，观察右侧「运作流程」如何诊断原因并换个问法。",
+    title: "课时津贴",
+    prompt: "超课时津贴每节多少钱？",
   },
   {
     icon: ShieldQuestion,
-    title: "测试拒答",
-    prompt: "问一个知识库里肯定没有的问题，看系统是否拒答而不是编造。",
+    title: "职称申报",
+    prompt: "申报高级教师职称需要满足哪些条件？",
   },
 ];
 
