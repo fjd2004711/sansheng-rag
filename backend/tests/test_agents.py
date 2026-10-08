@@ -143,3 +143,19 @@ class TestHistoryConversion:
         assert isinstance(messages[0], HumanMessage)
         assert isinstance(messages[1], AIMessage)
         assert isinstance(messages[2], SystemMessage)
+
+
+def test_system_prompt_states_todays_date() -> None:
+    from app.agents.prompts import get_system_prompt_with_rag
+    from app.core.clock import today_zh
+
+    assert today_zh() in get_system_prompt_with_rag()
+
+
+def test_today_zh_formats_year_month_day_and_weekday() -> None:
+    from datetime import datetime
+
+    from app.core.clock import today_zh
+
+    assert today_zh(datetime(2026, 10, 8)) == "2026年10月8日 星期四"
+    assert today_zh(datetime(2027, 3, 1)) == "2027年3月1日 星期一"

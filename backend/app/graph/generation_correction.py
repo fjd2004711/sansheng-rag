@@ -16,6 +16,10 @@ from app.services.rag.generation.models import (
 )
 
 
+# A failed re-verification still yields a partial answer when it is at least this faithful.
+_PARTIAL_MIN_GROUNDEDNESS = 0.7
+
+
 class AnswerGrader(Protocol):
     async def assess(self, question: str, answer: str, evidence: str) -> AnswerAssessment: ...
 
@@ -51,6 +55,7 @@ class GenerationCorrector:
         graph.add_node("regenerate", self._regenerate)
         graph.add_node("reverify", self._reverify)
         graph.add_node("abstain", self._abstain)
+        graph.add_node("partial", self._partial)
         graph.add_edge(START, "verify")
         graph.add_conditional_edges(
             "verify",
@@ -70,9 +75,12 @@ class GenerationCorrector:
         graph.add_edge("retrieve_missing", "regenerate")
         graph.add_edge("regenerate", "reverify")
         graph.add_conditional_edges(
-            "reverify", self._after_reverify, {"pass": END, "abstain": "abstain"}
+            "reverify",
+            self._after_reverify,
+            {"pass": END, "partial": "partial", "abstain": "abstain"},
         )
         graph.add_edge("abstain", END)
+        graph.add_edge("partial", END)
         return graph.compile()
 
     async def run(
@@ -179,6 +187,17 @@ class GenerationCorrector:
             )
         return self._assessment_update(state, assessment, step="answer_reverify")
 
+    async def _partial(self, state: GenerationCorrectionState) -> GenerationCorrectionState:
+        """Keep a faithful but incomplete answer instead of discarding what the evidence does support."""
+        return {
+            "trace": self._append_trace(
+                state,
+                step="partial_answer",
+                status="COMPLETE",
+                detail={"missing_information": state["assessment"].missing_information},
+            ),
+        }
+
     async def _abstain(self, state: GenerationCorrectionState) -> GenerationCorrectionState:
         return {
             "answer": _ABSTAIN_MESSAGE,
@@ -210,7 +229,22 @@ class GenerationCorrector:
         return "retrieve"
 
     def _after_reverify(self, state: GenerationCorrectionState) -> str:
-        return "pass" if state["assessment"].sufficient and not state.get("abstained") else "abstain"
+        assessment = state["assessment"]
+        if state.get("abstained"):
+            return "abstain"
+        if assessment.sufficient:
+            return "pass"
+        # A regenerated answer that is faithful to the evidence (and says what is not covered) is
+        # more useful than a blanket refusal; unfaithful or unsupported answers still abstain.
+        if (
+            _has_evidence(state["evidence"])
+            and state["answer"].strip() != _ABSTAIN_MESSAGE
+            and assessment.failure_type != AnswerFailureType.OUT_OF_SCOPE
+            and assessment.groundedness >= _PARTIAL_MIN_GROUNDEDNESS
+            and assessment.citation_coverage > 0
+        ):
+            return "partial"
+        return "abstain"
 
     def _assessment_update(
         self,

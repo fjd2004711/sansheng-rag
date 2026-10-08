@@ -42,7 +42,11 @@ class EvidenceEvaluator:
             for index, doc in enumerate(docs)
         ]
         prompt = (
-            "Assess whether the evidence can answer the question. Return only JSON with "
+            "Assess whether the evidence can answer the question. Judge by meaning, not exact wording: "
+            "evidence is sufficient when it states the facts the answer needs, even if phrased "
+            "differently from the question, and even if the question also needs simple arithmetic or "
+            "a date comparison on top of those facts. Mark it insufficient only when a needed fact "
+            "is truly absent. Return only JSON with "
             'keys relevance_scores (0..1 array), sufficient (boolean), missing_information '
             '(string array), failure_type (insufficient_evidence|ambiguous_query|out_of_scope|'
             'irrelevant_evidence|null), failure_reason (string).\n'

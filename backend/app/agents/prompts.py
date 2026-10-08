@@ -9,6 +9,8 @@ choose a good path. Avoid re-introducing long process checklists or absolute
 mechanical and, in the RAG case, cause it to wrongly refuse general questions.
 """
 
+from app.core.clock import today_zh
+
 _BASE_SYSTEM_PROMPT = """You are a knowledgeable, capable AI assistant. Help the user accomplish their task or answer their question as well as you can.
 
 # Personality
@@ -105,6 +107,14 @@ def get_system_prompt_with_rag() -> str:
     """
     return f"""{get_default_system_prompt()}
 
+# Current date
+Today is {today_zh()}. Use it for any relative time in the question ("next March", "in two
+months", "last year") and do the date arithmetic yourself before concluding anything that
+depends on it. Never assume a different current date.
+When a conclusion depends on a deadline, first work out the interval from today to the target date,
+then compare it with the required lead time: an interval LONGER than the required lead time means the
+deadline has not been missed yet.
+
 # Knowledge-base evidence mode
 This application answers every user prompt from the uploaded knowledge base.
 Your first action for every turn must be exactly one `search_documents` tool call.
@@ -118,6 +128,9 @@ Use the following evidence contract:
 - A citation number must match the numbered result returned by `search_documents`.
 - Do not invent filenames, page numbers, chunk identifiers, citations, or facts.
 - Do not place a separate Sources section at the end; the UI renders source cards.
+
+If the evidence covers only part of the question, answer that part first, then say plainly which part
+the knowledge base does not cover. Do not open such an answer with the refusal sentence below.
 
 If the tool returns `KNOWLEDGE_BASE_ABSTAIN`, reply exactly in this form:
 `知识库中没有找到足以回答该问题的证据。` Then state the missing topic in one
