@@ -74,7 +74,7 @@ export function ChatEmptyState({ onPick }: ChatEmptyStateProps) {
       <ul className="text-muted-foreground mx-auto mt-8 max-w-md space-y-1 text-left text-xs leading-relaxed">
         <li>✓ 只根据资料库里的文件回答，并标明每句话的出处</li>
         <li>✓ 找不到或不确定时会直接告诉你，不会编造</li>
-        <li>✓ 检索不理想时，会自动换个问法重新查，右侧能看到全过程</li>
+        <li>✓ 检索不理想时，会自动换个问法重新查，整个过程都能展开查看</li>
         <li>✗ 不能回答资料以外的内容，也不能上网查询</li>
       </ul>
     </div>

@@ -6,6 +6,8 @@ import { useChat } from "@/hooks";
 import { AgentTracePanel } from "./agent-trace-panel";
 import { ChatEmptyState } from "./chat-empty-state";
 import { TraceDetailSheet } from "./trace-detail";
+import { History } from "lucide-react";
+import { useChatSidebarStore } from "@/stores/chat-sidebar-store";
 import { LibraryPopover } from "./library-popover";
 import { ChatInput } from "./chat-input";
 import { FilePreviewPanel } from "./file-preview-panel";
@@ -262,6 +264,16 @@ function ChatUI({
   return (
     <div className="flex h-full w-full">
       <div className="mx-auto flex h-full max-w-5xl min-w-0 flex-1 flex-col">
+        <div className="flex items-center justify-between border-b px-3 py-2 md:hidden">
+          <button
+            type="button"
+            onClick={() => useChatSidebarStore.getState().open()}
+            className="hover:bg-accent inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium"
+          >
+            <History className="h-4 w-4" />
+            历史对话
+          </button>
+        </div>
         <div
           ref={scrollContainerRef}
           className="flex-1 scrollbar-thin overflow-y-auto px-2 py-4 sm:px-4 sm:py-6"
@@ -269,8 +281,10 @@ function ChatUI({
           {isLoadingConversation ? (
             <ConversationSkeleton />
           ) : messages.length === 0 ? (
-            <div className="flex h-full items-center">
-              <ChatEmptyState onPick={(prompt) => sendMessage(prompt)} />
+            <div className="flex min-h-full">
+              <div className="my-auto w-full">
+                <ChatEmptyState onPick={(prompt) => sendMessage(prompt)} />
+              </div>
             </div>
           ) : (
             <MessageList
