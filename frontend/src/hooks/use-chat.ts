@@ -11,6 +11,7 @@ import type {
   Decision,
   PendingApproval,
   ToolCall,
+  AgentTraceEvent,
   WSEvent,
 } from "@/types";
 import { WS_URL } from "@/lib/constants";
@@ -42,6 +43,7 @@ export function useChat(options: UseChatOptions = {}) {
     appendThinkingDelta,
     addToolCallPart,
     updateToolCallPart,
+    addAgentTrace,
     clearMessages,
   } = useChatStore();
 
@@ -199,6 +201,13 @@ export function useChat(options: UseChatOptions = {}) {
           break;
         }
 
+        case "agent_trace": {
+          if (currentMessageIdRef.current) {
+            addAgentTrace(currentMessageIdRef.current, wsEvent.data as AgentTraceEvent);
+          }
+          break;
+        }
+
         case "tool_result": {
           // Update tool call with result
           if (currentMessageIdRef.current) {
@@ -324,6 +333,7 @@ export function useChat(options: UseChatOptions = {}) {
       appendThinkingDelta,
       addToolCallPart,
       updateToolCallPart,
+      addAgentTrace,
       setCurrentConversationId,
       setCurrentMessageId,
       onConversationCreated,

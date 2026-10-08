@@ -1,5 +1,6 @@
 """RAG tool for agent knowledge base search."""
 
+import json
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -12,6 +13,8 @@ from app.services.rag.retrieval import RetrievalService
 from app.services.rag.vectorstore import QdrantVectorStore
 
 logger = logging.getLogger(__name__)
+_TRACE_PREFIX = "\n<!-- RAG_TRACE:"
+_TRACE_SUFFIX = " -->"
 
 if TYPE_CHECKING:
     from app.services.rag.models import SearchResult
@@ -49,9 +52,15 @@ def _format_results(results: list[Any]) -> str:
         page_info = f", page {page}" if page is not None else ""
         chunk_info = f", chunk {chunk}" if chunk is not None else ""
         col_info = f" [{col}]" if col else ""
+        component_scores = [
+            f"{key}={float(result.metadata[key]):.4f}"
+            for key in ("dense_score", "bm25_score", "rrf_score", "reranker_score")
+            if isinstance(result.metadata.get(key), (int, float))
+        ]
+        score_line = f"Scores: {', '.join(component_scores)}\n" if component_scores else ""
         formatted.append(
             f"[{i}] Source: {source}{page_info}{chunk_info}{col_info} (score: {result.score:.3f})\n"
-            f"{result.content}"
+            f"{score_line}{result.content}"
         )
     return (
         "Search results (cite inline using [1], [2], etc. — do NOT list sources at the end):\n\n"
@@ -140,12 +149,33 @@ async def search_knowledge_base(
         [event.model_dump(mode="json") for event in result.trace],
     )
     if result.abstained:
-        return (
+        output = (
             "KNOWLEDGE_BASE_ABSTAIN: The knowledge base does not contain sufficient "
             "evidence to answer this question. Tell the user that the answer is unavailable "
             "from the indexed documents; do not infer or invent an answer."
         )
-    return _format_results(result.retrieved_docs)
+    else:
+        output = _format_results(result.retrieved_docs)
+    return _append_trace(output, [event.model_dump(mode="json") for event in result.trace])
 
 
-__all__ = ["search_knowledge_base"]
+def _append_trace(output: str, trace: list[dict[str, Any]]) -> str:
+    """Carry P2 trace through a tool result; the WebSocket layer removes it for users."""
+    return f"{output}{_TRACE_PREFIX}{json.dumps(trace, ensure_ascii=False)}{_TRACE_SUFFIX}"
+
+
+def extract_rag_trace(content: str) -> tuple[str, list[dict[str, Any]]]:
+    """Split a private P2 trace from tool text before it reaches the UI or persistence."""
+    if _TRACE_PREFIX not in content or not content.endswith(_TRACE_SUFFIX):
+        return content, []
+    visible, raw = content.rsplit(_TRACE_PREFIX, 1)
+    try:
+        trace = json.loads(raw[: -len(_TRACE_SUFFIX)])
+    except json.JSONDecodeError:
+        return content, []
+    if not isinstance(trace, list) or not all(isinstance(event, dict) for event in trace):
+        return content, []
+    return visible, trace
+
+
+__all__ = ["extract_rag_trace", "search_knowledge_base"]

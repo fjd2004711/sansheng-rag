@@ -10,7 +10,7 @@ from langchain.messages import AIMessage, AIMessageChunk, HumanMessage, ToolMess
 from langchain_core.messages.ai import add_usage
 
 from app.agents.langchain_assistant import AgentContext, get_agent
-from app.agents.tools.rag_tool import search_knowledge_base
+from app.agents.tools.rag_tool import extract_rag_trace, search_knowledge_base
 from app.core.config import settings
 from app.core.exceptions import AuthorizationError, NotFoundError
 from app.db.models.user import User
@@ -352,12 +352,15 @@ class AgentSession:
                 for msg in update.get("messages", []):
                     if isinstance(msg, ToolMessage):
                         tc = pending.get(msg.tool_call_id)
+                        visible_content, trace = extract_rag_trace(str(msg.content))
                         if tc is not None:
-                            tc["result"] = str(msg.content)
+                            tc["result"] = visible_content
+                        for trace_event in trace:
+                            await send_event(self.websocket, "agent_trace", trace_event)
                         await send_event(
                             self.websocket,
                             "tool_result",
-                            {"tool_call_id": msg.tool_call_id, "content": msg.content},
+                            {"tool_call_id": msg.tool_call_id, "content": visible_content},
                         )
             elif node_name == "model":
                 for msg in update.get("messages", []):

@@ -10,6 +10,7 @@ export interface SourceItem {
   url?: string;
   content?: string;
   score?: number;
+  componentScores?: Record<string, number>;
 }
 
 function getToolCalls(message: ChatMessage): ToolCall[] {
@@ -39,6 +40,7 @@ export function extractSources(message: ChatMessage): SourceItem[] {
               .join(" · ") || undefined,
           content: item.content,
           score: item.score ? parseFloat(item.score) : undefined,
+          componentScores: item.componentScores,
         });
       }
     } else if (tc.name === "web_search" || tc.name === "search_web") {
