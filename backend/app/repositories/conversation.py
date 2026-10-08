@@ -4,13 +4,12 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import String, func, select, tuple_
+from sqlalchemy import func, select
 from sqlalchemy import update as sql_update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.db.models.conversation import Conversation, Message, ToolCall
-from app.db.models.user import User
 
 
 async def get_conversation_by_id(
@@ -55,175 +54,6 @@ async def get_conversations_by_user(
     )
     result = await db.execute(query)
     return list(result.scalars().all())
-
-
-async def get_all_conversations_with_count(
-    db: AsyncSession,
-    *,
-    skip: int = 0,
-    limit: int = 50,
-    include_archived: bool = False,
-    search: str | None = None,
-) -> tuple[list[tuple[Conversation, int]], int]:
-    """Get all conversations with message counts for admin (paginated).
-
-    Returns list of (conversation, message_count) tuples and total count.
-    """
-    message_count_subq = (
-        select(func.count(Message.id))
-        .where(Message.conversation_id == Conversation.id)
-        .correlate(Conversation)
-        .scalar_subquery()
-    )
-
-    query = select(Conversation, message_count_subq.label("message_count"))
-
-    if not include_archived:
-        query = query.where(Conversation.is_archived == False)  # noqa: E712
-    if search:
-        safe_search = search.replace("\\", "\\\\").replace("%", r"\%").replace("_", r"\_")
-        query = query.where(
-            (Conversation.title.ilike(f"%{safe_search}%", escape="\\"))
-            | Conversation.id.cast(String).ilike(f"{safe_search}%", escape="\\")
-        )
-
-    query = (
-        query.order_by(func.coalesce(Conversation.updated_at, Conversation.created_at).desc())
-        .offset(skip)
-        .limit(limit)
-    )
-    result = await db.execute(query)
-    rows = result.all()
-
-    count_query = select(func.count(Conversation.id))
-    if not include_archived:
-        count_query = count_query.where(Conversation.is_archived == False)  # noqa: E712
-    if search:
-        safe_search = search.replace("\\", "\\\\").replace("%", r"\%").replace("_", r"\_")
-        count_query = count_query.where(
-            (Conversation.title.ilike(f"%{safe_search}%", escape="\\"))
-            | Conversation.id.cast(String).ilike(f"{safe_search}%", escape="\\")
-        )
-    total: int = (await db.execute(count_query)).scalar() or 0
-
-    return [tuple(row) for row in rows], total
-
-
-async def export_chunk(
-    db: AsyncSession,
-    *,
-    last_created_at: datetime | None,
-    last_id: UUID | None,
-    limit: int,
-) -> list[Conversation]:
-    """Keyset-paginated chunk for admin export of all conversations."""
-    query = (
-        select(Conversation)
-        .order_by(Conversation.created_at.desc(), Conversation.id.desc())
-        .limit(limit)
-    )
-    if last_created_at is not None and last_id is not None:
-        query = query.where(
-            tuple_(Conversation.created_at, Conversation.id) < (last_created_at, last_id)
-        )
-    result = await db.execute(query)
-    return list(result.scalars().all())
-
-
-async def get_demo_conversations_with_count(
-    db: AsyncSession,
-    *,
-    skip: int = 0,
-    limit: int = 50,
-) -> tuple[list[tuple[Conversation, int, str | None]], int]:
-    """Get admin-curated demo conversations with message count + first user prompt preview."""
-    message_count_subq = (
-        select(func.count(Message.id))
-        .where(Message.conversation_id == Conversation.id)
-        .correlate(Conversation)
-        .scalar_subquery()
-    )
-    preview_subq = (
-        select(Message.content)
-        .where(Message.conversation_id == Conversation.id, Message.role == "user")
-        .correlate(Conversation)
-        .order_by(Message.created_at.asc())
-        .limit(1)
-        .scalar_subquery()
-    )
-    query = (
-        select(
-            Conversation,
-            message_count_subq.label("message_count"),
-            preview_subq.label("preview"),
-        )
-        .where(Conversation.is_demo.is_(True))
-        .order_by(func.coalesce(Conversation.updated_at, Conversation.created_at).desc())
-        .offset(skip)
-        .limit(limit)
-    )
-    result = await db.execute(query)
-    rows = result.all()
-
-    total: int = (
-        await db.execute(select(func.count(Conversation.id)).where(Conversation.is_demo.is_(True)))
-    ).scalar() or 0
-
-    return [tuple(row) for row in rows], total  # type: ignore[return-value]
-
-
-async def admin_list_with_users(
-    db: AsyncSession,
-    *,
-    skip: int = 0,
-    limit: int = 50,
-    search: str | None = None,
-    user_id: UUID | None = None,
-    include_archived: bool = False,
-    archived_only: bool = False,
-    sort_by: str = "updated_at",
-    sort_dir: str = "desc",
-) -> tuple[list[tuple[Conversation, int, str | None]], int]:
-    """Admin: list conversations across all users with message counts and owner email.
-
-    Returns list of (conversation, message_count, user_email) tuples and total count.
-    """
-    msg_count_col = func.count(Message.id).label("message_count")
-    query = (
-        select(Conversation, msg_count_col, User.email.label("user_email"))
-        .outerjoin(Message, Message.conversation_id == Conversation.id)
-        .outerjoin(User, User.id == Conversation.user_id)
-        .group_by(Conversation.id, User.email)
-    )
-    count_query = select(func.count()).select_from(Conversation)
-
-    if search:
-        query = query.where(Conversation.title.ilike(f"%{search}%"))
-        count_query = count_query.where(Conversation.title.ilike(f"%{search}%"))
-    if user_id is not None:
-        query = query.where(Conversation.user_id == user_id)
-        count_query = count_query.where(Conversation.user_id == user_id)
-    if archived_only:
-        query = query.where(Conversation.is_archived.is_(True))
-        count_query = count_query.where(Conversation.is_archived.is_(True))
-    elif not include_archived:
-        query = query.where(Conversation.is_archived.is_(False))
-        count_query = count_query.where(Conversation.is_archived.is_(False))
-
-    sort_columns: dict[str, Any] = {
-        "title": Conversation.title,
-        "created_at": Conversation.created_at,
-        "updated_at": Conversation.updated_at,
-        "owner": User.email,
-        "messages": msg_count_col,
-    }
-    sort_col = sort_columns.get(sort_by, Conversation.updated_at)
-    sort_col = sort_col.desc() if sort_dir == "desc" else sort_col.asc()
-    query = query.order_by(sort_col).offset(skip).limit(limit)
-
-    total = await db.scalar(count_query) or 0
-    rows = (await db.execute(query)).all()
-    return [(conv, msg_count, email) for conv, msg_count, email in rows], total
 
 
 async def count_conversations(

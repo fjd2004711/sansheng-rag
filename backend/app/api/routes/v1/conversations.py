@@ -1,21 +1,12 @@
 from typing import Any
 from uuid import UUID
 
-from fastapi import APIRouter, Query, Response, status
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Query, status
 
-from app.api.deps import (
-    ConversationShareSvc,
-    ConversationSvc,
-    CurrentAdmin,
-    CurrentUser,
-    MessageRatingSvc,
-)
+from app.api.deps import ConversationSvc, CurrentUser
 from app.db.models.user import UserRole
 from app.schemas.conversation import (
-    ConversationAdminList,
     ConversationCreate,
-    ConversationExport,
     ConversationList,
     ConversationRead,
     ConversationReadWithMessages,
@@ -24,70 +15,8 @@ from app.schemas.conversation import (
     MessageList,
     MessageRead,
 )
-from app.schemas.conversation_share import (
-    ConversationShareCreate,
-    ConversationShareList,
-    ConversationShareRead,
-)
-from app.schemas.message_rating import (
-    MessageRatingCreate,
-    MessageRatingRead,
-)
 
 router = APIRouter()
-
-
-@router.get("/export", response_model=ConversationExport)
-async def export_conversations(
-    conversation_service: ConversationSvc,
-    _: CurrentAdmin,
-) -> Any:
-    """Export all conversations with messages and tool calls (admin only)."""
-    export_data = await conversation_service.export_all()
-    return JSONResponse(
-        content={"conversations": export_data, "total": len(export_data)},
-        headers={"Content-Disposition": 'attachment; filename="conversations_export.json"'},
-    )
-
-
-@router.get("/admin-list", response_model=ConversationAdminList)
-async def list_conversations_admin(
-    conversation_service: ConversationSvc,
-    _: CurrentAdmin,
-    skip: int = Query(0, ge=0),
-    limit: int = Query(50, ge=1, le=100),
-    include_archived: bool = Query(True, description="Include archived conversations"),
-    search: str | None = Query(None, max_length=100, description="Search by title or ID prefix"),
-) -> Any:
-    """List all conversations with message counts (admin only)."""
-    items, total = await conversation_service.list_conversations_admin(
-        skip=skip,
-        limit=limit,
-        include_archived=include_archived,
-        search=search,
-    )
-    return ConversationAdminList(items=items, total=total)
-
-
-@router.get("/shared-with-me", response_model=ConversationList)
-async def list_shared_with_me(
-    share_service: ConversationShareSvc,
-    current_user: CurrentUser,
-    skip: int = Query(0, ge=0),
-    limit: int = Query(50, ge=1, le=100),
-) -> Any:
-    """List conversations shared with the current user."""
-    items, total = await share_service.list_shared_with_me(current_user.id, skip=skip, limit=limit)
-    return ConversationList(items=items, total=total)
-
-
-@router.get("/shared/{token}", response_model=ConversationReadWithMessages)
-async def get_shared_conversation(
-    token: str,
-    share_service: ConversationShareSvc,
-) -> Any:
-    """Access a shared conversation via public token (no auth required)."""
-    return await share_service.get_by_token(token)
 
 
 @router.get("", response_model=ConversationList)
@@ -220,94 +149,3 @@ async def add_message(
         data,
         user_id=current_user.id,
     )
-
-
-@router.post(
-    "/{conversation_id}/messages/{message_id}/rate",
-    response_model=MessageRatingRead,
-)
-async def rate_message(
-    conversation_id: UUID,
-    message_id: UUID,
-    data: MessageRatingCreate,
-    rating_service: MessageRatingSvc,
-    current_user: CurrentUser,
-    response: Response,
-) -> Any:
-    """Rate an assistant message — 201 for new rating, 200 when updating."""
-    rating, is_new = await rating_service.rate_message(
-        conversation_id=conversation_id,
-        message_id=message_id,
-        user_id=current_user.id,
-        data=data,
-    )
-    if is_new:
-        response.status_code = status.HTTP_201_CREATED
-    return rating
-
-
-@router.delete(
-    "/{conversation_id}/messages/{message_id}/rate",
-    status_code=status.HTTP_204_NO_CONTENT,
-    response_model=None,
-)
-async def remove_rating(
-    conversation_id: UUID,
-    message_id: UUID,
-    rating_service: MessageRatingSvc,
-    current_user: CurrentUser,
-) -> None:
-    """Remove your rating from a message."""
-    await rating_service.remove_rating(
-        conversation_id=conversation_id,
-        message_id=message_id,
-        user_id=current_user.id,
-    )
-
-
-@router.post(
-    "/{conversation_id}/shares",
-    response_model=ConversationShareRead,
-    status_code=status.HTTP_201_CREATED,
-)
-async def share_conversation(
-    conversation_id: UUID,
-    data: ConversationShareCreate,
-    share_service: ConversationShareSvc,
-    current_user: CurrentUser,
-) -> Any:
-    """Share a conversation with another user or generate a public link."""
-    result = await share_service.share_conversation(
-        conversation_id,
-        shared_by=current_user.id,
-        shared_with=data.shared_with,
-        generate_link=data.generate_link,
-        permission=data.permission,
-    )
-    return result["share"]
-
-
-@router.get("/{conversation_id}/shares", response_model=ConversationShareList)
-async def list_shares(
-    conversation_id: UUID,
-    share_service: ConversationShareSvc,
-    current_user: CurrentUser,
-) -> Any:
-    """List all shares for a conversation (owner only)."""
-    shares = await share_service.list_shares(conversation_id, current_user.id)
-    return ConversationShareList(items=shares, total=len(shares))
-
-
-@router.delete(
-    "/{conversation_id}/shares/{share_id}",
-    status_code=status.HTTP_204_NO_CONTENT,
-    response_model=None,
-)
-async def revoke_share(
-    conversation_id: UUID,
-    share_id: UUID,
-    share_service: ConversationShareSvc,
-    current_user: CurrentUser,
-) -> None:
-    """Revoke a conversation share."""
-    await share_service.revoke_share(share_id, current_user.id)

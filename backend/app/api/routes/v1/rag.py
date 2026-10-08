@@ -17,13 +17,11 @@ from app.api.deps import (
     CurrentUser,
     IngestionSvc,
     RAGDocumentSvc,
-    RAGSyncSvc,
     RetrievalSvc,
-    SyncSourceSvc,
     VectorStoreSvc,
 )
 from app.core.config import settings
-from app.core.exceptions import NotFoundError
+from app.core.exceptions import BadRequestError, NotFoundError
 from app.schemas.rag import (
     RAGCollectionInfo,
     RAGCollectionList,
@@ -34,18 +32,8 @@ from app.schemas.rag import (
     RAGSearchRequest,
     RAGSearchResponse,
     RAGSearchResult,
-    RAGSyncLogList,
-    RAGSyncRequest,
-    RAGSyncResponse,
     RAGTrackedDocumentList,
     SupportedFormatsResponse,
-)
-from app.schemas.sync_source import (
-    ConnectorList,
-    SyncSourceCreate,
-    SyncSourceList,
-    SyncSourceRead,
-    SyncSourceUpdate,
 )
 from app.services.rag.config import get_supported_formats
 
@@ -259,125 +247,3 @@ async def retry_ingestion(
     """Retry a failed document ingestion."""
     doc = await rag_doc_svc.retry_ingestion(doc_id)
     return RAGRetryResponse(id=str(doc.id), status="processing", message="Retry queued")
-
-
-@router.get("/sync/logs", response_model=RAGSyncLogList)
-async def list_sync_logs(
-    rag_sync_svc: RAGSyncSvc,
-    _: CurrentAdmin,
-    collection_name: str | None = Query(None),
-    limit: int = Query(20, ge=1, le=100),
-) -> Any:
-    """List sync operation logs."""
-    return await rag_sync_svc.list_sync_logs(collection_name=collection_name, limit=limit)
-
-
-@router.post("/sync/local", response_model=RAGSyncResponse)
-async def trigger_local_sync(
-    request: RAGSyncRequest,
-    rag_sync_svc: RAGSyncSvc,
-    _: CurrentAdmin,
-) -> Any:
-    """Trigger a local directory sync via background task."""
-    sync_log = await rag_sync_svc.start_local_sync(
-        collection_name=request.collection_name,
-        mode=request.mode,
-        path=request.path,
-    )
-    return RAGSyncResponse(
-        id=str(sync_log.id),
-        status="running",
-        message=f"Sync started for '{request.collection_name}' (mode={request.mode})",
-    )
-
-
-@router.delete("/sync/{sync_id}", response_model=RAGMessageResponse)
-async def cancel_sync(
-    sync_id: str,
-    rag_sync_svc: RAGSyncSvc,
-    _: CurrentAdmin,
-) -> Any:
-    """Cancel a running sync operation."""
-    await rag_sync_svc.cancel_sync(sync_id)
-    return RAGMessageResponse(message="Sync cancelled")
-
-
-@router.get("/sync/sources", response_model=SyncSourceList)
-async def list_sync_sources(
-    sync_source_svc: SyncSourceSvc,
-    _: CurrentAdmin,
-    collection_name: str | None = Query(None, description="Filter by KB collection name"),
-) -> Any:
-    """List sync sources for the active organization.
-
-    Pass ``collection_name`` to see only sources assigned to a specific KB.
-    Omit it to list all org-level integrations (assigned and unassigned).
-    """
-    return await sync_source_svc.list_sources()
-
-
-@router.post(
-    "/sync/sources",
-    response_model=SyncSourceRead,
-    status_code=status.HTTP_201_CREATED,
-)
-async def create_sync_source(
-    data: SyncSourceCreate,
-    sync_source_svc: SyncSourceSvc,
-    _: CurrentAdmin,
-) -> Any:
-    """Create a new sync source configuration.
-
-    Omit ``collection_name`` to create an org-level integration template
-    that can later be cloned into one or more knowledge bases.
-    """
-    return await sync_source_svc.create_source(data)
-
-
-@router.patch("/sync/sources/{source_id}", response_model=SyncSourceRead)
-async def update_sync_source(
-    source_id: str,
-    data: SyncSourceUpdate,
-    sync_source_svc: SyncSourceSvc,
-    _: CurrentAdmin,
-) -> Any:
-    """Update an existing sync source configuration."""
-    return await sync_source_svc.update_source(source_id, data)
-
-
-@router.delete(
-    "/sync/sources/{source_id}",
-    status_code=status.HTTP_204_NO_CONTENT,
-    response_model=None,
-)
-async def delete_sync_source(
-    source_id: str,
-    sync_source_svc: SyncSourceSvc,
-    _: CurrentAdmin,
-) -> None:
-    """Delete a sync source configuration."""
-    await sync_source_svc.delete_source(source_id)
-
-
-@router.post("/sync/sources/{source_id}/trigger", response_model=RAGSyncResponse)
-async def trigger_sync_source(
-    source_id: str,
-    sync_source_svc: SyncSourceSvc,
-    _: CurrentAdmin,
-) -> Any:
-    """Trigger a manual sync for a configured source."""
-    sync_log = await sync_source_svc.trigger_sync(source_id)
-    return RAGSyncResponse(
-        id=str(sync_log.id),
-        status="running",
-        message=f"Sync triggered for source '{source_id}'",
-    )
-
-
-@router.get("/sync/connectors", response_model=ConnectorList)
-async def list_connectors(
-    sync_source_svc: SyncSourceSvc,
-    _: CurrentAdmin,
-) -> Any:
-    """List available sync connector types with their config schemas."""
-    return sync_source_svc.list_connectors()

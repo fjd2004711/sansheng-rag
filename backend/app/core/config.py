@@ -40,8 +40,6 @@ class Settings(BaseSettings):
     MODELS_CACHE_DIR: Path = Path("./models_cache")
     MEDIA_DIR: Path = Path("./media")
     MAX_UPLOAD_SIZE_MB: int = 50  # Max file upload size in MB
-    # Soft per-org storage cap surfaced on /billing — not enforced yet (5 GB).
-    STORAGE_SOFT_LIMIT_BYTES: int = 5 * 1024 * 1024 * 1024
 
     POSTGRES_HOST: str = "localhost"
     POSTGRES_PORT: int = 5432
@@ -95,9 +93,7 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
     ALGORITHM: str = "HS256"
 
-    # Public URL of the frontend; used to build OAuth redirect targets and
-    # Stripe checkout/portal return URLs. Always declared (not gated) because
-    # the billing model_validator references it unconditionally.
+    # Public URL of the frontend.
     FRONTEND_URL: str = "http://localhost:3010"
 
     API_KEY: str = "change-me-in-production"

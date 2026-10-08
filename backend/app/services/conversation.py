@@ -6,30 +6,18 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import AuthorizationError, NotFoundError
+from app.core.exceptions import NotFoundError
 from app.db.models.conversation import Conversation, Message, ToolCall
-from app.repositories import (
-    chat_file_repo,
-    conversation_repo,
-    conversation_share_repo,
-    message_rating_repo,
-)
+from app.repositories import chat_file_repo, conversation_repo
 from app.schemas.conversation import (
     ConversationCreate,
     ConversationUpdate,
-    ConversationWithLatestMessage,
-    DemoConversationSummary,
     MessageCreate,
-    MessageRead,
     ToolCallComplete,
     ToolCallCreate,
 )
-from app.schemas.conversation_share import AdminConversationList, AdminConversationRead
 
 logger = logging.getLogger(__name__)
-
-# Maximum number of conversations to export in a single request to prevent DoS.
-MAX_EXPORT_LIMIT = 1000
 
 
 def _safe_parse_args(args: Any) -> dict:
@@ -50,100 +38,6 @@ class ConversationService:
 
     EXPORT_CHUNK_SIZE = 1000
     MESSAGE_EXPORT_LIMIT = 10000
-
-    async def export_all(self) -> list[dict[str, Any]]:
-        """Export all conversations with messages and ratings for admin download.
-
-        Uses keyset pagination on (created_at, id) to avoid skipping or
-        duplicating conversations when data changes during export.
-        """
-        export_data: list[dict[str, Any]] = []
-        last_created_at: datetime | None = None
-        last_id: UUID | None = None
-
-        while True:
-            items = await conversation_repo.export_chunk(
-                self.db,
-                last_created_at=last_created_at,
-                last_id=last_id,
-                limit=self.EXPORT_CHUNK_SIZE,
-            )
-            if not items:
-                break
-
-            all_message_ids: list[UUID] = []
-            conv_messages_map: dict[str, list[Message | MessageRead]] = {}
-
-            for conv in items:
-                messages, _ = await self.list_messages(
-                    conv.id, skip=0, limit=self.MESSAGE_EXPORT_LIMIT, include_tool_calls=True
-                )
-                conv_messages_map[str(conv.id)] = messages
-                all_message_ids.extend([m.id for m in messages if m.id])
-            message_ratings_map: dict[str, list[dict[str, Any]]] = {}
-            ratings = await message_rating_repo.get_ratings_with_users_for_messages(
-                self.db, message_ids=all_message_ids
-            )
-            for rating, user in ratings:
-                msg_id = str(rating.message_id)
-                if msg_id not in message_ratings_map:
-                    message_ratings_map[msg_id] = []
-                message_ratings_map[msg_id].append(
-                    {
-                        "id": str(rating.id),
-                        "user_id": str(rating.user_id),
-                        "user_email": getattr(user, "email", None),
-                        "user_name": user.full_name if user else None,
-                        "rating": rating.rating,
-                        "comment": rating.comment,
-                        "created_at": rating.created_at.isoformat() if rating.created_at else None,
-                        "updated_at": rating.updated_at.isoformat() if rating.updated_at else None,
-                    }
-                )
-
-            for conv in items:
-                messages = conv_messages_map.get(str(conv.id), [])
-                export_data.append(
-                    {
-                        "id": str(conv.id),
-                        "user_id": str(conv.user_id) if conv.user_id else None,
-                        "title": conv.title,
-                        "created_at": conv.created_at.isoformat() if conv.created_at else None,
-                        "updated_at": conv.updated_at.isoformat() if conv.updated_at else None,
-                        "is_archived": conv.is_archived,
-                        "messages": [
-                            {
-                                "id": str(m.id),
-                                "role": m.role,
-                                "content": m.content,
-                                "created_at": m.created_at.isoformat() if m.created_at else None,
-                                "model_name": m.model_name,
-                                "tokens_used": m.tokens_used,
-                                "tool_calls": [
-                                    {
-                                        "tool_name": tc.tool_name,
-                                        "args": _safe_parse_args(tc.args),
-                                        "result": tc.result,
-                                        "status": tc.status,
-                                    }
-                                    for tc in (m.tool_calls or [])
-                                ]
-                                if hasattr(m, "tool_calls") and m.tool_calls
-                                else [],
-                                "ratings": message_ratings_map.get(str(m.id), []),
-                            }
-                            for m in messages
-                        ],
-                    }
-                )
-
-            last_created_at = items[-1].created_at
-            last_id = items[-1].id
-
-            if len(items) < self.EXPORT_CHUNK_SIZE:
-                break
-
-        return export_data
 
     async def get_conversation(
         self,
@@ -166,24 +60,10 @@ class ConversationService:
             and conversation.user_id is not None
             and str(conversation.user_id) != str(user_id)
         ):
-            # Not the owner — check if user has a share granting access
-            share = await conversation_share_repo.get_share(self.db, conversation_id, user_id)
-            if not share:
-                raise NotFoundError(
-                    message="Conversation not found",
-                    details={"conversation_id": str(conversation_id)},
-                )
-        if include_messages and user_id is not None and conversation.messages:
-            message_ids = [m.id for m in conversation.messages]
-            user_ratings = await message_rating_repo.get_user_ratings_for_messages(
-                self.db, message_ids=message_ids, user_id=user_id
+            raise NotFoundError(
+                message="Conversation not found",
+                details={"conversation_id": str(conversation_id)},
             )
-            rating_counts = await message_rating_repo.get_rating_counts_for_messages(
-                self.db, message_ids=message_ids
-            )
-            for msg in conversation.messages:
-                msg.user_rating = user_ratings.get(msg.id)  # ty: ignore[unresolved-attribute]
-                msg.rating_count = rating_counts.get(msg.id)  # ty: ignore[unresolved-attribute]
         return conversation
 
     async def list_conversations(
@@ -207,75 +87,6 @@ class ConversationService:
             include_archived=include_archived,
         )
         return items, total
-
-    async def list_conversations_admin(
-        self,
-        *,
-        skip: int = 0,
-        limit: int = 50,
-        include_archived: bool = False,
-        search: str | None = None,
-    ) -> tuple[list[ConversationWithLatestMessage], int]:
-        rows, total = await conversation_repo.get_all_conversations_with_count(
-            self.db,
-            skip=skip,
-            limit=limit,
-            include_archived=include_archived,
-            search=search,
-        )
-
-        items = [
-            ConversationWithLatestMessage(
-                id=conv.id,
-                user_id=conv.user_id,
-                title=conv.title,
-                is_archived=conv.is_archived,
-                created_at=conv.created_at,
-                updated_at=conv.updated_at,
-                message_count=msg_count,
-            )
-            for conv, msg_count in rows
-        ]
-        return items, total
-
-    async def admin_list_with_users(
-        self,
-        *,
-        skip: int = 0,
-        limit: int = 50,
-        search: str | None = None,
-        user_id: UUID | None = None,
-        include_archived: bool = False,
-        archived_only: bool = False,
-        sort_by: str = "updated_at",
-        sort_dir: str = "desc",
-    ) -> AdminConversationList:
-        rows, total = await conversation_repo.admin_list_with_users(
-            self.db,
-            skip=skip,
-            limit=limit,
-            search=search,
-            user_id=user_id,
-            include_archived=include_archived,
-            archived_only=archived_only,
-            sort_by=sort_by,
-            sort_dir=sort_dir,
-        )
-        items = [
-            AdminConversationRead(
-                id=conv.id,
-                user_id=conv.user_id,
-                title=conv.title,
-                is_archived=conv.is_archived,
-                is_demo=conv.is_demo,
-                message_count=msg_count,
-                user_email=email,
-                created_at=conv.created_at,
-                updated_at=conv.updated_at,
-            )
-            for conv, msg_count, email in rows
-        ]
-        return AdminConversationList(items=items, total=total)
 
     async def create_conversation(
         self,
@@ -339,38 +150,6 @@ class ConversationService:
     ) -> Conversation:
         return await self.get_conversation(conversation_id, include_messages=True)
 
-    async def list_demo_conversations(
-        self, *, skip: int = 0, limit: int = 50
-    ) -> tuple[list[DemoConversationSummary], int]:
-        """List admin-curated demo conversations for the public gallery."""
-        rows, total = await conversation_repo.get_demo_conversations_with_count(
-            self.db, skip=skip, limit=limit
-        )
-        items = [
-            DemoConversationSummary(
-                id=conv.id,
-                title=conv.title,
-                message_count=msg_count,
-                preview=preview[:200] if preview else None,
-                created_at=conv.created_at,
-                updated_at=conv.updated_at,
-            )
-            for conv, msg_count, preview in rows
-        ]
-        return items, total
-
-    async def get_demo_conversation(self, conversation_id: UUID) -> Conversation:
-        """Get a single demo conversation with messages (public, no auth required)."""
-        conversation = await conversation_repo.get_conversation_by_id(
-            self.db, conversation_id, include_messages=True
-        )
-        if not conversation or not conversation.is_demo:
-            raise NotFoundError(
-                message="Demo not found",
-                details={"conversation_id": str(conversation_id)},
-            )
-        return conversation
-
     async def get_message(self, message_id: UUID) -> Message:
         message = await conversation_repo.get_message_by_id(self.db, message_id)
         if not message:
@@ -388,9 +167,9 @@ class ConversationService:
         limit: int = 100,
         include_tool_calls: bool = False,
         user_id: UUID | None = None,
-    ) -> tuple[list[Message | MessageRead], int]:
-        """When user_id is provided, messages are enriched with user_rating and rating_count."""
-        await self.get_conversation(conversation_id)
+    ) -> tuple[list[Message], int]:
+        """List messages; when ``user_id`` is given the caller must own the conversation."""
+        await self.get_conversation(conversation_id, user_id=user_id)
         items = await conversation_repo.get_messages_by_conversation(
             self.db,
             conversation_id,
@@ -399,22 +178,6 @@ class ConversationService:
             include_tool_calls=include_tool_calls,
         )
         total = await conversation_repo.count_messages(self.db, conversation_id)
-        if user_id is not None and items:
-            message_ids = [msg.id for msg in items]
-            user_ratings = await message_rating_repo.get_user_ratings_for_messages(
-                self.db, message_ids=message_ids, user_id=user_id
-            )
-            rating_counts = await message_rating_repo.get_rating_counts_for_messages(
-                self.db, message_ids=message_ids
-            )
-
-            enriched: list[Message | MessageRead] = []
-            for msg in items:
-                msg_schema = MessageRead.model_validate(msg)
-                msg_schema.user_rating = user_ratings.get(msg.id)
-                msg_schema.rating_count = rating_counts.get(msg.id)
-                enriched.append(msg_schema)
-            return enriched, total
         return list(items), total
 
     async def add_message(
@@ -424,22 +187,7 @@ class ConversationService:
         *,
         user_id: UUID | None = None,
     ) -> Message:
-        conversation = await self.get_conversation(
-            conversation_id,
-            user_id=user_id,
-        )
-        if (
-            user_id is not None
-            and hasattr(conversation, "user_id")
-            and conversation.user_id is not None
-            and str(conversation.user_id) != str(user_id)
-        ):
-            share = await conversation_share_repo.get_share(self.db, conversation_id, user_id)
-            if not share or share.permission != "edit":
-                raise AuthorizationError(
-                    message="You do not have edit permission for this conversation",
-                    details={"conversation_id": str(conversation_id)},
-                )
+        await self.get_conversation(conversation_id, user_id=user_id)
         return await conversation_repo.create_message(
             self.db,
             conversation_id=conversation_id,

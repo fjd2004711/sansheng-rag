@@ -17,7 +17,7 @@ export function stripLocale(pathname: string): string {
 /**
  * Whether `href` matches the current path.
  * - `exact`: only an exact match (after stripping locale).
- * - otherwise: matches the path itself or any sub-path (`/billing` → `/billing/usage`).
+ * - otherwise: matches the path itself or any sub-path (`/rag` → `/rag/anything`).
  *   The root `/` always matches exactly to avoid false positives.
  */
 export function isRouteActive(pathname: string, href: string, exact = false): boolean {
