@@ -115,6 +115,7 @@ class EvidenceEvaluator:
             model=self._model,
             messages=[{"role": "user", "content": prompt}],
             temperature=0,
+            extra_body=settings.llm_extra_body,
         )
         return response.choices[0].message.content or ""
 

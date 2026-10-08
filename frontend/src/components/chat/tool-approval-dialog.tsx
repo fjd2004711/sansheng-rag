@@ -71,7 +71,7 @@ export function ToolApprovalDialog({
     <div className="space-y-3 rounded-lg border border-yellow-500/50 bg-yellow-50/5 p-3">
       <div className="flex items-center gap-2 text-sm text-yellow-600">
         <AlertTriangle className="h-4 w-4" />
-        <span className="font-medium">Tool approval required</span>
+        <span className="font-medium">需要你确认后才能继续</span>
       </div>
 
       {actionRequests.map((action) => (

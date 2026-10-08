@@ -18,7 +18,7 @@ const PROMPTS = [
   {
     icon: GitBranch,
     title: "观察自纠错",
-    prompt: "用一个比较含糊的说法询问某个具体凭证或代码，观察右侧 Trace 如何诊断并改写查询。",
+    prompt: "用一个比较含糊的说法询问某个具体凭证或代码，观察右侧「运作流程」如何诊断原因并换个问法。",
   },
   {
     icon: ShieldQuestion,

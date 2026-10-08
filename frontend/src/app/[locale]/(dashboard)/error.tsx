@@ -19,13 +19,13 @@ export default function DashboardError({
     <div className="flex min-h-0 flex-1 items-center justify-center py-10">
       <ErrorState
         className="w-full max-w-md"
-        title="This section failed to load"
+        title="这部分内容加载失败"
         description={
           error.digest
-            ? `An unexpected error occurred. Error ID: ${error.digest}`
-            : "An unexpected error occurred while loading this view. Please try again."
+            ? `出现了意外错误。错误编号：${error.digest}`
+            : "加载时出现意外错误，请重试。"
         }
-        cta={{ label: "Try again", onClick: () => reset() }}
+        cta={{ label: "重试", onClick: () => reset() }}
       />
     </div>
   );

@@ -32,7 +32,7 @@ export function RawToolView({ toolCall, resultText }: { toolCall: ToolCall; resu
   return (
     <div className="space-y-3">
       {isEmptyArgs(toolCall.args) ? (
-        <p className="text-muted-foreground text-xs italic">No arguments</p>
+        <p className="text-muted-foreground text-xs italic">无参数</p>
       ) : (
         <div className="group relative">
           <div className="mb-1 flex items-center justify-between">
@@ -89,7 +89,7 @@ export function GenericToolResult({
   if (toolCall.status !== "completed" && !resultText) {
     return (
       <p className="text-muted-foreground py-2 text-xs italic">
-        {toolCall.status === "error" ? "Tool failed." : "Running…"}
+        {toolCall.status === "error" ? "工具执行失败。" : "执行中…"}
       </p>
     );
   }

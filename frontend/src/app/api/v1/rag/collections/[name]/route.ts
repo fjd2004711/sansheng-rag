@@ -22,7 +22,7 @@ export async function POST(
     if (error instanceof BackendApiError) {
       return NextResponse.json({ detail: error.message }, { status: error.status });
     }
-    return NextResponse.json({ detail: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ detail: "服务器内部错误" }, { status: 500 });
   }
 }
 
@@ -47,6 +47,6 @@ export async function DELETE(
     if (error instanceof BackendApiError) {
       return NextResponse.json({ detail: error.message }, { status: error.status });
     }
-    return NextResponse.json({ detail: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ detail: "服务器内部错误" }, { status: 500 });
   }
 }

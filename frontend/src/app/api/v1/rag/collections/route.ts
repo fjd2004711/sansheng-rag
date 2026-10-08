@@ -14,11 +14,11 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     if (error instanceof BackendApiError) {
       return NextResponse.json(
-        { detail: error.message || "Failed to fetch collections" },
+        { detail: error.message || "获取集合列表失败" },
         { status: error.status },
       );
     }
-    return NextResponse.json({ detail: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ detail: "服务器内部错误" }, { status: 500 });
   }
 }
 
@@ -40,10 +40,10 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof BackendApiError) {
       return NextResponse.json(
-        { detail: error.message || "Failed to create collection" },
+        { detail: error.message || "创建集合失败" },
         { status: error.status },
       );
     }
-    return NextResponse.json({ detail: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ detail: "服务器内部错误" }, { status: 500 });
   }
 }

@@ -187,7 +187,7 @@ export function MessageItem({ message, groupPosition, onRegenerate }: MessageIte
                       key={att.file.id}
                       onClick={() => openPreview(att.file)}
                       className="hover:ring-foreground/30 block overflow-hidden rounded-xl border ring-2 ring-transparent transition-all"
-                      title={`Open ${att.file.filename}`}
+                      title={`打开 ${att.file.filename}`}
                     >
                       <Image
                         src={getFileUrl(att.file.id)}
@@ -206,7 +206,7 @@ export function MessageItem({ message, groupPosition, onRegenerate }: MessageIte
                       onClick={() => openPreview(att.file)}
                     />
                   ) : (
-                    <FileChip key={att.id} filename="Attached file" href={getFileUrl(att.id)} />
+                    <FileChip key={att.id} filename="附件" href={getFileUrl(att.id)} />
                   ),
                 )}
               </div>
@@ -239,7 +239,7 @@ export function MessageItem({ message, groupPosition, onRegenerate }: MessageIte
                     <span className="bg-muted-foreground/40 h-1.5 w-1.5 animate-bounce rounded-full [animation-delay:150ms]" />
                     <span className="bg-muted-foreground/40 h-1.5 w-1.5 animate-bounce rounded-full [animation-delay:300ms]" />
                   </div>
-                  <span className="text-muted-foreground text-xs">Thinking...</span>
+                  <span className="text-muted-foreground text-xs">正在思考...</span>
                 </div>
               )}
 
@@ -335,8 +335,8 @@ export function MessageItem({ message, groupPosition, onRegenerate }: MessageIte
               <button
                 type="button"
                 onClick={onRegenerate}
-                title="Regenerate response"
-                aria-label="Regenerate response"
+                title="重新生成回答"
+                aria-label="重新生成回答"
                 className="bg-muted hover:bg-muted/80 text-foreground/70 hover:text-foreground inline-flex h-6 w-6 items-center justify-center rounded-md transition-colors sm:opacity-0 sm:group-hover:opacity-100"
               >
                 <RefreshCw className="h-3 w-3" />

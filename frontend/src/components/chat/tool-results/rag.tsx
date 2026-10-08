@@ -55,7 +55,7 @@ export function RAGSearchResults({ result }: { result: string }) {
       return (
         <div className="text-muted-foreground flex items-center gap-2 py-2 text-sm">
           <Search className="h-4 w-4" />
-          No relevant documents found
+          没有找到相关资料
         </div>
       );
     }
@@ -65,7 +65,7 @@ export function RAGSearchResults({ result }: { result: string }) {
   // Group chunks by source filename so the same file doesn't render as N
   // duplicate cards. Preserve insertion order so the indices stay readable.
   const grouped = items.reduce<Map<string, RAGResultItem[]>>((acc, item) => {
-    const key = item.source || "Unknown";
+    const key = item.source || "未知来源";
     const list = acc.get(key) ?? [];
     list.push(item);
     acc.set(key, list);
@@ -78,11 +78,11 @@ export function RAGSearchResults({ result }: { result: string }) {
       <div className="text-foreground/55 flex items-center gap-2 font-mono text-[10px] tracking-wider uppercase">
         <Search className="h-3 w-3" />
         <span>
-          {items.length} chunk{items.length !== 1 ? "s" : ""}
+          共 {items.length} 段资料
         </span>
         <span>·</span>
         <span>
-          {sourceCount} source{sourceCount !== 1 ? "s" : ""}
+          来自 {sourceCount} 份文件
         </span>
       </div>
 
@@ -121,14 +121,14 @@ function RAGSourceGroup({
         <span className="text-foreground truncate text-xs font-medium" title={source}>
           {source}
         </span>
-        <span className="text-foreground/45 ml-auto font-mono text-[10px] tracking-wider uppercase">
-          {chunks.length} chunk{chunks.length !== 1 ? "s" : ""}
+        <span className="text-foreground/45 ml-auto text-[10px]">
+          {chunks.length} 段
         </span>
         <ScoreDot score={bestScore} />
         {collection && (
           <span
             className="border-foreground/15 text-foreground/55 hidden shrink-0 rounded-full border px-1.5 py-0.5 font-mono text-[9px] tracking-wider uppercase sm:inline"
-            title={`Collection: ${collection}`}
+            title={`集合：${collection}`}
           >
             {collection}
           </span>
@@ -158,11 +158,11 @@ function RAGSourceGroup({
                   </p>
                   {(chunk.page || chunk.chunk) && (
                     <div className="text-foreground/45 mt-1 flex items-center gap-1.5 font-mono text-[10px] tracking-wider uppercase">
-                      {chunk.page && <span>p.{chunk.page}</span>}
+                      {chunk.page && <span>第 {chunk.page} 页</span>}
                       {chunk.chunk && (
                         <>
                           {chunk.page && <span>·</span>}
-                          <span>chunk {chunk.chunk}</span>
+                          <span>第 {Number(chunk.chunk) + 1} 段</span>
                         </>
                       )}
                     </div>

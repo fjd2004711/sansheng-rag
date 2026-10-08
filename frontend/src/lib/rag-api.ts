@@ -123,7 +123,7 @@ export async function downloadKBDocument(
   mode: "download" | "view" = "download",
 ): Promise<void> {
   const res = await fetch(`/api/kb/${kbId}/documents/${doc.id}/download`);
-  if (!res.ok) throw new Error(`Download failed: ${res.status}`);
+  if (!res.ok) throw new Error(`下载失败：${res.status}`);
   const blob = await res.blob();
   const url = URL.createObjectURL(blob);
   if (mode === "view") {
@@ -176,8 +176,8 @@ export async function ingestFile(
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: "Upload failed" }));
-    throw new ApiError(response.status, error.detail || "Ingestion failed", error);
+    const error = await response.json().catch(() => ({ detail: "上传失败" }));
+    throw new ApiError(response.status, error.detail || "入库失败", error);
   }
 
   return response.json();

@@ -1,14 +1,16 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
+import { zhError } from "@/lib/zh-errors";
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export function getErrorMessage(err: unknown, fallback = "An unexpected error occurred"): string {
-  return err instanceof Error ? err.message : fallback;
+export function getErrorMessage(err: unknown, fallback = "出现了意外错误，请重试"): string {
+  return err instanceof Error ? zhError(err.message, fallback) : fallback;
 }
 
 export function isAppAdmin(user: { role?: string } | null | undefined): boolean {
@@ -63,10 +65,10 @@ export function timeAgo(dateStr: string): string {
   if (Number.isNaN(then)) return "";
   const diff = Math.round((Date.now() - then) / 1000);
   if (diff < 0) return "";
-  if (diff < 60) return "just now";
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  if (diff < 86400 * 7) return `${Math.floor(diff / 86400)}d ago`;
+  if (diff < 60) return "刚刚";
+  if (diff < 3600) return `${Math.floor(diff / 60)}分钟前`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}小时前`;
+  if (diff < 86400 * 7) return `${Math.floor(diff / 86400)}天前`;
   return new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 

@@ -6,6 +6,8 @@
 
 import { useAuthStore } from "@/stores";
 
+import { zhError } from "@/lib/zh-errors";
+
 export class ApiError extends Error {
   constructor(
     public status: number,
@@ -103,7 +105,10 @@ class ApiClient {
       }
       throw new ApiError(
         response.status,
-        errorData?.detail || errorData?.message || "Request failed",
+        zhError(
+          errorData?.detail || errorData?.error?.message || errorData?.message,
+          "请求失败",
+        ),
         errorData,
       );
     }

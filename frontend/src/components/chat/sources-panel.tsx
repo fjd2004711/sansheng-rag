@@ -6,13 +6,20 @@ import { useSourcesPanelStore } from "@/stores/sources-panel-store";
 import type { SourceItem } from "@/lib/chat-sources";
 import { cn } from "@/lib/utils";
 
+const SCORE_LABELS: Record<string, string> = {
+  dense_score: "语义相似",
+  bm25_score: "关键词匹配",
+  rrf_score: "综合排名",
+  reranker_score: "精排得分",
+};
+
 function ScoreDot({ score }: { score: number }) {
   const tone =
     score >= 0.7 ? "bg-foreground" : score >= 0.4 ? "bg-foreground/55" : "bg-foreground/25";
   return (
     <span
       className={cn("h-1.5 w-1.5 shrink-0 rounded-full", tone)}
-      title={`Relevance: ${score.toFixed(2)}`}
+      title={`相关度：${score.toFixed(2)}`}
     />
   );
 }
@@ -58,9 +65,9 @@ function RAGSourceRow({
             </p>
           )}
           {item.componentScores && Object.keys(item.componentScores).length > 0 && (
-            <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 pl-5 font-mono text-[10px] text-muted-foreground">
+            <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 pl-5 text-[11px] text-muted-foreground">
               {Object.entries(item.componentScores).map(([name, value]) => (
-                <div key={name} className="flex justify-between gap-2"><dt>{name.replace("_score", "")}</dt><dd>{value.toFixed(3)}</dd></div>
+                <div key={name} className="flex justify-between gap-2"><dt>{SCORE_LABELS[name] ?? name}</dt><dd>{value.toFixed(3)}</dd></div>
               ))}
             </dl>
           )}
@@ -153,13 +160,13 @@ export function SourcesPanel() {
       {/* Header */}
       <div className="border-foreground/8 flex items-center justify-between border-b px-4 py-3">
         <h2 className="text-foreground text-sm font-semibold">
-          Sources
+          依据来源
           <span className="text-foreground/45 ml-2 font-normal">({sources.length})</span>
         </h2>
         <button
           type="button"
           onClick={close}
-          aria-label="Close sources panel"
+          aria-label="关闭来源面板"
           className="text-foreground/50 hover:text-foreground hover:bg-foreground/8 rounded-md p-1 transition-colors"
         >
           <X className="h-4 w-4" />
@@ -172,7 +179,7 @@ export function SourcesPanel() {
           <section className="space-y-2">
             {ragSources.length > 0 && webSources.length > 0 && (
               <h3 className="text-foreground/45 font-mono text-[10px] tracking-wider uppercase">
-                Knowledge base
+                知识库
               </h3>
             )}
             {ragSources.map((s) => (
@@ -189,7 +196,7 @@ export function SourcesPanel() {
           <section className="space-y-2">
             {ragSources.length > 0 && (
               <h3 className="text-foreground/45 font-mono text-[10px] tracking-wider uppercase">
-                Web
+                网页
               </h3>
             )}
             {webSources.map((s) => (

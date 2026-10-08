@@ -10,8 +10,8 @@ interface ErrorStateProps {
 }
 
 export function ErrorState({
-  title = "Something went wrong",
-  description = "Check your connection and try again.",
+  title = "出错了",
+  description = "请检查网络后重试。",
   cta,
   className,
 }: ErrorStateProps) {

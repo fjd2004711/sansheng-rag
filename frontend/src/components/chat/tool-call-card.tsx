@@ -71,15 +71,15 @@ export function ToolCallCard({ toolCall, defaultExpanded = false }: ToolCallCard
   const hasSpecialRenderer =
     isDateTime || isRAGSearch || isWebSearch || isAskUser;
   const friendlyName = isDateTime
-    ? "Current Date & Time"
+    ? "当前日期时间"
     : isRAGSearch
-      ? "Knowledge Base Search"
+      ? "知识库检索"
       : isWebSearch
-        ? "Web Search"
+        ? "网页搜索"
           : isAskUser
-            ? "Question"
+            ? "提问"
             : toolCall.name === "run_python"
-              ? "Run Python"
+              ? "运行计算"
               : toolDisplayName(toolCall.name);
 
   const ToolIcon = isDateTime
@@ -179,8 +179,8 @@ export function ToolCallCard({ toolCall, defaultExpanded = false }: ToolCallCard
                   showRaw && "text-primary",
                 )}
                 onClick={toggleRaw}
-                title={showRaw ? "Show formatted view" : "Show arguments + raw output"}
-                aria-label={showRaw ? "Show formatted view" : "Show arguments and raw output"}
+                title={showRaw ? "显示整理后的结果" : "显示参数与原始输出"}
+                aria-label={showRaw ? "显示整理后的结果" : "显示参数与原始输出"}
               >
                 <Code2 className="h-3.5 w-3.5" />
               </Button>

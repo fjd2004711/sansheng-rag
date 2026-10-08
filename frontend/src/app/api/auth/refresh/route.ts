@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
     const refreshToken = request.cookies.get("refresh_token")?.value;
 
     if (!refreshToken) {
-      return NextResponse.json({ detail: "No refresh token" }, { status: 401 });
+      return NextResponse.json({ detail: "登录已失效" }, { status: 401 });
     }
 
     const data = await backendFetch<RefreshTokenResponse>("/api/v1/auth/refresh", {
@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
 
     const response = NextResponse.json({
       access_token: data.access_token,
-      message: "Token refreshed",
+      message: "已刷新",
     });
 
     // The refresh token is only re-set when the backend rotated it.
@@ -30,12 +30,12 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (error) {
     if (error instanceof BackendApiError) {
-      const response = NextResponse.json({ detail: "Session expired" }, { status: 401 });
+      const response = NextResponse.json({ detail: "登录已过期，请重新登录" }, { status: 401 });
 
       clearAuthCookies(response);
 
       return response;
     }
-    return NextResponse.json({ detail: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ detail: "服务器内部错误" }, { status: 500 });
   }
 }

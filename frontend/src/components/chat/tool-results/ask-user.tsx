@@ -35,7 +35,7 @@ export function AskUserResult({ args, resultText }: { args: unknown; resultText:
     <div className="space-y-2.5 py-1">
       <div>
         <p className="text-foreground/55 font-mono text-[10px] tracking-wider uppercase">
-          {questions.length > 1 ? "Questions" : "Question"}
+          {questions.length > 1 ? "问题" : "问题"}
         </p>
         {questions.length > 0 ? (
           <ul className="text-foreground/85 mt-0.5 space-y-1 text-sm leading-relaxed">
@@ -44,11 +44,11 @@ export function AskUserResult({ args, resultText }: { args: unknown; resultText:
             ))}
           </ul>
         ) : (
-          <p className="text-muted-foreground mt-0.5 text-xs italic">Waiting for the user…</p>
+          <p className="text-muted-foreground mt-0.5 text-xs italic">等待回答…</p>
         )}
       </div>
       {questions.length > 0 && (
-        <p className="text-muted-foreground text-xs italic">Waiting for the user…</p>
+        <p className="text-muted-foreground text-xs italic">等待回答…</p>
       )}
     </div>
   );

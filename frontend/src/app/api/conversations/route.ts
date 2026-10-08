@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
     const accessToken = request.cookies.get("access_token")?.value;
 
     if (!accessToken) {
-      return NextResponse.json({ detail: "Not authenticated" }, { status: 401 });
+      return NextResponse.json({ detail: "未登录" }, { status: 401 });
     }
 
     const qs = request.nextUrl.searchParams.toString();
@@ -21,11 +21,11 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     if (error instanceof BackendApiError) {
       return NextResponse.json(
-        { detail: error.message || "Failed to fetch conversations" },
+        { detail: error.message || "加载对话失败" },
         { status: error.status },
       );
     }
-    return NextResponse.json({ detail: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ detail: "服务器内部错误" }, { status: 500 });
   }
 }
 
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     const accessToken = request.cookies.get("access_token")?.value;
 
     if (!accessToken) {
-      return NextResponse.json({ detail: "Not authenticated" }, { status: 401 });
+      return NextResponse.json({ detail: "未登录" }, { status: 401 });
     }
 
     const body = await request.json();
@@ -52,10 +52,10 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof BackendApiError) {
       return NextResponse.json(
-        { detail: error.message || "Failed to create conversation" },
+        { detail: error.message || "创建对话失败" },
         { status: error.status },
       );
     }
-    return NextResponse.json({ detail: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ detail: "服务器内部错误" }, { status: 500 });
   }
 }

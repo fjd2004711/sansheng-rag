@@ -77,12 +77,12 @@ export function FilePreviewPanel() {
     <aside
       className="border-foreground/10 bg-card relative flex h-full max-w-full shrink-0 flex-col border-l"
       style={{ width: `${width}px` }}
-      aria-label="File preview"
+      aria-label="文件预览"
     >
       <div
         role="separator"
         aria-orientation="vertical"
-        aria-label="Resize file preview"
+        aria-label="调整预览宽度"
         onMouseDown={onMouseDown}
         className={cn(
           "group absolute top-0 left-0 z-20 h-full w-1.5 -translate-x-1/2 cursor-col-resize",
@@ -109,14 +109,14 @@ export function FilePreviewPanel() {
           target="_blank"
           rel="noopener noreferrer"
           className="text-foreground/55 hover:bg-foreground/5 hover:text-foreground inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors"
-          title="Open in new tab"
+          title="在新标签页打开"
         >
           <ExternalLink className="h-3.5 w-3.5" />
         </a>
         <a
           href={downloadUrl}
           className="text-foreground/55 hover:bg-foreground/5 hover:text-foreground inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors"
-          title="Download"
+          title="下载"
         >
           <Download className="h-3.5 w-3.5" />
         </a>
@@ -124,8 +124,8 @@ export function FilePreviewPanel() {
           type="button"
           onClick={close}
           className="text-foreground/55 hover:bg-foreground/5 hover:text-foreground inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors"
-          aria-label="Close preview"
-          title="Close"
+          aria-label="关闭预览"
+          title="关闭"
         >
           <X className="h-4 w-4" />
         </button>

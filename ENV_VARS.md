@@ -39,6 +39,7 @@ group is for and which are required vs optional.
 | Variable | Required | Default | Description |
 |---|---|---|---|
 | `OPENAI_API_KEY` | **required** | — | From platform.openai.com |
+| `AI_DISABLE_THINKING` | optional | `false` | Send `enable_thinking=false` to providers that think by default (DashScope Qwen3); required there for `tool_choice=required` |
 | `AI_MODEL` | optional | `gpt-5.5` | Default model used by agent (provider-specific) |
 
 ## RAG (qdrant)

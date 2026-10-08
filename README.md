@@ -14,13 +14,22 @@
 
 ## 产品界面
 
-- `/`：公开展示页（固定样例 + 评测脚本生成的指标）
+界面全部为中文。没有启动页：打开站点直接进入对话页，未登录时转到登录页。
+
 - `/chat`：对话，右侧展示 Agent Trace（React Flow）与 Evidence Viewer
 - `/rag`：知识库管理（上传、入库状态、检索验证），需要管理员账号
 - `/evaluation`：P5 评测与消融看板
 - `/login`、`/register`
 
 第一个注册的用户自动成为管理员；公开部署前请先自行注册，或使用 `create-app-admin` 命令。
+
+### 演示免登录（可选）
+
+在 `frontend/.env.local` 里设置服务端变量 `DEMO_LOGIN_EMAIL` 和 `DEMO_LOGIN_PASSWORD`，打开站点时会自动以该账号进入对话页，不需要输入密码。**任何能访问该站点的人都会以这个账号进入**，请只在可信网络使用，并优先使用非管理员账号。不设置则保持正常登录。
+
+### 模型
+
+聊天与评审模型通过 OpenAI 兼容接口配置（`backend/.env` 的 `OPENAI_BASE_URL`、`OPENAI_API_KEY`、`AI_MODEL`）；嵌入模型单独配置（`EMBEDDING_*`）。对默认开启“思考模式”的服务（如阿里云百炼 Qwen3），需设置 `AI_DISABLE_THINKING=true`，否则 `tool_choice=required` 会被拒绝。密钥只放在被 git 忽略的 `.env`。
 
 ## 快速开始
 

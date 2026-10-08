@@ -27,14 +27,14 @@ export async function GET(request: NextRequest) {
     } catch (error) {
       if (!(error instanceof BackendApiError) || error.status !== 401) {
         const status = error instanceof BackendApiError ? error.status : 500;
-        return NextResponse.json({ detail: "Failed to get user" }, { status });
+        return NextResponse.json({ detail: "获取用户信息失败" }, { status });
       }
       // 401 → fall through and try to refresh.
     }
   }
 
   if (!refreshToken) {
-    return NextResponse.json({ detail: "Not authenticated" }, { status: 401 });
+    return NextResponse.json({ detail: "未登录" }, { status: 401 });
   }
 
   try {
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
     return response;
   } catch {
     // Refresh failed → truly logged out. Clear cookies.
-    const response = NextResponse.json({ detail: "Not authenticated" }, { status: 401 });
+    const response = NextResponse.json({ detail: "未登录" }, { status: 401 });
     clearAuthCookies(response);
     return response;
   }
