@@ -15,7 +15,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db_session
 
-DBSession = Annotated[AsyncSession, Depends(get_db_session)]
+# scope="function": the session commits as soon as the endpoint returns, *before* the response is
+# sent. With the default request scope the commit ran after the response, so a client that
+# re-read immediately after a write (delete, update) could still see the old data.
+DBSession = Annotated[AsyncSession, Depends(get_db_session, scope="function")]
 from uuid import UUID
 
 from app.db.session import get_db_context
