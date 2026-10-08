@@ -4,10 +4,9 @@ from typing import Any
 from uuid import UUID
 
 from sqlalchemy import delete as sql_delete
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.models.conversation import Conversation
 from app.db.models.user import User
 
 
@@ -116,44 +115,3 @@ async def has_any(db: AsyncSession) -> bool:
     """Return True if at least one user exists."""
     result = await db.execute(select(User).limit(1))
     return result.scalars().first() is not None
-
-
-async def admin_list_with_counts(
-    db: AsyncSession,
-    *,
-    skip: int = 0,
-    limit: int = 50,
-    search: str | None = None,
-    sort_by: str = "created_at",
-    sort_dir: str = "desc",
-) -> tuple[list[tuple[User, int]], int]:
-    """Admin: list users with their conversation counts.
-
-    Returns list of (user, conversation_count) tuples and total count.
-    """
-    conv_count_col = func.count(Conversation.id).label("conversation_count")
-    query = (
-        select(User, conv_count_col)
-        .outerjoin(Conversation, Conversation.user_id == User.id)
-        .group_by(User.id)
-    )
-    count_query = select(func.count()).select_from(User)
-
-    if search:
-        condition = User.email.ilike(f"%{search}%") | User.full_name.ilike(f"%{search}%")
-        query = query.where(condition)
-        count_query = count_query.where(condition)
-
-    sort_columns = {
-        "email": User.email,
-        "full_name": User.full_name,
-        "created_at": User.created_at,
-        "conversations": conv_count_col,
-    }
-    sort_col = sort_columns.get(sort_by, User.created_at)
-    sort_col = sort_col.desc() if sort_dir == "desc" else sort_col.asc()
-    query = query.order_by(sort_col).offset(skip).limit(limit)
-
-    total = await db.scalar(count_query) or 0
-    rows = (await db.execute(query)).all()
-    return [(user, count) for user, count in rows], total

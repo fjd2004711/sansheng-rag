@@ -75,8 +75,6 @@ export function conversationMessageToChatMessage(msg: RawMessage): ChatMessage {
     conversationId: msg.conversation_id,
     toolCalls,
     parts,
-    user_rating: msg.user_rating ?? undefined,
-    rating_count: msg.rating_count ?? undefined,
     files,
     fileIds: files?.map((f) => f.id),
   };

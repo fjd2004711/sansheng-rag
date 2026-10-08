@@ -5,7 +5,7 @@ from uuid import uuid4
 
 import pytest
 
-from app.core.exceptions import AuthorizationError, NotFoundError
+from app.core.exceptions import NotFoundError
 from app.services.conversation import ConversationService
 
 
@@ -121,18 +121,14 @@ class TestConversationServiceGetConversation:
 
     @pytest.mark.anyio
     async def test_get_conversation_wrong_user_raises(self, service: ConversationService):
-        """get_conversation raises NotFoundError when user_id doesn't match and no share exists."""
+        """get_conversation raises NotFoundError when user_id does not own it."""
         conv_id = uuid4()
         owner_id = uuid4()
         other_user_id = uuid4()
         mock_conv = MockConversation(id=conv_id, user_id=owner_id)
 
-        with (
-            patch("app.services.conversation.conversation_repo") as mock_repo,
-            patch("app.services.conversation.conversation_share_repo") as mock_share_repo,
-        ):
+        with patch("app.services.conversation.conversation_repo") as mock_repo:
             mock_repo.get_conversation_by_id = AsyncMock(return_value=mock_conv)
-            mock_share_repo.get_share = AsyncMock(return_value=None)
 
             with pytest.raises(NotFoundError):
                 await service.get_conversation(conv_id, user_id=other_user_id)
@@ -276,51 +272,38 @@ class TestConversationServiceAddMessageAuthorization:
         return ConversationService(mock_db)
 
     @pytest.mark.anyio
-    async def test_add_message_rejects_view_only_share(self, service: ConversationService):
-        """Recipients with a view share cannot append messages."""
+    async def test_add_message_by_non_owner_raises_not_found(self, service: ConversationService):
+        """Only the owner can append messages; others see the conversation as missing."""
         conv_id = uuid4()
-        owner_id = uuid4()
-        recipient_id = uuid4()
-        mock_conv = MockConversation(id=conv_id, user_id=owner_id)
-        mock_share = MagicMock(permission="view")
+        mock_conv = MockConversation(id=conv_id, user_id=uuid4())
         data = MagicMock(
             role="user", content="hi", thinking=None, model_name=None, tokens_used=None
         )
 
-        with (
-            patch("app.services.conversation.conversation_repo") as mock_repo,
-            patch("app.services.conversation.conversation_share_repo") as mock_share_repo,
-        ):
+        with patch("app.services.conversation.conversation_repo") as mock_repo:
             mock_repo.get_conversation_by_id = AsyncMock(return_value=mock_conv)
-            mock_share_repo.get_share = AsyncMock(return_value=mock_share)
 
-            with pytest.raises(AuthorizationError):
-                await service.add_message(conv_id, data, user_id=recipient_id)
+            with pytest.raises(NotFoundError):
+                await service.add_message(conv_id, data, user_id=uuid4())
 
             mock_repo.create_message.assert_not_called()
 
     @pytest.mark.anyio
-    async def test_add_message_allows_edit_share(self, service: ConversationService):
-        """Recipients with an edit share can append messages."""
+    async def test_add_message_by_owner_succeeds(self, service: ConversationService):
+        """The owner can append messages."""
         conv_id = uuid4()
         owner_id = uuid4()
-        recipient_id = uuid4()
         message = MockMessage(conversation_id=conv_id, content="hi")
         mock_conv = MockConversation(id=conv_id, user_id=owner_id)
-        mock_share = MagicMock(permission="edit")
         data = MagicMock(
             role="user", content="hi", thinking=None, model_name=None, tokens_used=None
         )
 
-        with (
-            patch("app.services.conversation.conversation_repo") as mock_repo,
-            patch("app.services.conversation.conversation_share_repo") as mock_share_repo,
-        ):
+        with patch("app.services.conversation.conversation_repo") as mock_repo:
             mock_repo.get_conversation_by_id = AsyncMock(return_value=mock_conv)
             mock_repo.create_message = AsyncMock(return_value=message)
-            mock_share_repo.get_share = AsyncMock(return_value=mock_share)
 
-            result = await service.add_message(conv_id, data, user_id=recipient_id)
+            result = await service.add_message(conv_id, data, user_id=owner_id)
 
             assert result.content == "hi"
             mock_repo.create_message.assert_called_once()
@@ -379,12 +362,8 @@ class TestConversationServiceUpdate:
         mock_update = MagicMock()
         mock_update.model_dump.return_value = {"title": "New Title"}
 
-        with (
-            patch("app.services.conversation.conversation_repo") as mock_repo,
-            patch("app.services.conversation.conversation_share_repo") as mock_share_repo,
-        ):
+        with patch("app.services.conversation.conversation_repo") as mock_repo:
             mock_repo.get_conversation_by_id = AsyncMock(return_value=mock_conv)
-            mock_share_repo.get_share = AsyncMock(return_value=None)
 
             with pytest.raises(NotFoundError):
                 await service.update_conversation(conv_id, mock_update, user_id=other_id)
@@ -438,12 +417,8 @@ class TestConversationServiceArchive:
         other_id = uuid4()
         mock_conv = MockConversation(id=conv_id, user_id=owner_id)
 
-        with (
-            patch("app.services.conversation.conversation_repo") as mock_repo,
-            patch("app.services.conversation.conversation_share_repo") as mock_share_repo,
-        ):
+        with patch("app.services.conversation.conversation_repo") as mock_repo:
             mock_repo.get_conversation_by_id = AsyncMock(return_value=mock_conv)
-            mock_share_repo.get_share = AsyncMock(return_value=None)
 
             with pytest.raises(NotFoundError):
                 await service.archive_conversation(conv_id, user_id=other_id)
@@ -496,12 +471,8 @@ class TestConversationServiceDelete:
         other_id = uuid4()
         mock_conv = MockConversation(id=conv_id, user_id=owner_id)
 
-        with (
-            patch("app.services.conversation.conversation_repo") as mock_repo,
-            patch("app.services.conversation.conversation_share_repo") as mock_share_repo,
-        ):
+        with patch("app.services.conversation.conversation_repo") as mock_repo:
             mock_repo.get_conversation_by_id = AsyncMock(return_value=mock_conv)
-            mock_share_repo.get_share = AsyncMock(return_value=None)
 
             with pytest.raises(NotFoundError):
                 await service.delete_conversation(conv_id, user_id=other_id)
@@ -864,69 +835,23 @@ class TestConversationServiceLinkFiles:
             service.db.flush.assert_called_once()
 
 
-class TestConversationServiceExportAll:
-    """Tests for export_all."""
+class TestConversationServiceListMessagesOwnership:
+    """list_messages must not leak another user's conversation."""
 
     @pytest.fixture
-    def mock_db(self) -> AsyncMock:
-        """Create mock database session."""
-        return AsyncMock()
-
-    @pytest.fixture
-    def service(self, mock_db: AsyncMock) -> ConversationService:
-        """Create ConversationService instance with mock db."""
-        return ConversationService(mock_db)
+    def service(self) -> ConversationService:
+        return ConversationService(AsyncMock())
 
     @pytest.mark.anyio
-    async def test_export_all_empty(self, service: ConversationService):
-        """export_all returns empty list when no conversations exist."""
-        with patch("app.services.conversation.conversation_repo") as mock_repo:
-            # export_chunk returns [] → loop exits immediately
-            mock_repo.export_chunk = AsyncMock(return_value=[])
-
-            result = await service.export_all()
-
-            assert result == []
-            mock_repo.export_chunk.assert_called_once()
-
-    @pytest.mark.anyio
-    async def test_export_all_with_conversations(self, service: ConversationService):
-        """export_all returns formatted conversation data."""
+    async def test_list_messages_by_non_owner_raises_not_found(self, service: ConversationService):
         conv_id = uuid4()
-        msg_id = uuid4()
-        mock_conv = MagicMock()
-        mock_conv.id = conv_id
-        mock_conv.title = "Test"
-        mock_conv.created_at = None
-        mock_conv.updated_at = None
-        mock_conv.is_archived = False
-
-        mock_msg = MagicMock()
-        mock_msg.id = msg_id
-        mock_msg.role = "user"
-        mock_msg.content = "Hello"
-        mock_msg.created_at = None
-        mock_msg.tool_calls = []
-        mock_msg.model_name = None
-        mock_msg.tokens_used = None
+        mock_conv = MockConversation(id=conv_id, user_id=uuid4())
 
         with patch("app.services.conversation.conversation_repo") as mock_repo:
-            # First call returns one conversation (< EXPORT_CHUNK_SIZE → loop exits after one pass)
-            mock_repo.export_chunk = AsyncMock(return_value=[mock_conv])
-            # get_conversation used inside list_messages
             mock_repo.get_conversation_by_id = AsyncMock(return_value=mock_conv)
-            mock_repo.get_messages_by_conversation = AsyncMock(return_value=[mock_msg])
-            mock_repo.count_messages = AsyncMock(return_value=1)
-            # Patch the *use site* — service does `from app.repositories import
-            # message_rating_repo` so the binding lives on app.services.conversation,
-            # not on app.repositories.
-            with patch("app.services.conversation.message_rating_repo") as mock_rating_repo:
-                mock_rating_repo.get_ratings_with_users_for_messages = AsyncMock(return_value=[])
-                result = await service.export_all()
+            mock_repo.get_messages_by_conversation = AsyncMock(return_value=[])
 
-            assert len(result) == 1
-            assert result[0]["id"] == str(conv_id)
-            assert result[0]["title"] == "Test"
-            assert len(result[0]["messages"]) == 1
-            assert result[0]["messages"][0]["role"] == "user"
-            assert result[0]["messages"][0]["content"] == "Hello"
+            with pytest.raises(NotFoundError):
+                await service.list_messages(conv_id, user_id=uuid4())
+
+            mock_repo.get_messages_by_conversation.assert_not_called()

@@ -14,7 +14,6 @@ from app.core.security import (
 )
 from app.db.models.user import User, UserRole
 from app.repositories import user_repo
-from app.schemas.conversation_share import AdminUserList, AdminUserRead
 from app.schemas.user import UserCreate, UserRead, UserUpdate
 from app.services.file_storage import get_file_storage
 
@@ -57,38 +56,6 @@ class UserService:
 
     async def has_any(self) -> bool:
         return await user_repo.has_any(self.db)
-
-    async def admin_list_with_counts(
-        self,
-        *,
-        skip: int = 0,
-        limit: int = 50,
-        search: str | None = None,
-        sort_by: str = "created_at",
-        sort_dir: str = "desc",
-    ) -> AdminUserList:
-        rows, total = await user_repo.admin_list_with_counts(
-            self.db,
-            skip=skip,
-            limit=limit,
-            search=search,
-            sort_by=sort_by,
-            sort_dir=sort_dir,
-        )
-        items = [
-            AdminUserRead(
-                id=user.id,
-                email=user.email,
-                full_name=user.full_name,
-                role=user.role,
-                is_active=user.is_active,
-                is_app_admin=getattr(user, "is_app_admin", False),
-                conversation_count=conv_count,
-                created_at=user.created_at,
-            )
-            for user, conv_count in rows
-        ]
-        return AdminUserList(items=items, total=total)
 
     async def register(self, user_in: UserCreate) -> User:
         """Create a local password account.

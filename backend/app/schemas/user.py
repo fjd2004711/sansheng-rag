@@ -68,33 +68,3 @@ class UserInDB(UserRead):
     """User schema with hashed password (internal use)."""
 
     hashed_password: str
-
-
-class AdminUserRead(BaseSchema):
-    """Minimal user info for admin endpoints."""
-
-    id: UUID
-    email: str
-    full_name: str | None = None
-    role: str = "user"
-    is_active: bool = True
-    is_app_admin: bool = False
-    conversation_count: int = 0
-    created_at: datetime
-
-
-class AdminUserList(BaseSchema):
-    """Paginated list of users for admin."""
-
-    items: list[AdminUserRead]
-    total: int
-
-
-class ImpersonateResponse(BaseSchema):
-    """Response schema for admin user impersonation."""
-
-    access_token: str
-    token_type: str
-    impersonated_user_id: str
-    impersonated_by: str
-    expires_in: int

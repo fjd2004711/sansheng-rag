@@ -315,11 +315,6 @@ export function useChat(options: UseChatOptions = {}) {
           setIsProcessing(false);
           // Clear currentMessageId after complete (message_saved should have handled ID mapping)
           setCurrentMessageId(null);
-          // The turn just debited credits server-side — nudge any mounted
-          // billing view to refetch so the user doesn't see stale numbers.
-          if (typeof window !== "undefined") {
-            window.dispatchEvent(new Event("billing:refresh"));
-          }
           break;
         }
       }

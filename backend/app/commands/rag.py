@@ -7,22 +7,16 @@ Commands:
     rag-search        - Search knowledge base
     rag-drop          - Drop collection
     rag-stats         - Overall RAG system statistics
-    rag-sources       - List configured sync sources
-    rag-source-add    - Add a new sync source
-    rag-source-remove - Remove a sync source
-    rag-source-sync   - Trigger sync for a source (or all)
 """
 
 import asyncio
 import hashlib
-import json
 from pathlib import Path
 
 import click
 
 from app.commands import command, error, info, success, warning
 from app.db.session import get_db_context
-from app.schemas.sync_source import SyncSourceCreate
 from app.services.rag.config import DocumentExtensions, RAGSettings
 from app.services.rag.documents import DocumentProcessor
 from app.services.rag.embeddings import EmbeddingService
@@ -30,8 +24,6 @@ from app.services.rag.ingestion import IngestionService
 from app.services.rag.retrieval import RetrievalService
 from app.services.rag.vectorstore import BaseVectorStore, QdrantVectorStore
 from app.services.rag_document import RAGDocumentService
-from app.services.rag_sync import RAGSyncService
-from app.services.sync_source import SyncSourceService
 
 
 def get_rag_services() -> tuple[
@@ -150,12 +142,6 @@ async def ingest_path_async(
     replaced_count = 0
     skipped_count = 0
 
-    async with get_db_context() as db:
-        sync_log = await RAGSyncService(db).create_sync_log(
-            source="local", collection_name=collection, mode=sync_mode
-        )
-        sync_log_id = str(sync_log.id)
-
     with tqdm(files, unit="file", desc="Syncing", ncols=80) as pbar:
         for filepath in pbar:
             pbar.set_postfix_str(filepath.name[:30], refresh=True)
@@ -221,17 +207,6 @@ async def ingest_path_async(
                 tqdm.write(f"  ✗ {filepath.name}: {e!s}")
                 async with get_db_context() as db:
                     await RAGDocumentService(db).fail_ingestion(doc_id, error_message=str(e))
-
-    async with get_db_context() as db:
-        await RAGSyncService(db).complete_sync(
-            sync_log_id,
-            status="done" if error_count == 0 else "error",
-            total_files=len(files),
-            ingested=success_count - replaced_count,
-            updated=replaced_count,
-            skipped=skipped_count,
-            failed=error_count,
-        )
 
     click.echo()
     msg = f"Done: {success_count} ingested"
@@ -449,167 +424,3 @@ async def stats_async(settings: RAGSettings, vector_store: BaseVectorStore) -> N
         click.echo(f"\nTotal vectors: {total_vectors:,}")
 
     click.echo()
-
-
-@command("rag-sources", help="List configured sync sources")
-def rag_sources() -> None:
-    """List all configured sync sources with their status."""
-
-    async def _list() -> None:
-        async with get_db_context() as db:
-            svc = SyncSourceService(db)
-            sources = await svc.list_sources()
-
-            if not sources:
-                info("No sync sources configured.")
-                return
-
-            click.echo(f"\nFound {len(sources)} sync source(s):\n")
-            for s in sources:
-                status_str = s.last_sync_status or "never"
-                active_str = "active" if s.is_active else "inactive"
-                click.echo(f"  [{active_str}] {s.name} (id={s.id})")
-                click.echo(f"    Type: {s.connector_type}")
-                click.echo(f"    Collection: {s.collection_name}")
-                click.echo(f"    Sync mode: {s.sync_mode}")
-                if s.schedule_minutes:
-                    click.echo(f"    Schedule: every {s.schedule_minutes} min")
-                else:
-                    click.echo("    Schedule: manual")
-                click.echo(f"    Last sync: {status_str}")
-                if s.last_error:
-                    click.echo(f"    Last error: {s.last_error}")
-                click.echo()
-
-    asyncio.run(_list())
-
-
-@command("rag-source-add", help="Add a new sync source")
-@click.option("--name", required=True, help="Source name")
-@click.option("--type", "connector_type", required=True, help="Connector type (e.g. gdrive, s3)")
-@click.option("--collection", required=True, help="Target collection name")
-@click.option("--config", "config_json", required=True, help="Config JSON string")
-@click.option(
-    "--sync-mode",
-    default="new_only",
-    type=click.Choice(["full", "new_only", "update_only"]),
-    help="Sync mode",
-)
-@click.option(
-    "--schedule",
-    "schedule_minutes",
-    type=int,
-    default=0,
-    help="Schedule interval in minutes (0=manual)",
-)
-def rag_source_add(
-    name: str,
-    connector_type: str,
-    collection: str,
-    config_json: str,
-    sync_mode: str,
-    schedule_minutes: int,
-) -> None:
-    """
-    Add a new sync source configuration.
-
-    Example:
-        project cmd rag-source-add --name "My Drive" --type gdrive --collection docs \\
-            --config '{"folder_id": "abc123"}' --sync-mode new_only
-    """
-    try:
-        config_dict = json.loads(config_json)
-    except json.JSONDecodeError as e:
-        error(f"Invalid JSON config: {e}")
-        return
-
-    data = SyncSourceCreate(
-        name=name,
-        connector_type=connector_type,
-        collection_name=collection,
-        config=config_dict,
-        sync_mode=sync_mode,
-        schedule_minutes=schedule_minutes if schedule_minutes > 0 else None,
-    )
-
-    async def _create() -> None:
-        async with get_db_context() as db:
-            svc = SyncSourceService(db)
-            try:
-                source = await svc.create_source(data)
-                success(f"Sync source created: {source.name} (id={source.id})")
-            except ValueError as e:
-                error(f"Failed to create source: {e}")
-
-    asyncio.run(_create())
-
-
-@command("rag-source-remove", help="Remove a sync source")
-@click.argument("source_id")
-@click.option("--yes", "-y", is_flag=True, help="Skip confirmation prompt")
-def rag_source_remove(source_id: str, yes: bool) -> None:
-    """
-    Remove a sync source configuration.
-
-    SOURCE_ID: The ID of the sync source to remove.
-
-    Example:
-        project cmd rag-source-remove abc-123-def
-    """
-    if not yes:
-        click.confirm(f"Are you sure you want to remove sync source '{source_id}'?", abort=True)
-
-    async def _remove() -> None:
-        async with get_db_context() as db:
-            svc = SyncSourceService(db)
-            try:
-                await svc.delete_source(source_id)
-                success(f"Sync source '{source_id}' removed.")
-            except Exception as e:
-                error(f"Failed to remove source: {e}")
-
-    asyncio.run(_remove())
-
-
-@command("rag-source-sync", help="Trigger sync for a source")
-@click.argument("source_id", required=False)
-@click.option("--all", "sync_all", is_flag=True, help="Sync all active sources")
-def rag_source_sync(source_id: str | None, sync_all: bool) -> None:
-    """
-    Trigger sync for a configured source (or all active sources).
-
-    SOURCE_ID: The ID of the sync source to sync (optional if --all).
-
-    Example:
-        project cmd rag-source-sync abc-123-def
-        project cmd rag-source-sync --all
-    """
-    if not source_id and not sync_all:
-        error("Provide a SOURCE_ID or use --all to sync all active sources.")
-        return
-
-    async def _sync() -> None:
-        async with get_db_context() as db:
-            svc = SyncSourceService(db)
-
-            if sync_all:
-                sources = await svc.list_sources(is_active=True)
-                if not sources:
-                    warning("No active sync sources found.")
-                    return
-                info(f"Triggering sync for {len(sources)} active source(s)...")
-                for s in sources:
-                    try:
-                        log = await svc.trigger_sync(str(s.id))
-                        success(f"  {s.name}: sync started (log_id={log.id})")
-                    except Exception as e:
-                        error(f"  {s.name}: failed - {e}")
-            else:
-                try:
-                    assert source_id is not None
-                    log = await svc.trigger_sync(source_id)
-                    success(f"Sync triggered (log_id={log.id})")
-                except Exception as e:
-                    error(f"Failed to trigger sync: {e}")
-
-    asyncio.run(_sync())

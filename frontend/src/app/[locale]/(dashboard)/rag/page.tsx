@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks";
 import {
   Button,
   Input,
@@ -51,8 +52,7 @@ import {
 import { DragDropOverlay } from "@/components/rag/drag-drop-overlay";
 import { apiClient } from "@/lib/api-client";
 
-import { BACKEND_URL } from "@/lib/constants";
-import { getErrorMessage, MAX_UPLOAD_SIZE_MB } from "@/lib/utils";
+import { getErrorMessage, isAppAdmin, MAX_UPLOAD_SIZE_MB } from "@/lib/utils";
 
 interface CollectionWithInfo {
   name: string;
@@ -73,7 +73,7 @@ function StatusIcon({ status }: { status: string }) {
 }
 
 export default function RAGPage() {
-
+  const { user } = useAuth();
   const [collections, setCollections] = useState<CollectionWithInfo[]>([]);
   const [selected, setSelected] = useState<string>("");
   const [docs, setDocs] = useState<RAGTrackedDocument[]>([]);
@@ -164,27 +164,30 @@ export default function RAGPage() {
     if (selected) fetchDocs(selected);
   }, [selected]);
 
-  // SSE for real-time ingestion status updates (auto-reconnect built-in)
+  // Poll while any document is still being ingested (the backend has no push channel for status).
+  const hasProcessing = docs.some((d) => d.status === "processing");
   useEffect(() => {
-    const es = new EventSource(`${BACKEND_URL}/api/v1/rag/status/stream`);
-
-    es.addEventListener("status", (event) => {
+    if (!hasProcessing || !selected) return;
+    const timer = setInterval(async () => {
       try {
-        const data = JSON.parse(event.data);
-        setDocs((prev) =>
-          prev.map((d) => (d.id === data.document_id ? { ...d, status: data.status } : d)),
-        );
-        if (data.status === "done") {
-          toast.success(`${data.filename}: Ingested successfully`);
-          fetchCollections();
-        } else if (data.status === "error") {
-          toast.error(`${data.filename}: Ingestion failed`);
-        }
+        const data = await listTrackedDocuments(selected);
+        const next = data.items || [];
+        setDocs((prev) => {
+          for (const doc of next) {
+            const before = prev.find((d) => d.id === doc.id);
+            if (before?.status === "processing" && doc.status === "done") {
+              toast.success(`${doc.filename}：入库完成`);
+            } else if (before?.status === "processing" && doc.status === "error") {
+              toast.error(`${doc.filename}：入库失败`);
+            }
+          }
+          return next;
+        });
+        if (next.every((d) => d.status !== "processing")) fetchCollections();
       } catch {}
-    });
-
-    return () => es.close();
-  }, [fetchCollections]);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, [hasProcessing, selected, fetchCollections]);
 
   const handleCreate = async () => {
     const name = newName.trim().toLowerCase().replace(/\s+/g, "_");
@@ -313,6 +316,16 @@ export default function RAGPage() {
   };
 
   const info = collections.find((c) => c.name === selected)?.info;
+
+  if (user && !isAppAdmin(user)) {
+    return (
+      <div className="border-border bg-card text-muted-foreground mx-auto mt-10 max-w-md rounded-xl border p-8 text-center">
+        <Database className="mx-auto mb-3 h-8 w-8" />
+        <p className="text-foreground text-sm font-medium">知识库管理需要管理员权限</p>
+        <p className="mt-1 text-xs">你仍可以在「对话」中向已入库的知识库提问。</p>
+      </div>
+    );
+  }
 
   const tabs: { key: "documents" | "search"; label: string }[] = [
     { key: "documents", label: docs.length > 0 ? `Documents (${docs.length})` : "Documents" },

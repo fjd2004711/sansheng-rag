@@ -46,21 +46,6 @@ class ToolCallRead(ToolCallBase):
     duration_ms: int | None = None
 
 
-class ToolCallStat(BaseSchema):
-    """One tool's aggregated stats over a window."""
-
-    tool_name: str
-    total_calls: int
-    failed_calls: int
-    avg_duration_ms: int | None = None
-    last_used_at: datetime | None = None
-
-
-class ToolCallStatList(BaseSchema):
-    items: list[ToolCallStat]
-    days: int
-
-
 class MessageBase(BaseSchema):
     """Base message schema."""
 
@@ -94,14 +79,6 @@ class MessageRead(MessageBase, TimestampSchema):
     tokens_used: int | None = None
     tool_calls: list[ToolCallRead] = Field(default_factory=list)
     files: list[MessageFileRead] = Field(default_factory=list)
-    user_rating: int | None = Field(
-        default=None,
-        description="Current user's rating (1 or -1)",
-    )
-    rating_count: dict[str, int] | None = Field(
-        default=None,
-        description="Aggregate counts {likes: N, dislikes: N}",
-    )
 
 
 class MessageReadSimple(MessageBase, TimestampSchema):
@@ -130,7 +107,6 @@ class ConversationUpdate(BaseSchema):
 
     title: str | None = Field(default=None, max_length=255)
     is_archived: bool | None = None
-    is_demo: bool | None = None
 
 
 class ConversationRead(ConversationBase, TimestampSchema):
@@ -139,7 +115,6 @@ class ConversationRead(ConversationBase, TimestampSchema):
     id: UUID
     user_id: UUID | None = None
     is_archived: bool = False
-    is_demo: bool = False
 
 
 class ConversationReadWithMessages(ConversationRead):
@@ -167,35 +142,3 @@ class ConversationWithLatestMessage(ConversationRead):
 
     latest_message: MessageReadSimple | None = None
     message_count: int = 0
-
-
-class ConversationAdminList(BaseSchema):
-    """Schema for admin conversation list with message counts."""
-
-    items: list[ConversationWithLatestMessage]
-    total: int
-
-
-class ConversationExport(BaseSchema):
-    conversations: list[Any]
-    total: int
-
-
-class DemoConversationSummary(BaseSchema):
-    """Lightweight card for the public demo gallery."""
-
-    id: UUID
-    title: str | None = None
-    message_count: int = 0
-    preview: str | None = Field(
-        default=None, description="First user prompt, truncated to 200 chars"
-    )
-    created_at: datetime
-    updated_at: datetime | None = None
-
-
-class DemoConversationList(BaseSchema):
-    """Paginated list of public demo conversations."""
-
-    items: list[DemoConversationSummary]
-    total: int

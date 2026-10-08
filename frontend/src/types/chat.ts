@@ -1,12 +1,4 @@
 export type MessageRole = "user" | "assistant" | "system";
-/** Rating values for message feedback. */
-export enum RatingValue {
-  LIKE = 1,
-  DISLIKE = -1,
-}
-
-export type UserRating = RatingValue.LIKE | RatingValue.DISLIKE | null;
-
 export interface ChatMessageFile {
   id: string;
   filename: string;
@@ -33,9 +25,7 @@ export interface ChatMessage {
   /** True if message ID is a temporary nanoid, not yet replaced by server ID */
   isTemporaryId?: boolean;
   /** Current user's rating */
-  user_rating?: UserRating;
   /** Aggregate rating counts */
-  rating_count?: { likes: number; dislikes: number } | null;
   /** Reasoning trace from extended-thinking models. Rendered dimmed +
    *  collapsible above the final response. */
   thinking?: string;

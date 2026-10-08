@@ -2,7 +2,7 @@
 
 ## Reporting a vulnerability
 
-Email: **your@email.com** (or open a private security advisory on the repo). Please include:
+Please report privately through a security advisory on the repository (do not open a public issue). Please include:
 
 - Affected version / commit
 - Steps to reproduce

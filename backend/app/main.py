@@ -104,16 +104,14 @@ def create_app() -> FastAPI:
 
     app = FastAPI(
         title=settings.PROJECT_NAME,
-        summary="FastAPI application",
+        summary="Explainable self-correcting RAG Agent API",
         description="""
-A FastAPI project
+基于 LangChain 的可解释自纠错 RAG Agent。
 
 ## Features
 - **Authentication**: JWT-based authentication with refresh tokens
-- **API Key**: Header-based API key authentication
-- **Database**: Async database operations
-- **AI Agent**: LangChain-powered conversational assistant
-- **RAG**: Retrieval Augmented Generation with Milvus and LangChain
+- **AI Agent**: LangChain Agent + bounded LangGraph correction loops (WebSocket streaming)
+- **RAG**: Dense + BM25 + RRF + Reranker over Qdrant, with structured trace events
 
 ## Documentation
 
@@ -125,10 +123,6 @@ A FastAPI project
         docs_url=docs_url,
         redoc_url=redoc_url,
         openapi_tags=openapi_tags,
-        contact={
-            "name": "Your Name",
-            "email": "your@email.com",
-        },
         license_info={
             "name": "MIT",
             "identifier": "MIT",

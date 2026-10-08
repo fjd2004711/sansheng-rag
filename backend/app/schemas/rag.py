@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from pydantic import Field, field_validator
+from pydantic import Field
 
 from app.schemas.base import BaseSchema
 
@@ -113,56 +113,6 @@ class RAGIngestResponse(BaseSchema):
 
 class RAGRetryResponse(BaseSchema):
     """Response for document retry."""
-
-    id: str
-    status: str
-    message: str
-
-
-class RAGSyncRequest(BaseSchema):
-    """Request to trigger a sync operation."""
-
-    collection_name: str = Field("documents", description="Target collection")
-    mode: str = Field("full", description="Sync mode: full, new_only, update_only")
-    path: str = Field("", description="Source path")
-
-
-class RAGSyncLogItem(BaseSchema):
-    """A sync operation log entry."""
-
-    id: str
-    source: str
-    collection_name: str
-    status: str
-    mode: str
-    total_files: int = 0
-    ingested: int = 0
-    updated: int = 0
-    skipped: int = 0
-    failed: int = 0
-    error_message: str | None = None
-    started_at: str | None = None
-    completed_at: str | None = None
-
-    @field_validator("started_at", "completed_at", mode="before")
-    @classmethod
-    def serialize_datetime(cls, v: Any) -> str | None:
-        if v is None:
-            return None
-        if hasattr(v, "isoformat"):
-            return v.isoformat()
-        return str(v)
-
-
-class RAGSyncLogList(BaseSchema):
-    """List of sync log entries."""
-
-    items: list[RAGSyncLogItem]
-    total: int
-
-
-class RAGSyncResponse(BaseSchema):
-    """Response for sync trigger."""
 
     id: str
     status: str

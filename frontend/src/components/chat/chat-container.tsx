@@ -123,8 +123,6 @@ export function ChatContainer() {
           conversationId: msg.conversation_id,
           toolCalls,
           parts,
-          user_rating: msg.user_rating ?? undefined,
-          rating_count: msg.rating_count ?? undefined,
           files: msg.files,
           fileIds: msg.files?.map((f) => f.id),
         });

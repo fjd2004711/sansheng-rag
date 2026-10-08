@@ -23,7 +23,6 @@ from app.db.session import get_db_context
 
 from app.services.user import UserService
 from app.services.conversation import ConversationService
-from app.services.conversation_share import ConversationShareService
 
 
 def get_user_service(db: DBSession) -> UserService:
@@ -42,25 +41,8 @@ def get_conversation_service(db: DBSession) -> ConversationService:
 ConversationSvc = Annotated[ConversationService, Depends(get_conversation_service)]
 
 
-def get_conversation_share_service(db: DBSession) -> ConversationShareService:
-    """Create ConversationShareService instance with database session."""
-    return ConversationShareService(db)
 
-
-ConversationShareSvc = Annotated[ConversationShareService, Depends(get_conversation_share_service)]
-
-from app.services.message_rating import MessageRatingService
-
-
-def get_rating_service(db: DBSession) -> MessageRatingService:
-    """Create MessageRatingService instance with database session."""
-    return MessageRatingService(db)
-
-
-MessageRatingSvc = Annotated[MessageRatingService, Depends(get_rating_service)]
 from app.services.rag_document import RAGDocumentService
-from app.services.rag_sync import RAGSyncService
-from app.services.sync_source import SyncSourceService
 
 
 def get_rag_document_service(db: DBSession) -> RAGDocumentService:
@@ -68,19 +50,7 @@ def get_rag_document_service(db: DBSession) -> RAGDocumentService:
     return RAGDocumentService(db)
 
 
-def get_rag_sync_service(db: DBSession) -> RAGSyncService:
-    """Create RAGSyncService instance with database session."""
-    return RAGSyncService(db)
-
-
-def get_sync_source_service(db: DBSession) -> SyncSourceService:
-    """Create SyncSourceService instance with database session."""
-    return SyncSourceService(db)
-
-
 RAGDocumentSvc = Annotated[RAGDocumentService, Depends(get_rag_document_service)]
-RAGSyncSvc = Annotated[RAGSyncService, Depends(get_rag_sync_service)]
-SyncSourceSvc = Annotated[SyncSourceService, Depends(get_sync_source_service)]
 from app.services.file_upload import FileUploadService
 
 
@@ -372,21 +342,3 @@ def get_ingestion_service(
 
 
 IngestionSvc = Annotated[IngestionService, Depends(get_ingestion_service)]
-from app.services.user_slash_command import UserSlashCommandService
-
-
-def get_user_slash_command_service(db: DBSession) -> UserSlashCommandService:
-    return UserSlashCommandService(db)
-
-
-UserSlashCommandSvc = Annotated[UserSlashCommandService, Depends(get_user_slash_command_service)]
-from app.services.admin import AdminService
-
-
-def get_admin_service(db: DBSession) -> AdminService:
-    """Create AdminService instance — used by admin REST routes (always
-    available, independent of the optional SQLAdmin UI)."""
-    return AdminService(db)
-
-
-AdminSvc = Annotated[AdminService, Depends(get_admin_service)]
