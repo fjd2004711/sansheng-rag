@@ -30,6 +30,7 @@ async def test_collect_evidence_forces_retrieval_when_model_skipped_search_tool(
 
     session = AgentSession.__new__(AgentSession)
     session.websocket = MagicMock()
+    session._turn_trace = []
     envelope = _append_trace(
         "[1] Source: vega.md\nP1 response is 15 minutes",
         [{"step": "retrieve", "round": 1, "status": "COMPLETE", "detail": {}}],
@@ -44,6 +45,7 @@ async def test_collect_evidence_forces_retrieval_when_model_skipped_search_tool(
     assert evidence == "[1] Source: vega.md\nP1 response is 15 minutes"
     send.assert_awaited_once()
     assert send.await_args.args[1] == "agent_trace"
+    assert session._turn_trace == [{"step": "retrieve", "round": 1, "status": "COMPLETE", "detail": {}}]
 
 
 @pytest.mark.anyio
@@ -54,6 +56,7 @@ async def test_collect_evidence_uses_tool_results_without_extra_search() -> None
 
     session = AgentSession.__new__(AgentSession)
     session.websocket = MagicMock()
+    session._turn_trace = []
     calls = [{"tool_name": "search_documents", "result": "[1] evidence"}]
     with patch("app.services.agent_session.search_knowledge_base", AsyncMock()) as search:
         evidence = await session._collect_evidence("q", calls)

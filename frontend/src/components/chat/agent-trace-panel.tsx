@@ -100,7 +100,7 @@ function TraceNode({ data }: { data: { event: AgentTraceEvent } }) {
 
 const nodeTypes = { trace: TraceNode };
 
-export function AgentTracePanel({ trace }: { trace: AgentTraceEvent[] }) {
+export function AgentTracePanel({ trace, title }: { trace: AgentTraceEvent[]; title?: string }) {
   const nodes: Node[] = trace.map((event, index) => ({
     id: `${index}-${event.step}`,
     type: "trace",
@@ -125,6 +125,11 @@ export function AgentTracePanel({ trace }: { trace: AgentTraceEvent[] }) {
           <h2 className="text-sm font-semibold">运作流程</h2>
         </div>
         <p className="text-muted-foreground mt-0.5 text-xs">每一步怎么找、怎么核对、怎么纠错</p>
+        {title && (
+          <p className="bg-muted mt-2 line-clamp-2 rounded-md px-2 py-1.5 text-xs leading-relaxed" title={title}>
+            针对：{title}
+          </p>
+        )}
       </div>
       {trace.length === 0 ? (
         <div className="text-muted-foreground m-4 rounded-xl border border-dashed p-4 text-sm leading-relaxed">

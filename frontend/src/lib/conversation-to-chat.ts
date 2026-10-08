@@ -1,4 +1,4 @@
-import type { ChatMessage, ChatMessageFile, MessagePart, ToolCall } from "@/types";
+import type { AgentTraceEvent, ChatMessage, ChatMessageFile, MessagePart, ToolCall } from "@/types";
 
 /**
  * Shape of a persisted message as returned by the backend (MessageRead).
@@ -23,6 +23,7 @@ export interface RawMessage {
   user_rating?: number | null;
   rating_count?: { likes: number; dislikes: number } | null;
   files?: ChatMessageFile[] | null;
+  agent_trace?: AgentTraceEvent[] | null;
 }
 
 /**
@@ -71,6 +72,7 @@ export function conversationMessageToChatMessage(msg: RawMessage): ChatMessage {
     role: msg.role,
     content: msg.content,
     thinking: msg.thinking ?? undefined,
+    agentTrace: msg.agent_trace?.length ? msg.agent_trace : undefined,
     timestamp: new Date(msg.created_at),
     conversationId: msg.conversation_id,
     toolCalls,

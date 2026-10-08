@@ -5,6 +5,8 @@ import dynamic from "next/dynamic";
 export interface MarkdownContentProps {
   content: string;
   onCiteClick?: (index: number) => void;
+  /** Hover text for a citation marker, e.g. the file name and the quoted passage. */
+  citeTitle?: (index: number) => string | undefined;
 }
 
 /**
@@ -29,7 +31,7 @@ const MarkdownContentImpl = dynamic(
   },
 );
 
-export function MarkdownContent({ content, onCiteClick }: MarkdownContentProps) {
-  return <MarkdownContentImpl content={content} onCiteClick={onCiteClick} />;
+export function MarkdownContent({ content, onCiteClick, citeTitle }: MarkdownContentProps) {
+  return <MarkdownContentImpl content={content} onCiteClick={onCiteClick} citeTitle={citeTitle} />;
 }
 

@@ -3,6 +3,9 @@
 import { cn } from "@/lib/utils";
 import type { ChatMessage, ChatMessageFile } from "@/types";
 import { progressText } from "@/lib/agent-trace-labels";
+import { deriveVerdict } from "@/lib/answer-verdict";
+import { AnswerVerdictBar } from "./answer-verdict";
+import { isAppAdmin } from "@/lib/utils";
 import { ToolCallCard } from "./tool-call-card";
 import { MarkdownContent } from "./markdown-content";
 import { CopyButton } from "./copy-button";
@@ -40,11 +43,13 @@ function TextBubble({
   showCursor,
   isUser,
   onCiteClick,
+  citeTitle,
 }: {
   text: string;
   showCursor: boolean;
   isUser: boolean;
   onCiteClick?: (index: number) => void;
+  citeTitle?: (index: number) => string | undefined;
 }) {
   return (
     <div
@@ -59,7 +64,7 @@ function TextBubble({
         <p className="text-sm break-words whitespace-pre-wrap">{text}</p>
       ) : (
         <div className="prose-sm max-w-none text-sm">
-          <MarkdownContent content={text} onCiteClick={onCiteClick} />
+          <MarkdownContent content={text} onCiteClick={onCiteClick} citeTitle={citeTitle} />
           {showCursor && (
             <span className="ml-1 inline-block h-4 w-1.5 animate-pulse rounded-full bg-current" />
           )}
@@ -98,7 +103,7 @@ function SourcesButton({
         )}
       </span>
       <span className="text-foreground/60 text-[11px] font-medium">
-        {sources.length} source{sources.length !== 1 ? "s" : ""}
+        查看 {sources.length} 处依据
       </span>
     </button>
   );
@@ -108,17 +113,27 @@ interface MessageItemProps {
   message: ChatMessage;
   groupPosition?: "first" | "middle" | "last" | "single";
   onRegenerate?: () => void;
+  /** Show this answer's operation flow in the side panel. */
+  onShowTrace?: () => void;
+  traceSelected?: boolean;
 }
 
-export function MessageItem({ message, groupPosition, onRegenerate }: MessageItemProps) {
+export function MessageItem({ message, groupPosition, onRegenerate, onShowTrace, traceSelected }: MessageItemProps) {
   const isUser = message.role === "user";
   const openPreview = useFilePreviewStore((s) => s.open);
   const openSources = useSourcesPanelStore((s) => s.open);
   const { user: authUser, avatarVersion } = useAuthStore();
   const isGrouped = groupPosition && groupPosition !== "single";
 
+  const verdict = !isUser ? deriveVerdict(message.agentTrace, message.content) : null;
   const sources = !isUser ? extractSources(message) : [];
   const hasSources = sources.length > 0 && !message.isStreaming;
+  const citeTitle = (n: number): string | undefined => {
+    const source = sources.find((item) => item.index === n);
+    if (!source) return undefined;
+    const passage = source.content ? `：${source.content.replace(/\s+/g, " ").slice(0, 80)}…` : "";
+    return `${source.title}${source.subtitle ? `（${source.subtitle}）` : ""}${passage}\n点击查看原文`;
+  };
   const onCiteClick = hasSources
     ? (index: number) => openSources(sources, index)
     : undefined;
@@ -287,6 +302,7 @@ export function MessageItem({ message, groupPosition, onRegenerate }: MessageIte
                         showCursor={Boolean(message.isStreaming) && i === parts.length - 1}
                         isUser={isUser}
                         onCiteClick={onCiteClick}
+                        citeTitle={citeTitle}
                       />
                     );
                   }
@@ -308,6 +324,7 @@ export function MessageItem({ message, groupPosition, onRegenerate }: MessageIte
                       showCursor={!isUser && Boolean(message.isStreaming)}
                       isUser={isUser}
                       onCiteClick={onCiteClick}
+                      citeTitle={citeTitle}
                     />
                   )}
                   {message.toolCalls && message.toolCalls.length > 0 && (
@@ -323,6 +340,15 @@ export function MessageItem({ message, groupPosition, onRegenerate }: MessageIte
             </>
           );
         })()}
+
+        {!isUser && !message.isStreaming && verdict && (
+          <AnswerVerdictBar
+            verdict={verdict}
+            isAdmin={isAppAdmin(authUser)}
+            selected={Boolean(traceSelected)}
+            onShowTrace={onShowTrace}
+          />
+        )}
 
         {hasSources && !isUser && (
           <div className="mt-1">

@@ -2,7 +2,7 @@
 
 import uuid
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
@@ -76,6 +76,8 @@ class Message(Base, TimestampMixin):
     thinking: Mapped[str | None] = mapped_column(Text, nullable=True)
     model_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
     tokens_used: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # Structured self-correction trace events for this answer (assistant turns).
+    agent_trace: Mapped[list[dict[str, Any]] | None] = mapped_column(JSONB, nullable=True)
 
     conversation: Mapped["Conversation"] = relationship("Conversation", back_populates="messages")
     tool_calls: Mapped[list["ToolCall"]] = relationship(

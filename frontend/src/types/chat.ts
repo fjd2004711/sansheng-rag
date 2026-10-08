@@ -31,6 +31,8 @@ export interface ChatMessage {
   thinking?: string;
   /** Explainable P2/P3 execution events emitted by the backend. */
   agentTrace?: AgentTraceEvent[];
+  /** Follow-up questions the system suggests after this answer. */
+  suggestions?: string[];
   /** Ordered timeline of the assistant turn: reasoning, text and tool
    *  calls in the exact order they occurred. Rendered in sequence so a
    *  multi-step turn (think → tools → text → think → tools → text) shows
@@ -128,6 +130,7 @@ export type WSEventType =
   | "tool_call"
   | "tool_result"
   | "agent_trace"
+  | "suggestions"
   | "final_result_start"
   | "final_result"
   | "complete"
