@@ -1,0 +1,3 @@
+{"id":"atlas-correction","question":"What credential does Atlas compliance require?","initial_query":"deployment schedule milestones","expected_phrase":"CRIMSON-SEAL","failure_type":"insufficient_evidence","abstain":false}
+{"id":"orion-correction","question":"Which code must Orion recovery use?","initial_query":"meeting calendar deadlines","expected_phrase":"ORION-RECOVER-17","failure_type":"insufficient_evidence","abstain":false}
+{"id":"out-of-scope","question":"Which planet won the interstellar league?","initial_query":"Which planet won the interstellar league?","expected_phrase":"","failure_type":"out_of_scope","abstain":true}

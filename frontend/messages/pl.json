@@ -74,7 +74,8 @@
     "responseRatings": "Oceny odpowiedzi",
     "allConversations": "Wszystkie rozmowy",
     "settingsSection": "Ustawienia",
-    "billingSection": "Płatności"
+    "billingSection": "Płatności",
+    "evaluation": "Ewaluacja"
   },
   "auth": {
     "login": "Zaloguj się",
