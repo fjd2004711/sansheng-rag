@@ -15,6 +15,7 @@ from app.db.models.user import User  # noqa: F401
 # Generated only with an AI framework; the core-tables migration creates them regardless.
 from app.db.models.conversation import Conversation, Message, ToolCall  # noqa: F401
 from app.db.models.chat_file import ChatFile  # noqa: F401
+from app.db.models.message_feedback import MessageFeedback  # noqa: F401
 from app.db.models.rag_document import RAGDocument  # noqa: F401
 
 config = context.config

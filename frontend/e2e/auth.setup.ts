@@ -1,32 +1,24 @@
-
 import { test as setup, expect } from "@playwright/test";
 import path from "path";
 
 const authFile = path.join(__dirname, "../.playwright/.auth/user.json");
 
 /**
- * Authentication setup - runs before all tests.
- *
- * This creates an authenticated session that other tests can reuse.
+ * Signs in once through the real login form and saves the session for the other specs.
+ * Needs an ADMIN account: TEST_USER_EMAIL / TEST_USER_PASSWORD (the knowledge-base and admin
+ * specs use admin-only pages).
  */
 setup("authenticate", async ({ page }) => {
-  // Test credentials - adjust for your environment
-  const testEmail = process.env.TEST_USER_EMAIL || "test@example.com";
-  const testPassword = process.env.TEST_USER_PASSWORD || "TestPassword123!";
+  const email = process.env.TEST_USER_EMAIL;
+  const password = process.env.TEST_USER_PASSWORD;
+  if (!email || !password) throw new Error("请设置 TEST_USER_EMAIL 和 TEST_USER_PASSWORD（管理员账号）");
 
-  // Navigate to login page
+  // Make sure the demo auto-login (if enabled in .env.local) cannot hide a broken login form.
   await page.goto("/login");
-
-  // Fill in login form
-  await page.getByLabel("邮箱").fill(testEmail);
-  await page.getByLabel("密码").fill(testPassword);
-
-  // Submit and wait for redirect
+  await page.getByLabel("邮箱").fill(email);
+  await page.getByLabel("密码").fill(password);
   await page.getByRole("button", { name: /登录/ }).click();
+  await expect(page).toHaveURL(/\/chat/, { timeout: 15000 });
 
-  // Successful login lands on the chat page
-  await expect(page).toHaveURL(/\/chat/, { timeout: 10000 });
-
-  // Save authentication state
   await page.context().storageState({ path: authFile });
 });

@@ -2,6 +2,8 @@ import { test, expect } from "@playwright/test";
 
 test.describe("入口", () => {
   test.use({ storageState: { cookies: [], origins: [] } });
+  // With DEMO_LOGIN_* configured the site signs visitors in automatically, so these cannot apply.
+  test.skip(process.env.E2E_DEMO_LOGIN === "1", "演示自动登录已开启");
 
   test("首页没有启动页，未登录时落到登录页", async ({ page }) => {
     await page.goto("/");

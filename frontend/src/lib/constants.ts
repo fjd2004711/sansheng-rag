@@ -18,6 +18,7 @@ export const ROUTES = {
   CHAT: "/chat",
   RAG: "/rag",
   EVALUATION: "/evaluation",
+  ADMIN: "/admin",
 } as const;
 
 // WebSocket URL (for chat - direct to backend, use wss:// in production)

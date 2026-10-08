@@ -36,8 +36,10 @@ async def update_current_user(
     user_service: UserSvc,
 ) -> Any:
     """Update current user profile."""
-    if user_in.role is not None and not current_user.has_role(UserRole.ADMIN):
-        user_in.role = None
+    if not current_user.has_role(UserRole.ADMIN):
+        # Self-service edits must never change privileges or account status. Rebuild the payload
+        # without those fields; assigning None would still count as "set" and be written.
+        user_in = UserUpdate(**user_in.model_dump(exclude_unset=True, exclude={"role", "is_active"}))
     user = await user_service.update(current_user.id, user_in)
     return user
 

@@ -33,12 +33,22 @@ export interface ChatMessage {
   agentTrace?: AgentTraceEvent[];
   /** Follow-up questions the system suggests after this answer. */
   suggestions?: string[];
+  /** The current user's rating of this answer. */
+  feedback?: AnswerFeedback | null;
   /** Ordered timeline of the assistant turn: reasoning, text and tool
    *  calls in the exact order they occurred. Rendered in sequence so a
    *  multi-step turn (think → tools → text → think → tools → text) shows
    *  correctly. ``content``/``thinking``/``toolCalls`` are kept in sync as
    *  flat aggregates for copy/persist/rating. */
   parts?: MessagePart[];
+}
+
+export type FeedbackReason = "wrong" | "not_found" | "bad_citation" | "incomplete" | "other";
+
+export interface AnswerFeedback {
+  rating: 1 | -1;
+  reason?: FeedbackReason | null;
+  comment?: string | null;
 }
 
 export interface AgentTraceEvent {
