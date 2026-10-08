@@ -127,6 +127,13 @@ class RerankerConfig(BaseModel):
     candidate_limit: int = 12
 
 
+class CorrectionConfig(BaseModel):
+    """P2 bounded retrieval self-correction configuration."""
+
+    enabled: bool = False
+    max_rounds: int = Field(default=2, ge=1)
+
+
 class RAGSettings(BaseModel):
     """RAG pipeline configuration."""
 
@@ -142,6 +149,7 @@ class RAGSettings(BaseModel):
     enable_hybrid_search: bool = False
     enable_ocr: bool = False
     reranker_config: RerankerConfig = Field(default_factory=RerankerConfig)
+    correction_config: CorrectionConfig = Field(default_factory=CorrectionConfig)
 
     embeddings_config: EmbeddingsConfig = Field(default_factory=EmbeddingsConfig)
 
