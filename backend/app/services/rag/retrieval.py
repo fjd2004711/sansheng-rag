@@ -115,7 +115,9 @@ class RetrievalService(BaseRetrievalService):
         filter: str = "",
         use_reranker: bool = False,
     ) -> list[SearchResult]:
-        should_rerank = self._reranker_enabled and (self.settings.reranker_config.enabled or use_reranker)
+        should_rerank = self._reranker_enabled and (
+            self.settings.reranker_config.enabled or use_reranker
+        )
 
         # Fetch 3x when reranking: gives the reranker room to eliminate weak candidates
         fetch_multiplier = 3 if should_rerank else 2

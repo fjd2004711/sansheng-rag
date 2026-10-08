@@ -57,12 +57,16 @@ async def suggest_followups(
     question: str, answer: str, evidence: str, complete: Complete = _complete
 ) -> list[str]:
     """Return up to three follow-up questions the evidence can answer; empty when there is no answer."""
-    if not answer.strip() or answer.strip().startswith(_ABSTAIN_MESSAGE) or not _has_evidence(evidence):
+    if (
+        not answer.strip()
+        or answer.strip().startswith(_ABSTAIN_MESSAGE)
+        or not _has_evidence(evidence)
+    ):
         return []
     prompt = (
         "根据下面的资料片段，替用户想出接下来最可能继续问的问题。要求：每个问题不超过 25 个字，"
         "必须能从资料片段里找到答案，不要重复用户已经问过的问题，用中文口语，不要加编号。"
-        "只返回 JSON 数组，例如 [\"问题一\", \"问题二\", \"问题三\"]。\n"
+        '只返回 JSON 数组，例如 ["问题一", "问题二", "问题三"]。\n'
         f"用户刚问的问题：{question}\n已给出的回答：{answer[:600]}\n资料片段：\n{evidence[:5000]}"
     )
     try:

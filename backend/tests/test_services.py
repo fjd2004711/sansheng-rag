@@ -118,7 +118,9 @@ class TestUserServicePostgresql:
             user_service.db.commit.assert_awaited_once()
 
     @pytest.mark.anyio
-    async def test_register_ignores_untrusted_admin_role(self, user_service: UserService, mock_user: MockUser):
+    async def test_register_ignores_untrusted_admin_role(
+        self, user_service: UserService, mock_user: MockUser
+    ):
         scalar_one_result = MagicMock()
         scalar_one_result.scalar_one.return_value = 1
         user_service.db.execute = AsyncMock(return_value=scalar_one_result)

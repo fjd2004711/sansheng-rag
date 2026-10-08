@@ -14,7 +14,10 @@ from app.db.session import get_db_context
 from app.repositories import user_repo
 
 
-@command("create-app-admin", help="Grant (or revoke) admin privileges (is_app_admin flag + admin role) for a user")
+@command(
+    "create-app-admin",
+    help="Grant (or revoke) admin privileges (is_app_admin flag + admin role) for a user",
+)
 @click.argument("email")
 @click.option(
     "--revoke", is_flag=True, default=False, help="Revoke app-admin instead of granting it"

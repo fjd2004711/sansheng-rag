@@ -52,8 +52,7 @@ class LLMJSONReranker(BaseReranker):
             return []
 
         payload = [
-            {"id": index, "text": result.content[:1600]}
-            for index, result in enumerate(candidates)
+            {"id": index, "text": result.content[:1600]} for index, result in enumerate(candidates)
         ]
         prompt = (
             "Rank the evidence passages by relevance to the user query. "

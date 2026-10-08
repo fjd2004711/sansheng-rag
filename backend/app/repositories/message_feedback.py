@@ -92,7 +92,9 @@ async def list_with_context(
 
     total = await db.scalar(select(func.count()).select_from(MessageFeedback)) or 0
     helpful = (
-        await db.scalar(select(func.count()).select_from(MessageFeedback).where(MessageFeedback.rating == 1))
+        await db.scalar(
+            select(func.count()).select_from(MessageFeedback).where(MessageFeedback.rating == 1)
+        )
         or 0
     )
     return enriched, total, helpful, total - helpful

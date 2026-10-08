@@ -10,9 +10,7 @@ from app.services.rag.generation.models import (
 )
 
 
-def assessment(
-    sufficient: bool, failure_type: AnswerFailureType | None = None
-) -> AnswerAssessment:
+def assessment(sufficient: bool, failure_type: AnswerFailureType | None = None) -> AnswerAssessment:
     return AnswerAssessment(
         groundedness=1.0 if sufficient else 0.2,
         completeness=1.0 if sufficient else 0.3,
@@ -51,9 +49,7 @@ class FakeEvaluator:
 
 @pytest.mark.anyio
 async def test_hallucination_regenerates_from_existing_evidence_without_retrieval() -> None:
-    evaluator = FakeEvaluator(
-        assessment(False, AnswerFailureType.HALLUCINATION), assessment(True)
-    )
+    evaluator = FakeEvaluator(assessment(False, AnswerFailureType.HALLUCINATION), assessment(True))
     queries: list[str] = []
 
     async def search(query: str) -> str:
@@ -108,7 +104,9 @@ async def test_out_of_scope_answer_abstains_without_retry() -> None:
     async def search(query: str) -> str:
         raise AssertionError("out-of-scope answers must not trigger another search")
 
-    result = await GenerationCorrector(search, evaluator).run("Unknown topic", "Guess", "[1] Other topic")
+    result = await GenerationCorrector(search, evaluator).run(
+        "Unknown topic", "Guess", "[1] Other topic"
+    )
 
     assert result.abstained
     assert result.answer == "知识库中没有找到足以回答该问题的证据。"
@@ -208,7 +206,9 @@ async def test_verification_trace_lists_each_claim_with_its_verdict() -> None:
 
     graded = assessment(True)
     graded.claims = [
-        ClaimVerification(claim="每节 35 元", supported=True, citation_indices=[1], reason="资料第一段"),
+        ClaimVerification(
+            claim="每节 35 元", supported=True, citation_indices=[1], reason="资料第一段"
+        ),
         ClaimVerification(claim="按月发放", supported=False, reason="资料没有提到"),
     ]
     evaluator = FakeEvaluator(graded, graded)
@@ -216,7 +216,9 @@ async def test_verification_trace_lists_each_claim_with_its_verdict() -> None:
     async def search(query: str) -> str:
         raise AssertionError("no correction needed")
 
-    result = await GenerationCorrector(search, evaluator, max_corrections=1).run("Q", "A [1]", "[1] E")
+    result = await GenerationCorrector(search, evaluator, max_corrections=1).run(
+        "Q", "A [1]", "[1] E"
+    )
 
     claims = result.trace[0].detail["claims"]
     assert [c["supported"] for c in claims] == [True, False]

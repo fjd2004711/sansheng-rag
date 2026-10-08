@@ -6,7 +6,11 @@ from app.services.rag.generation.followups import parse_suggestions, suggest_fol
 
 
 def test_parse_suggestions_keeps_short_distinct_questions_and_drops_the_asked_one() -> None:
-    reply = '好的：["超课时津贴怎么发放？", "超课时津贴怎么发放？", "晚自习值班多少钱？", "' + "长" * 50 + '", "问过的问题"]'
+    reply = (
+        '好的：["超课时津贴怎么发放？", "超课时津贴怎么发放？", "晚自习值班多少钱？", "'
+        + "长" * 50
+        + '", "问过的问题"]'
+    )
     assert parse_suggestions(reply, "问过的问题") == ["超课时津贴怎么发放？", "晚自习值班多少钱？"]
 
 
@@ -24,7 +28,10 @@ async def test_no_suggestions_for_refusals_or_missing_evidence() -> None:
     async def complete(prompt: str) -> str:
         raise AssertionError("must not call the model")
 
-    assert await suggest_followups("q", "知识库中没有找到足以回答该问题的证据。", "[1] ev", complete) == []
+    assert (
+        await suggest_followups("q", "知识库中没有找到足以回答该问题的证据。", "[1] ev", complete)
+        == []
+    )
     assert await suggest_followups("q", "answer [1]", "", complete) == []
     assert await suggest_followups("q", "answer [1]", "No relevant documents found", complete) == []
 

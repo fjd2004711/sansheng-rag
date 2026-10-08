@@ -29,8 +29,14 @@ class FeedbackService:
                 message="Conversation not found", details={"conversation_id": str(conversation_id)}
             )
         message = await conversation_repo.get_message_by_id(self.db, message_id)
-        if message is None or message.conversation_id != conversation_id or message.role != "assistant":
-            raise NotFoundError(message="Message not found", details={"message_id": str(message_id)})
+        if (
+            message is None
+            or message.conversation_id != conversation_id
+            or message.role != "assistant"
+        ):
+            raise NotFoundError(
+                message="Message not found", details={"message_id": str(message_id)}
+            )
 
     async def submit(
         self, *, conversation_id: UUID, message_id: UUID, user_id: UUID, data: FeedbackCreate

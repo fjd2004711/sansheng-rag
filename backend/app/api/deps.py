@@ -50,7 +50,6 @@ def get_feedback_service(db: DBSession) -> FeedbackService:
 FeedbackSvc = Annotated[FeedbackService, Depends(get_feedback_service)]
 
 
-
 from app.services.rag_document import RAGDocumentService
 
 

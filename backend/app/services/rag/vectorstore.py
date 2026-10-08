@@ -30,9 +30,7 @@ class BaseVectorStore(ABC):
         pass
 
     @abstractmethod
-    async def list_chunks(
-        self, collection_name: str, filter_expr: str = ""
-    ) -> list[SearchResult]:
+    async def list_chunks(self, collection_name: str, filter_expr: str = "") -> list[SearchResult]:
         """Return every stored chunk for a collection's sparse retrieval index."""
         pass
 
@@ -226,16 +224,16 @@ class QdrantVectorStore(BaseVectorStore):
             for hit in query_response.points
         ]
 
-    async def list_chunks(
-        self, collection_name: str, filter_expr: str = ""
-    ) -> list[SearchResult]:
+    async def list_chunks(self, collection_name: str, filter_expr: str = "") -> list[SearchResult]:
         """Scroll every Qdrant point so BM25 indexes the full collection."""
         qdrant_filter = None
         if filter_expr and "parent_doc_id" in filter_expr:
             match = re.search(r'parent_doc_id\s*==\s*"([^"\\]+)"', filter_expr)
             if match:
                 qdrant_filter = Filter(
-                    must=[FieldCondition(key="parent_doc_id", match=MatchValue(value=match.group(1)))]
+                    must=[
+                        FieldCondition(key="parent_doc_id", match=MatchValue(value=match.group(1)))
+                    ]
                 )
 
         offset = None

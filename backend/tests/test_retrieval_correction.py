@@ -99,7 +99,9 @@ class OutOfScopeGrader:
 
 @pytest.mark.anyio
 async def test_out_of_scope_evidence_ends_in_abstention() -> None:
-    result = await CorrectiveRetriever(EmptyRetriever(), OutOfScopeGrader()).run("Who won the match?")
+    result = await CorrectiveRetriever(EmptyRetriever(), OutOfScopeGrader()).run(
+        "Who won the match?"
+    )
 
     assert result.abstained
     assert result.retrieval_round == 1

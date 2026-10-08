@@ -21,7 +21,9 @@ class FakeVectorStore:
 async def test_bm25_searches_the_full_collection_not_dense_candidates() -> None:
     store = FakeVectorStore(
         [
-            SearchResult(content="generic semantic overview", score=0.0, parent_doc_id="dense-only"),
+            SearchResult(
+                content="generic semantic overview", score=0.0, parent_doc_id="dense-only"
+            ),
             SearchResult(
                 content="The rare identifier ZXQ-991 belongs to the retrieval benchmark.",
                 score=0.0,
@@ -41,9 +43,7 @@ async def test_bm25_searches_the_full_collection_not_dense_candidates() -> None:
 
 @pytest.mark.anyio
 async def test_bm25_cache_is_invalidated_after_collection_mutation() -> None:
-    store = FakeVectorStore(
-        [SearchResult(content="alpha token", score=0.0, parent_doc_id="first")]
-    )
+    store = FakeVectorStore([SearchResult(content="alpha token", score=0.0, parent_doc_id="first")])
     index = FullCollectionBM25()
 
     await index.search(store, "documents", "alpha", limit=1)
