@@ -35,7 +35,7 @@ class EvidenceEvaluator:
             return EvidenceAssessment(
                 sufficient=False,
                 failure_type=FailureType.OUT_OF_SCOPE,
-                failure_reason="No evidence was retrieved from the knowledge base.",
+                failure_reason="资料库里没有检索到任何相关资料。",
             )
         payload = [
             {"id": index, "text": doc.content[:1200], "source": doc.metadata.get("filename")}
@@ -49,7 +49,8 @@ class EvidenceEvaluator:
             "is truly absent. Return only JSON with "
             'keys relevance_scores (0..1 array), sufficient (boolean), missing_information '
             '(string array), failure_type (insufficient_evidence|ambiguous_query|out_of_scope|'
-            'irrelevant_evidence|null), failure_reason (string).\n'
+            'irrelevant_evidence|null), failure_reason (string). '
+            'Write failure_reason and every missing_information item in Chinese, as plain sentences a non-technical reader understands (say what is missing or wrong, not internal terms). \n'
             f"Question: {question}\nQuery: {query}\nEvidence: {json.dumps(payload, ensure_ascii=False)}"
         )
         parsed = _json_object(await self._complete(prompt))
@@ -70,7 +71,8 @@ class EvidenceEvaluator:
             "Diagnose an evidence retrieval failure. Return only JSON with keys action "
             '(rewrite|expand|abstain), rewritten_query (string or null), missing_information '
             '(string array), failure_type (insufficient_evidence|ambiguous_query|out_of_scope|'
-            'irrelevant_evidence), failure_reason (string). Prefer abstain only when the '
+            'irrelevant_evidence), failure_reason (string). '
+            'Write failure_reason and every missing_information item in Chinese, as plain sentences a non-technical reader understands (say what is missing or wrong, not internal terms). Prefer abstain only when the '
             "knowledge base is unlikely to contain the answer.\n"
             f"Question: {question}\nCurrent query: {query}\nAssessment: {assessment.model_dump_json()}"
         )
@@ -110,7 +112,7 @@ class EvidenceEvaluator:
             action=CorrectionAction.REWRITE,
             rewritten_query=f"{question} {', '.join(assessment.missing_information)}".strip(),
             failure_type=assessment.failure_type or FailureType.INSUFFICIENT_EVIDENCE,
-            failure_reason=assessment.failure_reason or "Evidence was insufficient.",
+            failure_reason=assessment.failure_reason or "找到的资料不足以回答这个问题。",
             missing_information=assessment.missing_information,
         )
 
@@ -145,7 +147,7 @@ def _fallback_assessment(question: str, docs: list[SearchResult]) -> EvidenceAss
     return EvidenceAssessment(
         relevance_scores=scores,
         sufficient=sufficient,
-        missing_information=[] if sufficient else ["More directly relevant evidence"],
+        missing_information=[] if sufficient else ["与问题更直接相关的资料"],
         failure_type=None if sufficient else FailureType.INSUFFICIENT_EVIDENCE,
-        failure_reason="" if sufficient else "No retrieved chunk overlaps the question terms.",
+        failure_reason="" if sufficient else "检索到的资料与问题几乎没有共同的关键词。",
     )

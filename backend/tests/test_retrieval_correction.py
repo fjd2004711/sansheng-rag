@@ -144,3 +144,37 @@ async def test_maximum_correction_rounds_stops_the_loop() -> None:
     assert not result.abstained
     assert result.trace[-1].step == "max_rounds_reached"
     assert result.trace[-1].detail["max_rounds"] == 2
+
+
+def test_summarize_results_reports_source_snippet_and_stage_scores() -> None:
+    from app.graph.retrieval_correction import summarize_results
+    from app.services.rag.models import SearchResult
+
+    doc = SearchResult(
+        content="  事假应提前两个工作日\n向教务处提出申请。" + "长" * 300,
+        score=0.5,
+        metadata={
+            "filename": "school-leave.md",
+            "page_num": 1,
+            "chunk_num": 0,
+            "dense_score": 0.81234567,
+            "bm25_score": 12.0,
+            "ignored": "x",
+        },
+    )
+
+    [item] = summarize_results([doc])
+
+    assert item["source"] == "school-leave.md"
+    assert item["page"] == 1 and item["chunk"] == 0
+    assert str(item["snippet"]).startswith("事假应提前两个工作日 向教务处")
+    assert len(str(item["snippet"])) == 160
+    assert item["scores"] == {"dense_score": 0.8123, "bm25_score": 12.0}
+
+
+def test_summarize_results_is_bounded() -> None:
+    from app.graph.retrieval_correction import summarize_results
+    from app.services.rag.models import SearchResult
+
+    docs = [SearchResult(content=str(i), score=1.0) for i in range(25)]
+    assert len(summarize_results(docs)) == 10

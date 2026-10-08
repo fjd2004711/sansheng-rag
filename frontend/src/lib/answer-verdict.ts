@@ -1,3 +1,4 @@
+import { describeFailure } from "@/lib/agent-trace-labels";
 import type { AgentTraceEvent } from "@/types";
 
 export type VerdictKind = "verified" | "corrected" | "partial" | "abstained" | "unchecked";
@@ -14,6 +15,24 @@ export interface AnswerVerdict {
   rewrites: number;
   /** Queries the system tried, in order, without duplicates. */
   queries: string[];
+  /** Plain-language reason behind a refusal or a partial answer, when there is one. */
+  reason?: string;
+}
+
+const REASON_STEPS = ["answer_reverify", "answer_verify", "answer_diagnose", "failure_diagnose", "evidence_evaluate"];
+
+/** The most recent explanation of what went wrong, from the last step that gave one. */
+function lastReason(trace: AgentTraceEvent[]): string | undefined {
+  for (const step of REASON_STEPS) {
+    for (let i = trace.length - 1; i >= 0; i--) {
+      const event = trace[i]!;
+      if (event.step !== step || event.status === "PASS") continue;
+      const reason = describeFailure(event.detail);
+      if (reason) return reason;
+    }
+  }
+  const abstain = [...trace].reverse().find((event) => event.step === "abstain");
+  return abstain ? describeFailure(abstain.detail) : undefined;
 }
 
 const CORRECTION_STEPS = new Set(["query_rewrite", "regenerate", "retrieve_missing"]);
@@ -47,5 +66,6 @@ export function deriveVerdict(
     searches: trace.filter((e) => e.step === "retrieve" || e.step === "retrieve_missing").length,
     rewrites: trace.filter((e) => e.step === "query_rewrite").length,
     queries,
+    reason: kind === "abstained" || kind === "partial" ? lastReason(trace) : undefined,
   };
 }

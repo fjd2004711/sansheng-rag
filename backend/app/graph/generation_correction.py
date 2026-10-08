@@ -155,7 +155,7 @@ class GenerationCorrector:
                     state,
                     step="regenerate",
                     status="ABSTAIN",
-                    detail={"reason": "No evidence available for corrective generation."},
+                    detail={"reason": "没有可用的资料来重新作答。"},
                 ),
             }
         answer = await self.evaluator.regenerate(state["question"], state["evidence"])
@@ -179,7 +179,7 @@ class GenerationCorrector:
                 citation_coverage=0,
                 sufficient=False,
                 failure_type=AnswerFailureType.OUT_OF_SCOPE,
-                failure_reason="No evidence was available for corrective generation.",
+                failure_reason="没有可用的资料来重新作答。",
             )
         else:
             assessment = await self.evaluator.assess(
@@ -271,6 +271,14 @@ class GenerationCorrector:
                     "failure_reason": assessment.failure_reason,
                     "missing_information": assessment.missing_information,
                     "claim_count": len(assessment.claims),
+                    "claims": [
+                        {
+                            "claim": claim.claim[:200],
+                            "supported": claim.supported,
+                            "reason": claim.reason[:240],
+                        }
+                        for claim in assessment.claims[:8]
+                    ],
                 },
             ),
         }

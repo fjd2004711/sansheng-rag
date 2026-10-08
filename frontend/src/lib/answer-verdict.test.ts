@@ -52,3 +52,22 @@ describe("deriveVerdict", () => {
     expect(deriveVerdict([ev("retrieve", "COMPLETE")], "答案")?.kind).toBe("unchecked");
   });
 });
+
+describe("deriveVerdict reasons", () => {
+  it("explains a refusal with the last failure the judges reported", () => {
+    const verdict = deriveVerdict(
+      [
+        ev("retrieve", "COMPLETE", { query: "退休金" }),
+        ev("evidence_evaluate", "FAIL", { failure_type: "insufficient_evidence", failure_reason: "资料没有提到金额" }),
+        ev("abstain", "COMPLETE", { reason: "资料没有提到金额" }),
+      ],
+      "没有",
+    );
+    expect(verdict?.reason).toBe("资料不足：资料没有提到金额");
+  });
+
+  it("falls back to the abstain reason, and gives no reason for verified answers", () => {
+    expect(deriveVerdict([ev("abstain", "COMPLETE", { reason: "库里没有" })], "没有")?.reason).toBe("库里没有");
+    expect(deriveVerdict([ev("answer_verify", "PASS")], "答案")?.reason).toBeUndefined();
+  });
+});

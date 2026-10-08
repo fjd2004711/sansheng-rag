@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useChat } from "@/hooks";
 import { AgentTracePanel } from "./agent-trace-panel";
 import { ChatEmptyState } from "./chat-empty-state";
+import { TraceDetailSheet } from "./trace-detail";
 import { LibraryPopover } from "./library-popover";
 import { ChatInput } from "./chat-input";
 import { FilePreviewPanel } from "./file-preview-panel";
@@ -184,6 +185,7 @@ export function ChatContainer() {
       messages={messages}
       trace={shownTrace?.agentTrace ?? []}
       traceTitle={traceQuestion}
+      traceMessageId={shownTrace?.id}
       selectedTraceId={selectedTraceId}
       onShowTrace={(id) => setSelectedTraceId((current) => (current === id ? null : id))}
       isConnected={isConnected}
@@ -210,6 +212,7 @@ interface ChatUIProps {
   messages: import("@/types").ChatMessage[];
   trace: AgentTraceEvent[];
   traceTitle?: string;
+  traceMessageId?: string;
   selectedTraceId?: string | null;
   onShowTrace?: (messageId: string) => void;
   isConnected: boolean;
@@ -237,6 +240,7 @@ function ChatUI({
   messages,
   trace,
   traceTitle,
+  traceMessageId,
   selectedTraceId,
   onShowTrace,
   isConnected,
@@ -336,7 +340,8 @@ function ChatUI({
           </p>
         </div>
       </div>
-      <AgentTracePanel trace={trace} title={traceTitle} />
+      <AgentTracePanel trace={trace} title={traceTitle} messageId={traceMessageId} />
+      <TraceDetailSheet />
       <FilePreviewPanel />
       <SourcesPanel />
     </div>

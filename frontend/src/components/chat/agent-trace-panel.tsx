@@ -5,6 +5,7 @@ import "@xyflow/react/dist/style.css";
 import { Activity, Check, CircleAlert, Search, ShieldCheck, WandSparkles } from "lucide-react";
 import type { AgentTraceEvent } from "@/types";
 import { cn } from "@/lib/utils";
+import { useTraceDetailStore } from "@/stores/trace-detail-store";
 import { TRACE_FAILURE_LABELS, TRACE_STATUS_LABELS, TRACE_STEP_LABELS } from "@/lib/agent-trace-labels";
 
 const LABELS = TRACE_STEP_LABELS;
@@ -100,7 +101,16 @@ function TraceNode({ data }: { data: { event: AgentTraceEvent } }) {
 
 const nodeTypes = { trace: TraceNode };
 
-export function AgentTracePanel({ trace, title }: { trace: AgentTraceEvent[]; title?: string }) {
+export function AgentTracePanel({
+  trace,
+  title,
+  messageId,
+}: {
+  trace: AgentTraceEvent[];
+  title?: string;
+  messageId?: string;
+}) {
+  const openDetail = useTraceDetailStore((state) => state.open);
   const nodes: Node[] = trace.map((event, index) => ({
     id: `${index}-${event.step}`,
     type: "trace",
@@ -125,6 +135,15 @@ export function AgentTracePanel({ trace, title }: { trace: AgentTraceEvent[]; ti
           <h2 className="text-sm font-semibold">运作流程</h2>
         </div>
         <p className="text-muted-foreground mt-0.5 text-xs">每一步怎么找、怎么核对、怎么纠错</p>
+        {messageId && trace.length > 0 && (
+          <button
+            type="button"
+            onClick={() => openDetail(messageId)}
+            className="border-foreground/20 hover:bg-foreground/5 mt-2 w-full rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors"
+          >
+            展开详细过程：搜了什么、为什么
+          </button>
+        )}
         {title && (
           <p className="bg-muted mt-2 line-clamp-2 rounded-md px-2 py-1.5 text-xs leading-relaxed" title={title}>
             针对：{title}

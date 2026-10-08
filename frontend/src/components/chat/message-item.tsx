@@ -6,6 +6,7 @@ import { progressText } from "@/lib/agent-trace-labels";
 import { deriveVerdict } from "@/lib/answer-verdict";
 import { AnswerVerdictBar } from "./answer-verdict";
 import { isAppAdmin } from "@/lib/utils";
+import { useTraceDetailStore } from "@/stores/trace-detail-store";
 import { ToolCallCard } from "./tool-call-card";
 import { MarkdownContent } from "./markdown-content";
 import { CopyButton } from "./copy-button";
@@ -125,6 +126,7 @@ export function MessageItem({ message, groupPosition, onRegenerate, onShowTrace,
   const { user: authUser, avatarVersion } = useAuthStore();
   const isGrouped = groupPosition && groupPosition !== "single";
 
+  const openTraceDetail = useTraceDetailStore((state) => state.open);
   const verdict = !isUser ? deriveVerdict(message.agentTrace, message.content) : null;
   const sources = !isUser ? extractSources(message) : [];
   const hasSources = sources.length > 0 && !message.isStreaming;
@@ -347,6 +349,7 @@ export function MessageItem({ message, groupPosition, onRegenerate, onShowTrace,
             isAdmin={isAppAdmin(authUser)}
             selected={Boolean(traceSelected)}
             onShowTrace={onShowTrace}
+            onShowDetail={() => openTraceDetail(message.id)}
           />
         )}
 

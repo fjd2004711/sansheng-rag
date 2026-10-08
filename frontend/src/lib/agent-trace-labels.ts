@@ -67,3 +67,30 @@ export function progressText(last: AgentTraceEvent | undefined): string {
       return "正在处理…";
   }
 }
+
+export const TRACE_ACTION_LABELS: Record<string, string> = {
+  rewrite: "换个问法，重新检索",
+  expand: "扩大范围，重新检索",
+  abstain: "不再检索，如实告知查不到",
+  stop: "停止检索",
+};
+
+/** Names for the per-stage retrieval scores recorded with each retrieved chunk. */
+export const RETRIEVAL_SCORE_LABELS: Record<string, string> = {
+  dense_score: "语义相似",
+  bm25_score: "关键词匹配",
+  rrf_score: "综合排名",
+  reranker_score: "精排得分",
+};
+
+const text = (value: unknown): string | undefined =>
+  typeof value === "string" && value.trim() ? value.trim() : undefined;
+
+/** "资料不足：……" — the failure type and the reason the judge gave, in one readable line. */
+export function describeFailure(detail: Record<string, unknown>): string | undefined {
+  const type = text(detail.failure_type);
+  const reason = text(detail.failure_reason) ?? text(detail.reason);
+  const label = type ? (TRACE_FAILURE_LABELS[type] ?? type) : undefined;
+  if (label && reason) return `${label}：${reason}`;
+  return reason ?? label;
+}
