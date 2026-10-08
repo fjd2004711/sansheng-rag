@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Run the local backend + frontend against the server's Postgres / Qdrant / Ollama through an
 # SSH tunnel, using an isolated database and Qdrant collection so server data is never touched.
+# The chat model (OPENAI_BASE_URL / AI_MODEL in backend/.env) is used as configured; only the
+# embedding model is reached through the tunnel.
 #
 #   scripts/dev_remote.sh up     start tunnel, scratch DB, backend (8010), frontend (3010)
 #   scripts/dev_remote.sh down   stop everything (keeps the scratch DB and collection)
@@ -39,7 +41,7 @@ case "${1:-up}" in
 
     export POSTGRES_HOST=localhost POSTGRES_PORT=55432 POSTGRES_DB="$DB_NAME" \
            QDRANT_HOST=localhost QDRANT_PORT=6333 \
-           OPENAI_BASE_URL=http://localhost:11434/v1 EMBEDDING_BASE_URL=http://localhost:11434/v1 \
+           EMBEDDING_BASE_URL=http://localhost:11434/v1 \
            RAG_DEFAULT_COLLECTION="$COLLECTION"
 
     (cd "$ROOT/backend" && uv run alembic upgrade head >/dev/null)

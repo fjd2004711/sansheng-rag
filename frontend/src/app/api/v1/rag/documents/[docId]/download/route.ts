@@ -19,7 +19,7 @@ export async function GET(
     });
 
     if (!response.ok) {
-      return NextResponse.json({ detail: "File not found" }, { status: response.status });
+      return NextResponse.json({ detail: "文件不存在" }, { status: response.status });
     }
 
     const data = await response.arrayBuffer();
@@ -34,6 +34,6 @@ export async function GET(
       },
     });
   } catch {
-    return NextResponse.json({ detail: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ detail: "服务器内部错误" }, { status: 500 });
   }
 }

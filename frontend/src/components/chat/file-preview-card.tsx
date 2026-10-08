@@ -213,7 +213,7 @@ function HtmlViewer({ url }: { url: string }) {
         if (!cancelled) setHtml(text);
       })
       .catch((e) => {
-        if (!cancelled) setError(e instanceof Error ? e.message : "Failed to load");
+        if (!cancelled) setError(e instanceof Error ? e.message : "加载失败");
       });
     return () => {
       cancelled = true;
@@ -227,7 +227,7 @@ function HtmlViewer({ url }: { url: string }) {
     <iframe
       sandbox=""
       srcDoc={html}
-      title="HTML preview"
+      title="网页预览"
       className="block min-h-0 w-full flex-1 border-0 bg-white"
     />
   );
@@ -245,7 +245,7 @@ function CsvViewer({ url }: { url: string }) {
         if (!cancelled) setRows(parseCsv(text));
       })
       .catch((e) => {
-        if (!cancelled) setError(e instanceof Error ? e.message : "Failed to load");
+        if (!cancelled) setError(e instanceof Error ? e.message : "加载失败");
       });
     return () => {
       cancelled = true;
@@ -254,7 +254,7 @@ function CsvViewer({ url }: { url: string }) {
 
   if (error) return <ErrorState message={error} />;
   if (rows === null) return <LoadingState />;
-  if (rows.length === 0) return <EmptyState message="Empty file" />;
+  if (rows.length === 0) return <EmptyState message="文件为空" />;
 
   const [header, ...body] = rows;
   const MAX_ROWS = 500;
@@ -386,7 +386,7 @@ function TextViewer({ url, mode, lang }: TextViewerProps) {
         }
       })
       .catch((e) => {
-        if (!cancelled) setError(e instanceof Error ? e.message : "Failed to load");
+        if (!cancelled) setError(e instanceof Error ? e.message : "加载失败");
       });
     return () => {
       cancelled = true;
@@ -435,7 +435,7 @@ function BinaryFallback({ url, filename }: { url: string; filename: string }) {
       </div>
       <div>
         <p className="text-foreground text-sm font-medium">{filename}</p>
-        <p className="text-foreground/55 mt-1 text-xs">No inline preview for this file type.</p>
+        <p className="text-foreground/55 mt-1 text-xs">此类文件暂不支持预览。</p>
       </div>
       <a
         href={url}
@@ -461,7 +461,7 @@ function ErrorState({ message }: { message: string }) {
   return (
     <div className="text-destructive/80 flex min-h-0 flex-1 flex-col items-center justify-center gap-2 p-6 text-center text-xs">
       <AlertCircle className="h-5 w-5" />
-      <p>Couldn&apos;t load preview</p>
+      <p>无法加载预览</p>
       <p className="text-foreground/55 font-mono text-[10px] tracking-wider uppercase">{message}</p>
     </div>
   );

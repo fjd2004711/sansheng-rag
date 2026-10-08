@@ -5,27 +5,27 @@
  */
 
 const EXACT_CAPTIONS: Record<string, string> = {
-  search_knowledge_base: "Searching the knowledge base",
-  search_documents: "Searching the documents",
-  web_search_tool: "Searching the web",
-  search_web: "Searching the web",
-  fetch_url: "Reading a web page",
-  get_current_datetime: "Checking the date and time",
-  run_python: "Running calculations",
-  create_chart_tool: "Creating a chart",
-  create_map_tool: "Drawing a map",
-  ask_user: "Asking you a question",
-  load_capability: "Loading a skill",
+  search_knowledge_base: "正在检索知识库",
+  search_documents: "正在检索资料",
+  web_search_tool: "正在搜索网页",
+  search_web: "正在搜索网页",
+  fetch_url: "正在阅读网页",
+  get_current_datetime: "正在查看日期时间",
+  run_python: "正在计算",
+  create_chart_tool: "正在生成图表",
+  create_map_tool: "正在绘制地图",
+  ask_user: "正在向你提问",
+  load_capability: "正在加载技能",
 };
 
 /** Prefix-based fallbacks for tools like `generate_*`. */
 const PREFIX_CAPTIONS: ReadonlyArray<readonly [string, string]> = [
-  ["generate_", "Generating a chart"],
-  ["search_", "Searching"],
-  ["create_", "Creating"],
-  ["fetch_", "Fetching data"],
-  ["get_", "Looking that up"],
-  ["list_", "Looking that up"],
+  ["generate_", "正在生成图表"],
+  ["search_", "正在检索"],
+  ["create_", "正在生成"],
+  ["fetch_", "正在获取数据"],
+  ["get_", "正在查询"],
+  ["list_", "正在查询"],
 ];
 
 function humanizeToolName(name: string): string {
@@ -38,19 +38,19 @@ function humanizeToolName(name: string): string {
 }
 
 const DISPLAY_NAMES: Record<string, string> = {
-  run_python: "Run Python",
-  create_chart_tool: "Chart",
-  create_map_tool: "Map",
-  web_search_tool: "Web Search",
-  search_web: "Web Search",
-  web_search: "Web Search",
-  web_fetch: "Web Fetch",
-  fetch_url: "Fetch URL",
-  get_current_datetime: "Current Date & Time",
-  search_knowledge_base: "Knowledge Base Search",
-  search_documents: "Knowledge Base Search",
-  ask_user: "Question",
-  load_capability: "Load Skill",
+  run_python: "运行计算",
+  create_chart_tool: "图表",
+  create_map_tool: "地图",
+  web_search_tool: "网页搜索",
+  search_web: "网页搜索",
+  web_search: "网页搜索",
+  web_fetch: "读取网页",
+  fetch_url: "读取网页",
+  get_current_datetime: "当前日期时间",
+  search_knowledge_base: "知识库检索",
+  search_documents: "知识库检索",
+  ask_user: "提问",
+  load_capability: "加载技能",
 };
 
 export function toolDisplayName(toolName: string): string {
@@ -67,5 +67,5 @@ export function toolCaption(toolName: string): string {
   for (const [prefix, caption] of PREFIX_CAPTIONS) {
     if (toolName.startsWith(prefix)) return caption;
   }
-  return `Running ${humanizeToolName(toolName)}`;
+  return `正在执行 ${humanizeToolName(toolName)}`;
 }

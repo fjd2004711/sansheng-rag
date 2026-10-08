@@ -51,8 +51,8 @@ export function PendingMessages({ messages, onCancel }: PendingMessagesProps) {
               type="button"
               onClick={() => onCancel(m.id)}
               className="text-foreground/45 hover:bg-foreground/10 hover:text-destructive inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md transition-colors"
-              title="Remove from queue"
-              aria-label="Remove from queue"
+              title="从队列移除"
+              aria-label="从队列移除"
             >
               <X className="h-3.5 w-3.5" />
             </button>

@@ -12,7 +12,7 @@ export function DateTimeResult({ result }: { result: string }) {
         <div className="flex items-center gap-2">
           <Calendar className="text-primary h-5 w-5" />
           <div>
-            <p className="text-muted-foreground text-xs">Date</p>
+            <p className="text-muted-foreground text-xs">日期</p>
             <p className="text-sm font-semibold">{dateMatch[1]}</p>
           </div>
         </div>
@@ -21,7 +21,7 @@ export function DateTimeResult({ result }: { result: string }) {
         <div className="flex items-center gap-2">
           <Clock className="text-primary h-5 w-5" />
           <div>
-            <p className="text-muted-foreground text-xs">Time</p>
+            <p className="text-muted-foreground text-xs">时间</p>
             <p className="text-sm font-semibold">{timeMatch[1]}</p>
           </div>
         </div>

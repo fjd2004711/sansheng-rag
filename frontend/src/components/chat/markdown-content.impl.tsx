@@ -90,7 +90,7 @@ export function MarkdownContent({ content, onCiteClick }: MarkdownContentProps) 
                     onCiteClick(n);
                   }}
                   className="bg-foreground/10 text-foreground/70 hover:bg-foreground/20 mx-0.5 inline-flex h-[1.1em] cursor-pointer items-center rounded px-1 align-middle font-mono text-[0.72em] font-semibold tabular-nums transition-colors"
-                  title={`Source [${n}]`}
+                  title={`来源 [${n}]`}
                 >
                   {n}
                 </button>

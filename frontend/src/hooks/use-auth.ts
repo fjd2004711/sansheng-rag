@@ -113,7 +113,7 @@ export function useAuth() {
       authCheckPromise = null;
       stopTokenRefresh();
       logout();
-      toast.success("Logged out");
+      toast.success("已退出登录");
       router.push(ROUTES.LOGIN);
     }
   }, [logout, router]);

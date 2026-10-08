@@ -251,7 +251,7 @@ export function useChat(options: UseChatOptions = {}) {
           if (currentMessageIdRef.current) {
             const id = currentMessageIdRef.current;
             const { message } = wsEvent.data as { message: string };
-            const errText = `\n\n❌ Error: ${message || "Unknown error"}`;
+            const errText = `\n\n❌ 出错了：${message || "未知错误"}`;
             const cur = useChatStore.getState().messages.find((m) => m.id === id);
             if (cur?.parts) {
               appendTextDelta(id, errText);
@@ -286,7 +286,7 @@ export function useChat(options: UseChatOptions = {}) {
           if (currentMessageIdRef.current) {
             const id = currentMessageIdRef.current;
             const toolNames = action_requests.map((ar) => ar.tool_name).join(", ");
-            const waitText = `\n\n⏸️ Waiting for approval: ${toolNames}`;
+            const waitText = `\n\n⏸️ 等待你确认：${toolNames}`;
             const cur = useChatStore.getState().messages.find((m) => m.id === id);
             if (cur?.parts) {
               appendTextDelta(id, waitText);
@@ -453,15 +453,15 @@ export function useChat(options: UseChatOptions = {}) {
         const rejectedCount = decisions.filter((d) => d.type === "reject").length;
 
         const summaryParts: string[] = [];
-        if (approvedCount > 0) summaryParts.push(`${approvedCount} approved`);
-        if (editedCount > 0) summaryParts.push(`${editedCount} edited`);
-        if (rejectedCount > 0) summaryParts.push(`${rejectedCount} rejected`);
+        if (approvedCount > 0) summaryParts.push(`${approvedCount} 项已批准`);
+        if (editedCount > 0) summaryParts.push(`${editedCount} 项已修改`);
+        if (rejectedCount > 0) summaryParts.push(`${rejectedCount} 项已拒绝`);
 
         updateMessage(currentMessageIdRef.current, (msg) => ({
           ...msg,
           content: msg.content.replace(
             /\n\n⏸️ Waiting for approval:.*$/,
-            `\n\n✅ Decisions: ${summaryParts.join(", ")}`,
+            `\n\n✅ 你的决定：${summaryParts.join(", ")}`,
           ),
         }));
       }

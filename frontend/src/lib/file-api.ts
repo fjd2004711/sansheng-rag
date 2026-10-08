@@ -22,8 +22,8 @@ export async function uploadFile(file: File): Promise<FileUploadResponse> {
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: "Upload failed" }));
-    throw new ApiError(response.status, error.detail || "Upload failed", error);
+    const error = await response.json().catch(() => ({ detail: "上传失败" }));
+    throw new ApiError(response.status, error.detail || "上传失败", error);
   }
 
   return response.json();

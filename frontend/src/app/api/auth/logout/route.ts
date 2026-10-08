@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const response = NextResponse.json({ message: "Logged out successfully" });
+  const response = NextResponse.json({ message: "已退出登录" });
 
   clearAuthCookies(response);
 

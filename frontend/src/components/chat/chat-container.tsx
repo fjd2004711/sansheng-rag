@@ -4,7 +4,6 @@ import { useEffect, useRef, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { useChat } from "@/hooks";
 import { AgentTracePanel } from "./agent-trace-panel";
-import { ChatControls } from "./chat-controls";
 import { ChatEmptyState } from "./chat-empty-state";
 import { ChatInput } from "./chat-input";
 import { FilePreviewPanel } from "./file-preview-panel";
@@ -44,9 +43,6 @@ export function ChatContainer() {
     queuedMessages,
     cancelQueued,
     clearQueued,
-    setModel,
-    setTemperature,
-    setThinkingEffort,
     pendingApproval,
     sendResumeDecisions,
     pendingQuestions,
@@ -174,9 +170,6 @@ export function ChatContainer() {
         currentConversationId !== null && isConversationLoading && messages.length === 0
       }
       sendMessage={sendMessage}
-      onModelChange={setModel}
-      onTemperatureChange={setTemperature}
-      onThinkingEffortChange={setThinkingEffort}
       onRegenerate={handleRegenerate}
       queuedMessages={queuedMessages}
       onCancelQueued={cancelQueued}
@@ -203,9 +196,6 @@ interface ChatUIProps {
     fileIds?: string[],
     files?: import("@/types").ChatMessageFile[],
   ) => void;
-  onModelChange?: (model: string | null) => void;
-  onTemperatureChange?: (temperature: number | null) => void;
-  onThinkingEffortChange?: (effort: "low" | "medium" | "high" | null) => void;
   onRegenerate?: (messageId: string) => void;
   queuedMessages?: import("@/hooks/use-chat").QueuedMessage[];
   onCancelQueued?: (id: string) => void;
@@ -225,9 +215,6 @@ function ChatUI({
   isProcessing,
   isLoadingConversation,
   sendMessage,
-  onModelChange,
-  onTemperatureChange,
-  onThinkingEffortChange,
   onRegenerate,
   queuedMessages,
   onCancelQueued,
@@ -307,17 +294,10 @@ function ChatUI({
                   {isConnected ? tc("live") : tc("offline")}
                 </span>
               </div>
-              <div className="flex items-center gap-1">
-                <ChatControls
-                  onModelChange={onModelChange}
-                  onTemperatureChange={onTemperatureChange}
-                  onThinkingEffortChange={onThinkingEffortChange}
-                />
-              </div>
             </div>
           </div>
-          <p className="text-foreground/40 mt-2 text-center font-mono text-[10px] tracking-wider uppercase">
-            AI can make mistakes. Verify important information.
+          <p className="text-foreground/40 mt-2 text-center text-xs">
+            回答由 AI 生成，重要内容请对照来源核实。
           </p>
         </div>
       </div>

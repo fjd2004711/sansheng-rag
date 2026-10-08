@@ -25,13 +25,13 @@ export async function POST(
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ detail: "Ingestion failed" }));
+      const error = await response.json().catch(() => ({ detail: "入库失败" }));
       return NextResponse.json(error, { status: response.status });
     }
 
     const data = await response.json();
     return NextResponse.json(data);
   } catch {
-    return NextResponse.json({ detail: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ detail: "服务器内部错误" }, { status: 500 });
   }
 }

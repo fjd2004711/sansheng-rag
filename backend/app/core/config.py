@@ -116,6 +116,10 @@ class Settings(BaseSettings):
     AI_MODEL: str = "gpt-5.5"
     AI_TEMPERATURE: float = 0.7
     AI_THINKING_ENABLED: bool = False
+    # Send ``enable_thinking=false`` to OpenAI-compatible providers that think by default (e.g.
+    # DashScope Qwen3). Their thinking mode rejects ``tool_choice="required"`` and is slow for the
+    # short JSON judging calls.
+    AI_DISABLE_THINKING: bool = False
     AI_THINKING_EFFORT: str = "medium"  # "low", "medium", "high"
     AI_AVAILABLE_MODELS: list[str] = [
         "gpt-5.5",
@@ -177,6 +181,11 @@ class Settings(BaseSettings):
         return v
 
     @computed_field  # type: ignore[prop-decorator]
+    @property
+    def llm_extra_body(self) -> dict[str, object] | None:
+        """Provider-specific request fields for chat completions, or None for plain providers."""
+        return {"enable_thinking": False} if self.AI_DISABLE_THINKING else None
+
     @property
     def rag(self) -> "RAGSettings":
         """Build RAG-specific settings."""

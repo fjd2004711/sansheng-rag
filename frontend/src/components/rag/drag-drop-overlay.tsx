@@ -24,8 +24,8 @@ interface DragDropOverlayProps {
 export function DragDropOverlay({
   onDrop,
   disabled,
-  title = "Drop files to upload",
-  description = "Files will be added to the active collection",
+  title = "松开即可上传",
+  description = "文件将添加到当前集合",
   acceptedFormats,
 }: DragDropOverlayProps) {
   const [active, setActive] = useState(false);

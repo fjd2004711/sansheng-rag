@@ -10,6 +10,7 @@ from typing import Any
 
 from openai import AsyncOpenAI
 
+from app.core.config import settings
 from app.services.rag.config import RAGSettings, RerankerConfig
 from app.services.rag.models import SearchResult
 
@@ -64,6 +65,7 @@ class LLMJSONReranker(BaseReranker):
             model=self.config.model,
             messages=[{"role": "user", "content": prompt}],
             temperature=0,
+            extra_body=settings.llm_extra_body,
         )
         rankings = _parse_rankings(response.choices[0].message.content or "")
         if not rankings:

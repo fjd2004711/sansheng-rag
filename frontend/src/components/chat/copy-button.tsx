@@ -25,8 +25,8 @@ export function CopyButton({ text, className, size = "sm" }: CopyButtonProps) {
       size={size}
       className={cn("h-6 w-6 p-0 opacity-0 transition-opacity group-hover:opacity-100", className)}
       onClick={handleCopy}
-      title={copied ? "Copied!" : "Copy"}
-      aria-label={copied ? "Copied to clipboard" : "Copy to clipboard"}
+      title={copied ? "已复制" : "复制"}
+      aria-label={copied ? "已复制到剪贴板" : "复制到剪贴板"}
     >
       {copied ? (
         <Check className="h-3.5 w-3.5 text-green-500" aria-hidden />

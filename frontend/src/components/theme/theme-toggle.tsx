@@ -31,7 +31,7 @@ export function ThemeToggle({ variant = "icon", className }: ThemeToggleProps) {
   // Render placeholder during SSR to prevent hydration mismatch
   if (!mounted) {
     return (
-      <Button variant="ghost" size="icon" className={className} aria-label="Toggle theme">
+      <Button variant="ghost" size="icon" className={className} aria-label="切换主题">
         <Sun className="h-5 w-5" />
       </Button>
     );
@@ -44,11 +44,11 @@ export function ThemeToggle({ variant = "icon", className }: ThemeToggleProps) {
         size="icon"
         onClick={cycleTheme}
         className={className}
-        aria-label={`Switch theme (current: ${theme})`}
-        title={`Theme: ${theme}`}
+        aria-label={`切换主题（当前：${theme === "light" ? "浅色" : theme === "dark" ? "深色" : "跟随系统"}）`}
+        title={`主题：${theme === "light" ? "浅色" : theme === "dark" ? "深色" : "跟随系统"}`}
       >
         {resolvedTheme === "dark" ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
-        {theme === "system" && <span className="sr-only">(following system)</span>}
+        {theme === "system" && <span className="sr-only">（跟随系统）</span>}
       </Button>
     );
   }
@@ -59,8 +59,8 @@ export function ThemeToggle({ variant = "icon", className }: ThemeToggleProps) {
         variant={theme === "light" ? "default" : "ghost"}
         size="icon"
         onClick={() => setTheme("light")}
-        aria-label="Light mode"
-        title="Light mode"
+        aria-label="浅色模式"
+        title="浅色模式"
       >
         <Sun className="h-4 w-4" />
       </Button>
@@ -68,8 +68,8 @@ export function ThemeToggle({ variant = "icon", className }: ThemeToggleProps) {
         variant={theme === "dark" ? "default" : "ghost"}
         size="icon"
         onClick={() => setTheme("dark")}
-        aria-label="Dark mode"
-        title="Dark mode"
+        aria-label="深色模式"
+        title="深色模式"
       >
         <Moon className="h-4 w-4" />
       </Button>
@@ -77,8 +77,8 @@ export function ThemeToggle({ variant = "icon", className }: ThemeToggleProps) {
         variant={theme === "system" ? "default" : "ghost"}
         size="icon"
         onClick={() => setTheme("system")}
-        aria-label="System theme"
-        title="System theme"
+        aria-label="跟随系统"
+        title="跟随系统"
       >
         <Monitor className="h-4 w-4" />
       </Button>

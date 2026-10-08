@@ -236,13 +236,13 @@ function ConversationList({
       <div className="px-3 pb-2">
         <div className="bg-secondary/50 flex rounded-lg p-0.5">
           <ViewTab
-            label="Active"
+            label="进行中"
             count={activeCount}
             active={view === "active"}
             onClick={() => setView("active")}
           />
           <ViewTab
-            label="Archived"
+            label="已归档"
             count={archivedCount}
             active={view === "archived"}
             onClick={() => setView("archived")}
@@ -278,10 +278,10 @@ function ConversationList({
               )}
             </span>
             <p className="text-foreground text-sm font-medium">
-              {isArchivedView ? "No archived conversations" : t("noConversations")}
+              {isArchivedView ? "没有已归档的对话" : t("noConversations")}
             </p>
             <p className="text-muted-foreground mt-1 text-xs">
-              {isArchivedView ? "Conversations you archive will appear here." : t("startNewChat")}
+              {isArchivedView ? "归档的对话会显示在这里。" : t("startNewChat")}
             </p>
           </div>
         ) : (
@@ -357,7 +357,7 @@ export function ConversationSidebar({ className }: ConversationSidebarProps) {
           size="sm"
           className="mb-4 h-10 w-10 p-0"
           onClick={() => setIsCollapsed(false)}
-          aria-label="Expand conversations sidebar"
+          aria-label="展开会话列表"
         >
           <ChevronRight className="h-4 w-4" aria-hidden />
         </Button>
@@ -366,8 +366,8 @@ export function ConversationSidebar({ className }: ConversationSidebarProps) {
           size="sm"
           className="h-10 w-10 p-0"
           onClick={startNewChat}
-          title="New Chat"
-          aria-label="New chat"
+          title="新建对话"
+          aria-label="新建对话"
         >
           <SquarePen className="h-4 w-4" aria-hidden />
         </Button>
@@ -387,7 +387,7 @@ export function ConversationSidebar({ className }: ConversationSidebarProps) {
             size="sm"
             className="h-8 w-8 p-0"
             onClick={() => setIsCollapsed(true)}
-            aria-label="Collapse conversations sidebar"
+            aria-label="收起会话列表"
           >
             <ChevronLeft className="h-4 w-4" aria-hidden />
           </Button>

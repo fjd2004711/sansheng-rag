@@ -194,7 +194,7 @@ export default function RAGPage() {
     if (!name) return;
     try {
       await createCollection(name);
-      toast.success(`"${name}" created`);
+      toast.success(`已创建集合「${name}」`);
       setNewName("");
       setShowCreate(false);
       await fetchCollections();
@@ -207,7 +207,7 @@ export default function RAGPage() {
   const handleDelete = async (name: string) => {
     try {
       await deleteCollection(name);
-      toast.success(`"${name}" deleted`);
+      toast.success(`已删除集合「${name}」`);
       setCollections((prev) => prev.filter((c) => c.name !== name));
       if (selected === name) {
         setSelected("");
@@ -350,7 +350,7 @@ export default function RAGPage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">知识库</h1>
         <p className="text-muted-foreground mt-1 text-sm">
-          管理文档集合、上传 PDF / DOCX / Markdown / TXT，并用混合检索（Dense + BM25 + RRF + Reranker）验证召回。
+          管理文档集合、上传 PDF / Word / Markdown / 文本文件，并在「检索验证」里查看系统能找到哪些资料。
         </p>
       </div>
 
@@ -366,7 +366,7 @@ export default function RAGPage() {
             {loading ? (
               <Skeleton className="h-9 w-56 rounded-xl" />
             ) : collections.length === 0 ? (
-              <span className="text-muted-foreground text-sm">No collections yet</span>
+              <span className="text-muted-foreground text-sm">还没有集合，请先新建一个</span>
             ) : (
               <Select
                 value={selected}

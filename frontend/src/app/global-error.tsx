@@ -42,7 +42,7 @@ export default function GlobalError({
               letterSpacing: "-0.025em",
             }}
           >
-            Something went wrong
+            出错了
           </h1>
           <p
             style={{
@@ -51,8 +51,7 @@ export default function GlobalError({
               maxWidth: "28rem",
             }}
           >
-            An unexpected error occurred. Please try again or contact support if the problem
-            persists.
+            出现了意外错误，请重试；如果问题一直存在，请联系管理员。
           </p>
           {error.digest && (
             <p
@@ -62,7 +61,7 @@ export default function GlobalError({
                 color: "#71717a",
               }}
             >
-              Error ID: {error.digest}
+              错误编号：{error.digest}
             </p>
           )}
           <div style={{ marginTop: "2rem", display: "flex", gap: "0.75rem" }}>
@@ -79,7 +78,7 @@ export default function GlobalError({
                 color: "#fff",
               }}
             >
-              Try again
+              重试
             </button>
             {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
             <a

@@ -21,7 +21,14 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
         const user = await apiClient.get<User>("/auth/me");
         setUser(user);
       } catch {
-        router.replace(ROUTES.LOGIN);
+        try {
+          // Opt-in demo account (server-side DEMO_LOGIN_*); answers 404 when not configured.
+          const demo = await apiClient.post<{ user: User; access_token: string }>("/auth/demo");
+          setUser(demo.user);
+          useAuthStore.getState().setAccessToken(demo.access_token);
+        } catch {
+          router.replace(ROUTES.LOGIN);
+        }
       } finally {
         setChecking(false);
       }
