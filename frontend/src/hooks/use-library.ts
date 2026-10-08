@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+import { apiClient } from "@/lib/api-client";
+
 export interface LibraryDocument {
   filename: string;
   filetype: string;
@@ -20,8 +22,9 @@ export function useLibrary(): { library: Library | null; loading: boolean } {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/v1/rag/library", { credentials: "include" })
-      .then((response) => (response.ok ? response.json() : null))
+    // apiClient (not a bare fetch) so an expired access token is refreshed and the request retried.
+    apiClient
+      .get<Library>("/v1/rag/library")
       .then((data) => {
         if (!cancelled) setLibrary(data);
       })

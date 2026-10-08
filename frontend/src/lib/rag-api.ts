@@ -2,7 +2,7 @@
  * RAG (Retrieval Augmented Generation) API client.
  */
 
-import { apiClient, ApiError } from "./api-client";
+import { apiClient } from "./api-client";
 
 export const RAG_API_ROUTES = {
   COLLECTIONS: "/v1/rag/collections",
@@ -145,17 +145,7 @@ export async function ingestFile(
   const formData = new FormData();
   formData.append("file", file);
 
-  const url = `/api${RAG_API_ROUTES.COLLECTIONS_INGEST(collectionName)}${replace ? "?replace=true" : ""}`;
-  const response = await fetch(url, {
-    method: "POST",
-    body: formData,
-    credentials: "include",
-  });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: "上传失败" }));
-    throw new ApiError(response.status, error.detail || "入库失败", error);
-  }
-
-  return response.json();
+  // Through apiClient so an expired access token is refreshed and the upload retried once.
+  const endpoint = `${RAG_API_ROUTES.COLLECTIONS_INGEST(collectionName)}${replace ? "?replace=true" : ""}`;
+  return apiClient.post<RAGIngestResult>(endpoint, formData);
 }
