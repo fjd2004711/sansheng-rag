@@ -10,6 +10,7 @@ interface RAGResultItem {
   chunk?: string;
   collection?: string;
   score: string;
+  componentScores?: Record<string, number>;
   content: string;
 }
 
@@ -20,6 +21,17 @@ export function parseRAGResults(result: string): RAGResultItem[] {
     /\[(\d+)\]\s*Source:\s*([^,\n]+?)(?:,\s*page\s*(\d+))?(?:,\s*chunk\s*(\d+))?(?:\s*\[([^\]]+)\])?\s*\(score:\s*([\d.]+)\)\n([\s\S]*?)(?=\n\[\d+\]|$)/g;
   let match;
   while ((match = pattern.exec(result)) !== null) {
+    const rawContent = (match[7] ?? "").trim();
+    const scoreMatch = rawContent.match(/^Scores:\s*([^\n]+)\n?/);
+    const componentScores = scoreMatch
+      ? Object.fromEntries(
+          (scoreMatch[1] ?? "")
+            .split(",")
+            .map((entry) => entry.trim().split("="))
+            .filter((entry): entry is [string, string] => entry.length === 2)
+            .map(([key, value]) => [key, Number(value)]),
+        )
+      : undefined;
     items.push({
       index: parseInt(match[1] ?? "0"),
       source: (match[2] ?? "").trim(),
@@ -27,7 +39,8 @@ export function parseRAGResults(result: string): RAGResultItem[] {
       chunk: match[4],
       collection: match[5],
       score: match[6] ?? "",
-      content: (match[7] ?? "").trim(),
+      componentScores,
+      content: rawContent.replace(/^Scores:\s*[^\n]+\n?/, "").trim(),
     });
   }
   return items;

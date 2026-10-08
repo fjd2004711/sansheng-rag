@@ -57,6 +57,13 @@ function RAGSourceRow({
               {item.subtitle}
             </p>
           )}
+          {item.componentScores && Object.keys(item.componentScores).length > 0 && (
+            <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 pl-5 font-mono text-[10px] text-muted-foreground">
+              {Object.entries(item.componentScores).map(([name, value]) => (
+                <div key={name} className="flex justify-between gap-2"><dt>{name.replace("_score", "")}</dt><dd>{value.toFixed(3)}</dd></div>
+              ))}
+            </dl>
+          )}
           {item.content && (
             <p className="text-foreground/60 mt-2 pl-5 text-[11px] leading-relaxed">
               {item.content}

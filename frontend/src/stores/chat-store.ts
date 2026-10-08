@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import type { ChatMessage, MessagePart, ToolCall } from "@/types";
+import type { AgentTraceEvent, ChatMessage, MessagePart, ToolCall } from "@/types";
 
 function newPartId(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -27,6 +27,7 @@ interface ChatState {
   appendTextDelta: (messageId: string, text: string) => void;
   /** Append a streamed reasoning delta — same logic for "thinking" parts. */
   appendThinkingDelta: (messageId: string, text: string) => void;
+  addAgentTrace: (messageId: string, event: AgentTraceEvent) => void;
   /** Add a tool call as an ordered part (and to the flat ``toolCalls``). */
   addToolCallPart: (messageId: string, toolCall: ToolCall) => void;
   /** Update a tool call inside its part and the flat ``toolCalls``. */
@@ -103,6 +104,13 @@ export const useChatStore = create<ChatState>((set) => ({
         }
         return { ...msg, parts, thinking: (msg.thinking ?? "") + text };
       }),
+    })),
+
+  addAgentTrace: (messageId, event) =>
+    set((state) => ({
+      messages: state.messages.map((msg) =>
+        msg.id === messageId ? { ...msg, agentTrace: [...(msg.agentTrace ?? []), event] } : msg,
+      ),
     })),
 
   addToolCallPart: (messageId, toolCall) =>

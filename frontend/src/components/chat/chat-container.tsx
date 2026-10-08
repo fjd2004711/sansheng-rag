@@ -3,6 +3,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { useChat } from "@/hooks";
+import { AgentTracePanel } from "./agent-trace-panel";
 import { ChatControls } from "./chat-controls";
 import { ChatEmptyState } from "./chat-empty-state";
 import { ChatInput } from "./chat-input";
@@ -12,7 +13,7 @@ import { MessageList } from "./message-list";
 import { PendingMessages } from "./pending-messages";
 import { ToolApprovalDialog } from "./tool-approval-dialog";
 import { QuestionPrompt } from "@/components/ui";
-import type { PendingApproval, AskUserQuestion, AskUserAnswer, Decision } from "@/types";
+import type { AgentTraceEvent, PendingApproval, AskUserQuestion, AskUserAnswer, Decision } from "@/types";
 import { buildAssistantParts } from "@/lib/conversation-to-chat";
 import { useConversationStore, useChatStore } from "@/stores";
 import { useConversations } from "@/hooks";
@@ -188,6 +189,7 @@ export function ChatContainer() {
   return (
     <ChatUI
       messages={messages}
+      trace={( [...messages].reverse().find((message) => message.agentTrace?.length)?.agentTrace ?? [] )}
       isConnected={isConnected}
       isProcessing={isProcessing}
       isLoadingConversation={
@@ -215,6 +217,7 @@ export function ChatContainer() {
 
 interface ChatUIProps {
   messages: import("@/types").ChatMessage[];
+  trace: AgentTraceEvent[];
   isConnected: boolean;
   isProcessing: boolean;
   /** True while a saved conversation is being loaded — show a skeleton, not empty state. */
@@ -243,6 +246,7 @@ interface ChatUIProps {
 
 function ChatUI({
   messages,
+  trace,
   isConnected,
   isProcessing,
   isLoadingConversation,
@@ -347,6 +351,7 @@ function ChatUI({
           </p>
         </div>
       </div>
+      <AgentTracePanel trace={trace} />
       <FilePreviewPanel />
       <SourcesPanel />
     </div>

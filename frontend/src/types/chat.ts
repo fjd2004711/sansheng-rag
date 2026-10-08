@@ -39,12 +39,21 @@ export interface ChatMessage {
   /** Reasoning trace from extended-thinking models. Rendered dimmed +
    *  collapsible above the final response. */
   thinking?: string;
+  /** Explainable P2/P3 execution events emitted by the backend. */
+  agentTrace?: AgentTraceEvent[];
   /** Ordered timeline of the assistant turn: reasoning, text and tool
    *  calls in the exact order they occurred. Rendered in sequence so a
    *  multi-step turn (think → tools → text → think → tools → text) shows
    *  correctly. ``content``/``thinking``/``toolCalls`` are kept in sync as
    *  flat aggregates for copy/persist/rating. */
   parts?: MessagePart[];
+}
+
+export interface AgentTraceEvent {
+  step: string;
+  round: number;
+  status: string;
+  detail: Record<string, unknown>;
 }
 
 export interface ToolCall {
@@ -128,6 +137,7 @@ export type WSEventType =
   | "call_tools_start"
   | "tool_call"
   | "tool_result"
+  | "agent_trace"
   | "final_result_start"
   | "final_result"
   | "complete"
