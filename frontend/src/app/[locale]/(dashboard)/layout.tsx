@@ -1,7 +1,5 @@
-import { Header, Sidebar } from "@/components/layout";
+import { Header } from "@/components/layout";
 import { AuthGuard } from "@/components/layout/auth-guard";
-import { CommandPalette } from "@/components/layout/command-palette";
-import { MobileTabBar } from "@/components/layout/mobile-tab-bar";
 import { PageTransition } from "@/components/layout/page-transition";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -9,16 +7,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <AuthGuard>
       <div className="flex h-screen flex-col">
         <Header />
-        <Sidebar />
-        <main
-          id="main"
-          tabIndex={-1}
-          className="flex min-h-0 flex-1 flex-col overflow-auto px-3 pt-4 pb-20 sm:px-6 sm:pt-8 lg:pb-8"
-        >
+        <main id="main" tabIndex={-1} className="flex min-h-0 flex-1 flex-col overflow-auto px-3 pt-4 pb-4 sm:px-6 sm:pt-6">
           <PageTransition>{children}</PageTransition>
         </main>
-        <MobileTabBar />
-        <CommandPalette />
       </div>
     </AuthGuard>
   );

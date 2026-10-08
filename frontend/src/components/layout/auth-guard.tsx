@@ -8,18 +8,12 @@ import { ROUTES } from "@/lib/constants";
 import type { User } from "@/types";
 import { Spinner } from "@/components/ui";
 
-const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
-
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { isAuthenticated, setUser } = useAuthStore();
   const [checking, setChecking] = useState(!isAuthenticated);
 
   useEffect(() => {
-    if (DEMO_MODE) {
-      setChecking(false);
-      return;
-    }
     if (isAuthenticated) return;
 
     const verify = async () => {
@@ -36,13 +30,11 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     verify();
   }, [isAuthenticated, router, setUser]);
 
-  if (DEMO_MODE) return <>{children}</>;
-
   if (checking && !isAuthenticated) {
     return (
       <div className="flex h-screen items-center justify-center" role="status" aria-live="polite">
         <Spinner className="text-muted-foreground h-6 w-6" />
-        <span className="sr-only">Checking authentication...</span>
+        <span className="sr-only">正在验证登录状态...</span>
       </div>
     );
   }
