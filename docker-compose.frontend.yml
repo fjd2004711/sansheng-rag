@@ -30,6 +30,11 @@ services:
       - NODE_ENV=development
       # Server-side only: resolved inside this container, never by the browser.
       - BACKEND_URL=${BACKEND_URL:-http://host.docker.internal:8010}
+      # Auth cookies are marked Secure in production builds, and a browser silently drops a Secure
+      # cookie received over plain http:// — login then succeeds but every later request is
+      # unauthenticated. This stack is served over http on a trusted network, so default to false;
+      # set COOKIE_SECURE=true once it is behind HTTPS.
+      - COOKIE_SECURE=${COOKIE_SECURE:-false}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
