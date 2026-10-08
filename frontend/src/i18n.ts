@@ -3,10 +3,10 @@ import { getRequestConfig } from "next-intl/server";
 // To re-enable multi-language: regenerate with --i18n, or extend this list and
 // add `messages/<code>.json`, then re-render the LanguageSwitcher import in
 // `components/layout/header.tsx`.
-export const locales = ["en"] as const;
+export const locales = ["zh"] as const;
 export type Locale = (typeof locales)[number];
 
-export const defaultLocale: Locale = "en";
+export const defaultLocale: Locale = "zh";
 
 export default getRequestConfig(async ({ requestLocale }) => {
   let locale = await requestLocale;
@@ -23,14 +23,14 @@ export default getRequestConfig(async ({ requestLocale }) => {
 
 export function getLocaleLabel(locale: Locale): string {
   const labels: Record<Locale, string> = {
-    en: "English",
+    zh: "中文",
   };
   return labels[locale];
 }
 
 export function getLocaleFlag(locale: Locale): string {
   const flags: Record<Locale, string> = {
-    en: "🇬🇧",
+    zh: "🇨🇳",
   };
   return flags[locale];
 }

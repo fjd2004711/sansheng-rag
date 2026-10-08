@@ -46,7 +46,7 @@ export const SITE = {
 
 /** Map our locale codes → BCP-47 / Open Graph locale strings. */
 export const OG_LOCALE: Record<(typeof locales)[number], string> = {
-  en: "en_US",
+  zh: "zh_CN",
 };
 
 interface PageMetaInput {
