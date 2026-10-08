@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any
 
 from app.core.config import settings
 from app.core.exceptions import ExternalServiceError
+from app.graph.retrieval_correction import CorrectiveRetriever
 from app.services.rag.embeddings import EmbeddingService
 from app.services.rag.reranker import RerankService
 from app.services.rag.retrieval import RetrievalService
@@ -13,6 +14,7 @@ from app.services.rag.vectorstore import QdrantVectorStore
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
+    from app.services.rag.models import SearchResult
     from app.services.rag.retrieval import BaseRetrievalService
 
 _retrieval_service: "BaseRetrievalService | None" = None
@@ -57,58 +59,93 @@ def _format_results(results: list[Any]) -> str:
     )
 
 
+class _ConfiguredRetriever:
+    """Adapt one tool invocation's collection scope to the P2 graph interface."""
+
+    def __init__(
+        self,
+        service: Any,
+        collection: str | None,
+        collections: list[str] | None,
+        top_k: int,
+    ) -> None:
+        self.service = service
+        self.collection = collection
+        self.collections = collections
+        self.top_k = top_k
+
+    async def search(self, query: str) -> list["SearchResult"]:
+        return await _retrieve_once(
+            self.service,
+            query=query,
+            collection=self.collection,
+            collections=self.collections,
+            top_k=self.top_k,
+        )
+
+
+async def _retrieve_once(
+    service: Any,
+    *,
+    query: str,
+    collection: str | None,
+    collections: list[str] | None,
+    top_k: int,
+) -> list["SearchResult"]:
+    default_collection = settings.rag.collection_name
+    target_collection = collection or default_collection
+
+    if collections and len(collections) > 1:
+        return await service.retrieve_multi(query=query, collection_names=collections, limit=top_k)
+    if target_collection != "all":
+        return await service.retrieve(query=query, collection_name=target_collection, limit=top_k)
+
+    try:
+        all_collections = await service.store.list_collections()
+        if not all_collections:
+            return []
+        if len(all_collections) == 1:
+            return await service.retrieve(query=query, collection_name=all_collections[0], limit=top_k)
+        return await service.retrieve_multi(
+            query=query, collection_names=all_collections, limit=top_k
+        )
+    except Exception as exc:
+        logger.error("Failed to list collections: %s", exc, exc_info=True)
+        raise ExternalServiceError(
+            message="Failed to list knowledge base collections", details={"error": str(exc)}
+        ) from exc
+
+
 async def search_knowledge_base(
     query: str,
     collection: str | None = None,
     collections: list[str] | None = None,
     top_k: int = 5,
 ) -> str:
-    """Search the knowledge base and return formatted results.
-
-    Args:
-        query: The search query string.
-        collection: Name of a single collection. If None, uses settings.rag.collection_name.
-        collections: List of collection names for cross-collection search (overrides collection).
-        top_k: Number of top results to retrieve (default: 5).
-    """
+    """Search the knowledge base and return formatted, citable results."""
     service: Any = get_retrieval_service()
+    configured_retriever = _ConfiguredRetriever(service, collection, collections, top_k)
+    correction_config = settings.rag.correction_config
 
-    default_collection = settings.rag.collection_name
-    target_collection = collection or default_collection
+    if not correction_config.enabled:
+        return _format_results(await configured_retriever.search(query))
 
-    if collections and len(collections) > 1:
-        results = await service.retrieve_multi(
-            query=query,
-            collection_names=collections,
-            limit=top_k,
+    result = await CorrectiveRetriever(
+        configured_retriever, max_rounds=correction_config.max_rounds
+    ).run(query)
+    logger.info(
+        "[P2] retrieval correction finished: rounds=%d, abstained=%s, trace=%s",
+        result.retrieval_round,
+        result.abstained,
+        [event.model_dump(mode="json") for event in result.trace],
+    )
+    if result.abstained:
+        return (
+            "KNOWLEDGE_BASE_ABSTAIN: The knowledge base does not contain sufficient "
+            "evidence to answer this question. Tell the user that the answer is unavailable "
+            "from the indexed documents; do not infer or invent an answer."
         )
-    elif target_collection == "all":
-        try:
-            all_collections = await service.store.list_collections()
-            if not all_collections:
-                return "No collections found in the knowledge base."
-            if len(all_collections) == 1:
-                results = await service.retrieve(
-                    query=query, collection_name=all_collections[0], limit=top_k
-                )
-            else:
-                results = await service.retrieve_multi(
-                    query=query, collection_names=all_collections, limit=top_k
-                )
-        except Exception as e:
-            logger.error("Failed to list collections: %s", e, exc_info=True)
-            raise ExternalServiceError(
-                message="Failed to list knowledge base collections",
-                details={"error": str(e)},
-            ) from e
-    else:
-        results = await service.retrieve(
-            query=query,
-            collection_name=target_collection,
-            limit=top_k,
-        )
-
-    return _format_results(results)
+    return _format_results(result.retrieved_docs)
 
 
 __all__ = ["search_knowledge_base"]

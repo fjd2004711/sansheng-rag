@@ -1,0 +1,200 @@
+{
+  "correction": {
+    "question": "What credential does Atlas protocol compliance require?",
+    "current_query": "What credentials are required for Atlas protocol compliance?",
+    "query_history": [
+      "deployment schedule milestones",
+      "What credentials are required for Atlas protocol compliance?"
+    ],
+    "retrieved_docs": [
+      {
+        "content": "Atlas protocol compliance requires the CRIMSON-SEAL credential before release.",
+        "score": 0.03278688524590164,
+        "metadata": {
+          "page_num": 1,
+          "chunk_num": 0,
+          "filename": "atlas-policy.txt",
+          "filesize": 78,
+          "filetype": ".txt",
+          "source_path": "",
+          "content_hash": "",
+          "additional_info": null,
+          "dense_score": 0.8175025,
+          "bm25_score": 0.0,
+          "rrf_score": 0.03278688524590164
+        },
+        "parent_doc_id": "p2-atlas-policy.txt"
+      }
+    ],
+    "relevance_scores": [
+      0.5714285714285714
+    ],
+    "missing_information": [],
+    "failure_type": null,
+    "failure_reason": "",
+    "retrieval_round": 2,
+    "abstained": false,
+    "trace": [
+      {
+        "step": "retrieve",
+        "round": 1,
+        "status": "COMPLETE",
+        "detail": {
+          "query": "deployment schedule milestones",
+          "result_count": 1
+        }
+      },
+      {
+        "step": "evidence_evaluate",
+        "round": 1,
+        "status": "FAIL",
+        "detail": {
+          "relevance_scores": [
+            0.0
+          ],
+          "sufficient": false,
+          "missing_information": [
+            "credential requirements for Atlas protocol compliance"
+          ],
+          "failure_type": "insufficient_evidence",
+          "failure_reason": "The evidence discusses deployment schedule milestones but does not address credential requirements for Atlas protocol compliance."
+        }
+      },
+      {
+        "step": "failure_diagnose",
+        "round": 1,
+        "status": "REWRITE",
+        "detail": {
+          "action": "rewrite",
+          "failure_type": "insufficient_evidence",
+          "failure_reason": "The evidence discusses deployment schedule milestones but does not address credential requirements for Atlas protocol compliance.",
+          "missing_information": [
+            "credential requirements for Atlas protocol compliance"
+          ],
+          "rewritten_query": "What credentials are required for Atlas protocol compliance?"
+        }
+      },
+      {
+        "step": "query_rewrite",
+        "round": 1,
+        "status": "COMPLETE",
+        "detail": {
+          "from": "deployment schedule milestones",
+          "to": "What credentials are required for Atlas protocol compliance?"
+        }
+      },
+      {
+        "step": "retrieve",
+        "round": 2,
+        "status": "COMPLETE",
+        "detail": {
+          "query": "What credentials are required for Atlas protocol compliance?",
+          "result_count": 1
+        }
+      },
+      {
+        "step": "evidence_evaluate",
+        "round": 2,
+        "status": "PASS",
+        "detail": {
+          "relevance_scores": [
+            0.5714285714285714
+          ],
+          "sufficient": true,
+          "missing_information": [],
+          "failure_type": null,
+          "failure_reason": ""
+        }
+      }
+    ]
+  },
+  "abstention": {
+    "question": "Which planet won the interstellar league?",
+    "current_query": "Which planet won the interstellar league?",
+    "query_history": [
+      "Which planet won the interstellar league?"
+    ],
+    "retrieved_docs": [
+      {
+        "content": "The deployment schedule has milestones on Monday, Wednesday, and Friday.",
+        "score": 0.03252247488101534,
+        "metadata": {
+          "page_num": 1,
+          "chunk_num": 0,
+          "filename": "deployment-calendar.txt",
+          "filesize": 72,
+          "filetype": ".txt",
+          "source_path": "",
+          "content_hash": "",
+          "additional_info": null,
+          "dense_score": 0.3682031,
+          "bm25_score": -0.021176814637290795,
+          "rrf_score": 0.03252247488101534
+        },
+        "parent_doc_id": "p2-deployment-calendar.txt"
+      }
+    ],
+    "relevance_scores": [
+      0.0
+    ],
+    "missing_information": [],
+    "failure_type": "out_of_scope",
+    "failure_reason": "The concept of an 'interstellar league' does not exist in real-world knowledge, making it impossible to retrieve evidence or determine a winner.",
+    "retrieval_round": 1,
+    "abstained": true,
+    "trace": [
+      {
+        "step": "retrieve",
+        "round": 1,
+        "status": "COMPLETE",
+        "detail": {
+          "query": "Which planet won the interstellar league?",
+          "result_count": 1
+        }
+      },
+      {
+        "step": "evidence_evaluate",
+        "round": 1,
+        "status": "FAIL",
+        "detail": {
+          "relevance_scores": [
+            0.0
+          ],
+          "sufficient": false,
+          "missing_information": [
+            "The interstellar league",
+            "Which planet won it"
+          ],
+          "failure_type": "insufficient_evidence",
+          "failure_reason": "The evidence provided is unrelated to the question about the interstellar league or any planet winning it."
+        }
+      },
+      {
+        "step": "failure_diagnose",
+        "round": 1,
+        "status": "ABSTAIN",
+        "detail": {
+          "action": "abstain",
+          "failure_type": "out_of_scope",
+          "failure_reason": "The concept of an 'interstellar league' does not exist in real-world knowledge, making it impossible to retrieve evidence or determine a winner.",
+          "missing_information": [],
+          "rewritten_query": null
+        }
+      },
+      {
+        "step": "abstain",
+        "round": 1,
+        "status": "COMPLETE",
+        "detail": {
+          "reason": "The concept of an 'interstellar league' does not exist in real-world knowledge, making it impossible to retrieve evidence or determine a winner."
+        }
+      }
+    ]
+  },
+  "pass": {
+    "q0_fail_q1_pass": true,
+    "out_of_scope_abstain": true,
+    "bounded": true
+  },
+  "all_pass": true
+}

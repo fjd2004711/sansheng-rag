@@ -156,6 +156,8 @@ class Settings(BaseSettings):
     RAG_RERANKER_ENABLED: bool = False
     RAG_RERANKER_MODEL: str = ""
     RAG_RERANKER_CANDIDATE_LIMIT: int = 12
+    RAG_CORRECTION_ENABLED: bool = False
+    RAG_MAX_CORRECTION_ROUNDS: int = 2
 
     CORS_ORIGINS: list[str] = [
         "http://localhost:3000",
@@ -196,6 +198,10 @@ class Settings(BaseSettings):
                 api_key=self.OPENAI_API_KEY,
                 candidate_limit=self.RAG_RERANKER_CANDIDATE_LIMIT,
             ),
+            correction_config=CorrectionConfig(
+                enabled=self.RAG_CORRECTION_ENABLED,
+                max_rounds=self.RAG_MAX_CORRECTION_ROUNDS,
+            ),
             embeddings_config=EmbeddingsConfig(
                 model=self.EMBEDDING_MODEL,
                 dim=self.EMBEDDING_DIMENSION,
@@ -206,7 +212,14 @@ class Settings(BaseSettings):
 
 
 # Rebuild Settings to resolve RAGSettings forward reference
-from app.services.rag.config import DocumentParser, EmbeddingsConfig, PdfParser, RAGSettings, RerankerConfig
+from app.services.rag.config import (
+    CorrectionConfig,
+    DocumentParser,
+    EmbeddingsConfig,
+    PdfParser,
+    RAGSettings,
+    RerankerConfig,
+)
 
 Settings.model_rebuild()
 
