@@ -44,14 +44,15 @@ class AnswerEvaluator:
                 citation_coverage=0,
                 sufficient=False,
                 failure_type=AnswerFailureType.OUT_OF_SCOPE,
-                failure_reason="No usable knowledge-base evidence was available for verification.",
+                failure_reason="没有可用于核对的资料，无法确认回答是否有依据。",
             )
         prompt = (
             "Verify a RAG answer against only the supplied evidence. Return only JSON with keys "
             "groundedness, completeness, answer_relevance, citation_coverage (all 0..1), "
             "sufficient (boolean), failure_type (hallucination|insufficient_evidence|incomplete|"
             "out_of_scope|null), failure_reason, missing_information (string array), claims "
-            "(array of {claim, supported, citation_indices, reason}). A claim without support or "
+            "(array of {claim, supported, citation_indices, reason}). "
+            "Write failure_reason and every missing_information item in Chinese, as plain sentences a non-technical reader understands (say what is missing or wrong, not internal terms). Write each claim and its reason in Chinese too. A claim without support or "
             "a matching inline [n] citation is not fully grounded. Use out_of_scope only when "
             "the knowledge base is unlikely to contain the needed answer. A claim that only applies "
             "the evidence to the question (arithmetic, comparing dates, deciding whether a stated "
@@ -76,7 +77,7 @@ class AnswerEvaluator:
         prompt = (
             "Create one focused sub-query for a RAG answer failure. Return only JSON with keys "
             "failure_type (insufficient_evidence|incomplete|out_of_scope), sub_query (string or "
-            "null), failure_reason, missing_information (string array). Use out_of_scope only "
+            "null), failure_reason, missing_information (string array). Write failure_reason and every missing_information item in Chinese, as plain sentences a non-technical reader understands (say what is missing or wrong, not internal terms). Use out_of_scope only "
             "when no indexed answer is likely.\n"
             f"Question: {question}\nAssessment: {assessment.model_dump_json()}"
         )
@@ -174,7 +175,7 @@ def _fallback_assessment(question: str, answer: str, evidence: str) -> AnswerAss
         citation_coverage=citation_coverage,
         sufficient=sufficient,
         failure_type=failure_type,
-        failure_reason="" if sufficient else "The answer could not be fully verified against cited evidence.",
+        failure_reason="" if sufficient else "回答中的部分说法在资料里找不到对应的依据。",
         claims=[
             ClaimVerification(
                 claim=answer[:300],

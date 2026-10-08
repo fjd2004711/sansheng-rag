@@ -18,6 +18,28 @@ from app.services.rag.correction.models import (
 from app.services.rag.models import SearchResult
 
 
+def summarize_results(docs: list[SearchResult], limit: int = 10) -> list[dict[str, object]]:
+    """Compact, UI-safe view of retrieved chunks for the trace: where each came from and how it scored."""
+    summary: list[dict[str, object]] = []
+    for doc in docs[:limit]:
+        meta = doc.metadata
+        scores = {
+            name: round(float(meta[name]), 4)
+            for name in ("dense_score", "bm25_score", "rrf_score", "reranker_score")
+            if isinstance(meta.get(name), (int, float))
+        }
+        summary.append(
+            {
+                "source": str(meta.get("filename") or "未知来源"),
+                "page": meta.get("page_num"),
+                "chunk": meta.get("chunk_num"),
+                "snippet": " ".join(doc.content.split())[:160],
+                "scores": scores,
+            }
+        )
+    return summary
+
+
 class QueryRetriever(Protocol):
     """The narrow retrieval interface P2 needs from P0/P1."""
 
@@ -118,7 +140,11 @@ class CorrectiveRetriever:
                 step="retrieve",
                 round=retrieval_round,
                 status="COMPLETE",
-                detail={"query": state["current_query"], "result_count": len(docs)},
+                detail={
+                    "query": state["current_query"],
+                    "result_count": len(docs),
+                    "results": summarize_results(docs),
+                },
             ),
         }
 

@@ -200,3 +200,24 @@ async def test_regeneration_without_citations_still_abstains() -> None:
     )
 
     assert result.abstained
+
+
+@pytest.mark.anyio
+async def test_verification_trace_lists_each_claim_with_its_verdict() -> None:
+    from app.services.rag.generation.models import ClaimVerification
+
+    graded = assessment(True)
+    graded.claims = [
+        ClaimVerification(claim="每节 35 元", supported=True, citation_indices=[1], reason="资料第一段"),
+        ClaimVerification(claim="按月发放", supported=False, reason="资料没有提到"),
+    ]
+    evaluator = FakeEvaluator(graded, graded)
+
+    async def search(query: str) -> str:
+        raise AssertionError("no correction needed")
+
+    result = await GenerationCorrector(search, evaluator, max_corrections=1).run("Q", "A [1]", "[1] E")
+
+    claims = result.trace[0].detail["claims"]
+    assert [c["supported"] for c in claims] == [True, False]
+    assert claims[1]["reason"] == "资料没有提到"

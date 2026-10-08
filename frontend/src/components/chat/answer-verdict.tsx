@@ -12,6 +12,7 @@ interface AnswerVerdictBarProps {
   isAdmin: boolean;
   selected: boolean;
   onShowTrace?: () => void;
+  onShowDetail?: () => void;
 }
 
 const TONES = {
@@ -50,7 +51,7 @@ function headline(verdict: AnswerVerdict): { tone: keyof typeof TONES; icon: typ
   }
 }
 
-export function AnswerVerdictBar({ verdict, isAdmin, selected, onShowTrace }: AnswerVerdictBarProps) {
+export function AnswerVerdictBar({ verdict, isAdmin, selected, onShowTrace, onShowDetail }: AnswerVerdictBarProps) {
   const { tone, icon: Icon, title, detail } = headline(verdict);
   return (
     <div className="space-y-2">
@@ -62,24 +63,30 @@ export function AnswerVerdictBar({ verdict, isAdmin, selected, onShowTrace }: An
             <span className="text-foreground/65"> · {detail}</span>
           </span>
         </span>
-        {onShowTrace && (
+        {onShowDetail && (
           <button
             type="button"
-            onClick={onShowTrace}
+            onClick={() => {
+              onShowTrace?.();
+              onShowDetail();
+            }}
             aria-pressed={selected}
-            className={cn(
-              "inline-flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 font-medium transition-colors",
-              selected ? "border-foreground/40 bg-foreground text-background" : "border-current/30 hover:bg-foreground/5",
-            )}
+            className="inline-flex shrink-0 items-center gap-1 rounded-full border border-current/30 px-2.5 py-1 font-medium transition-colors hover:bg-foreground/5"
           >
             <Workflow className="h-3 w-3" />
-            {selected ? "正在查看运作流程" : "查看运作流程"}
+            搜了什么、为什么
           </button>
         )}
       </div>
 
       {verdict.kind === "abstained" && (
         <div className="border-border bg-card space-y-2 rounded-xl border p-3 text-sm">
+          {verdict.reason && (
+            <p className="leading-relaxed">
+              <span className="font-medium">为什么没有回答：</span>
+              {verdict.reason}
+            </p>
+          )}
           <p className="font-medium">可以这样试试</p>
           <ul className="text-muted-foreground list-disc space-y-1 pl-5 text-xs leading-relaxed">
             <li>换一个更具体的说法再问，比如带上文件里可能出现的名称或数字</li>
