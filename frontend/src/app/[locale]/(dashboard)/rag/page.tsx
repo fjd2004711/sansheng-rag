@@ -60,7 +60,7 @@ interface CollectionWithInfo {
 }
 
 function StatusIcon({ status }: { status: string }) {
-  const label = status === "done" ? "Completed" : status === "error" ? "Failed" : "Processing";
+  const label = status === "done" ? "已完成" : status === "error" ? "失败" : "处理中";
   return (
     <span role="status" aria-label={label}>
       {status === "done" && <CheckCircle className="text-foreground h-4 w-4" />}
@@ -128,7 +128,7 @@ export default function RAGPage() {
       setCollections(items);
       setSelected((prev) => (items.length > 0 && !prev ? (items[0]?.name ?? "") : prev));
     } catch {
-      toast.error("Failed to load collections");
+      toast.error("加载集合失败");
     } finally {
       setLoading(false);
     }
@@ -200,7 +200,7 @@ export default function RAGPage() {
       await fetchCollections();
       setSelected(name);
     } catch {
-      toast.error("Failed to create collection");
+      toast.error("创建集合失败");
     }
   };
 
@@ -215,18 +215,18 @@ export default function RAGPage() {
         setSearchResults([]);
       }
     } catch {
-      toast.error("Failed to delete");
+      toast.error("删除失败");
     }
   };
 
   const handleDeleteDoc = async (docId: string) => {
     try {
       await deleteTrackedDocument(docId);
-      toast.success("Document deleted");
+      toast.success("文档已删除");
       setDocs((prev) => prev.filter((d) => d.id !== docId));
       fetchCollections();
     } catch {
-      toast.error("Failed to delete");
+      toast.error("删除失败");
     }
   };
 
@@ -245,12 +245,12 @@ export default function RAGPage() {
 
         const ext = "." + (file.name.split(".").pop()?.toLowerCase() ?? "");
         if (allowedExts.length > 0 && !allowedExts.includes(ext)) {
-          toast.error(`${file.name}: Unsupported format (${ext})`);
+          toast.error(`${file.name}: 不支持的格式（${ext}）`);
           errorCount++;
           continue;
         }
         if (file.size > MAX_UPLOAD_SIZE_MB * 1024 * 1024) {
-          toast.error(`${file.name}: Too large (max ${MAX_UPLOAD_SIZE_MB}MB)`);
+          toast.error(`${file.name}: 文件过大（上限 ${MAX_UPLOAD_SIZE_MB}MB）`);
           errorCount++;
           continue;
         }
@@ -259,7 +259,7 @@ export default function RAGPage() {
           await ingestFile(selected, file);
           successCount++;
         } catch (err) {
-          toast.error(`${file.name}: ${getErrorMessage(err, "Failed")}`);
+          toast.error(`${file.name}: ${getErrorMessage(err, "失败")}`);
           errorCount++;
         }
       }
@@ -269,7 +269,7 @@ export default function RAGPage() {
 
       if (successCount > 0) {
         toast.success(
-          `${successCount} file${successCount > 1 ? "s" : ""} ingested${errorCount > 0 ? `, ${errorCount} failed` : ""}`,
+          `${successCount} 个文件已提交入库${errorCount > 0 ? `，${errorCount} 个失败` : ""}`,
         );
       }
 
@@ -280,16 +280,17 @@ export default function RAGPage() {
   );
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
+    if (!e.target.files) return;
+    // Copy before resetting: the FileList is live and is emptied by clearing the input value.
+    const files = Array.from(e.target.files);
     e.target.value = "";
-    await processFiles(Array.from(files));
+    await processFiles(files);
   };
 
   const handleDrop = useCallback(
     (files: File[]) => {
       if (!selected) {
-        toast.error("Select a collection before dropping files");
+        toast.error("请先选择集合再拖入文件");
         return;
       }
       processFiles(files);
@@ -309,7 +310,7 @@ export default function RAGPage() {
       setSearchResults(data.results);
       setSearchDone(true);
     } catch {
-      toast.error("Search failed");
+      toast.error("检索失败");
     } finally {
       setSearching(false);
     }
@@ -328,8 +329,8 @@ export default function RAGPage() {
   }
 
   const tabs: { key: "documents" | "search"; label: string }[] = [
-    { key: "documents", label: docs.length > 0 ? `Documents (${docs.length})` : "Documents" },
-    { key: "search", label: "Search" },
+    { key: "documents", label: docs.length > 0 ? `文档（${docs.length}）` : "文档" },
+    { key: "search", label: "检索验证" },
   ];
 
   return (
@@ -337,11 +338,11 @@ export default function RAGPage() {
       <DragDropOverlay
         onDrop={handleDrop}
         disabled={!selected || uploading}
-        title={selected ? `Drop files into "${selected}"` : "Drop files to upload"}
+        title={selected ? `将文件拖入「${selected}」` : "拖入文件上传"}
         description={
           selected
-            ? "Files will be ingested into the active collection"
-            : "Select a collection first"
+            ? "文件将入库到当前集合"
+            : "请先选择集合"
         }
         acceptedFormats={supportedFormats}
       />
@@ -359,7 +360,7 @@ export default function RAGPage() {
             <div className="flex items-center gap-2">
               <Database className="text-muted-foreground h-4 w-4 shrink-0" />
               <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-                Collection
+                集合
               </span>
             </div>
             {loading ? (
@@ -377,13 +378,13 @@ export default function RAGPage() {
                 }}
               >
                 <SelectTrigger className="h-9 w-full rounded-xl sm:w-72">
-                  <SelectValue placeholder="Select a collection" />
+                  <SelectValue placeholder="选择集合" />
                 </SelectTrigger>
                 <SelectContent>
                   {collections.map((col) => (
                     <SelectItem key={col.name} value={col.name}>
                       {col.name}
-                      {col.info ? ` · ${col.info.total_vectors.toLocaleString()} vectors` : ""}
+                      {col.info ? ` · ${col.info.total_vectors.toLocaleString()} 向量` : ""}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -391,7 +392,7 @@ export default function RAGPage() {
             )}
             {info && (
               <span className="text-muted-foreground font-mono text-xs">
-                {info.total_vectors.toLocaleString()} vectors · {info.dim}d
+                {info.total_vectors.toLocaleString()} 向量 · {info.dim} 维
               </span>
             )}
           </div>
@@ -404,7 +405,7 @@ export default function RAGPage() {
               onClick={() => setShowCreate((v) => !v)}
             >
               <Plus className="mr-1.5 h-3.5 w-3.5" />
-              New collection
+              新建集合
             </Button>
             {uploadProgress ? (
               <div
@@ -427,7 +428,7 @@ export default function RAGPage() {
                 disabled={uploading || !selected}
               >
                 <Upload className="mr-1.5 h-3.5 w-3.5" />
-                Upload files
+                上传文件
               </Button>
             )}
             {selected && (
@@ -443,18 +444,18 @@ export default function RAGPage() {
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Delete collection &ldquo;{selected}&rdquo;?</AlertDialogTitle>
+                    <AlertDialogTitle>删除集合「{selected}」？</AlertDialogTitle>
                     <AlertDialogDescription>
-                      All documents and vectors will be permanently removed.
+                      该集合内所有文档和向量将被永久删除。
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel>取消</AlertDialogCancel>
                     <AlertDialogAction
                       className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                       onClick={() => handleDelete(selected)}
                     >
-                      Delete
+                      删除
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
@@ -481,7 +482,7 @@ export default function RAGPage() {
               className="h-9 max-w-xs rounded-xl"
             />
             <Button size="sm" className="h-9 rounded-xl" onClick={handleCreate}>
-              Create
+              创建
             </Button>
             <Button
               size="sm"
@@ -512,7 +513,7 @@ export default function RAGPage() {
       {!selected ? (
         <div className="border-border bg-card text-muted-foreground flex flex-col items-center justify-center rounded-xl border py-16 text-center">
           <Database className="mb-3 h-8 w-8" />
-          <p className="text-sm">Select or create a collection to get started.</p>
+          <p className="text-sm">请选择或新建一个集合开始使用。</p>
         </div>
       ) : (
         <>
@@ -544,15 +545,15 @@ export default function RAGPage() {
             ) : docs.length === 0 ? (
               <div className="border-border bg-card flex flex-col items-center justify-center rounded-xl border py-16 text-center">
                 <FileText className="text-muted-foreground mb-3 h-8 w-8" />
-                <p className="text-foreground text-sm font-medium">No documents</p>
-                <p className="text-muted-foreground mt-1 text-xs">Upload PDF, DOCX, TXT, or MD</p>
+                <p className="text-foreground text-sm font-medium">暂无文档</p>
+                <p className="text-muted-foreground mt-1 text-xs">上传 PDF、DOCX、TXT 或 MD</p>
                 <Button
                   variant="outline"
                   size="sm"
                   className="mt-4 rounded-xl"
                   onClick={() => fileRef.current?.click()}
                 >
-                  <Upload className="mr-2 h-4 w-4" /> Upload files
+                  <Upload className="mr-2 h-4 w-4" /> 上传文件
                 </Button>
               </div>
             ) : (
@@ -578,7 +579,7 @@ export default function RAGPage() {
                             </span>
                           )}
                           {doc.status === "processing" && (
-                            <span className="text-muted-foreground text-xs">Processing...</span>
+                            <span className="text-muted-foreground text-xs">处理中...</span>
                           )}
                           {doc.status === "error" && (
                             <span className="text-destructive max-w-[200px] truncate text-xs">
@@ -600,7 +601,7 @@ export default function RAGPage() {
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg p-1.5 transition-colors"
-                          title="View original"
+                          title="查看原文件"
                         >
                           <Eye className="h-3.5 w-3.5" />
                         </a>
@@ -613,18 +614,18 @@ export default function RAGPage() {
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Delete &ldquo;{doc.filename}&rdquo;?</AlertDialogTitle>
+                            <AlertDialogTitle>删除「{doc.filename}」？</AlertDialogTitle>
                             <AlertDialogDescription>
-                              This will remove the document from vector store and storage.
+                              将从向量库和存储中移除该文档。
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogCancel>取消</AlertDialogCancel>
                             <AlertDialogAction
                               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                               onClick={() => handleDeleteDoc(doc.id)}
                             >
-                              Delete
+                              删除
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
@@ -640,7 +641,7 @@ export default function RAGPage() {
               <div className="border-border bg-card rounded-xl border p-4">
                 <div className="flex gap-2">
                   <Input
-                    placeholder={`Search in "${selected}"...`}
+                    placeholder={`在「${selected}」中检索...`}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleSearch()}
@@ -652,7 +653,7 @@ export default function RAGPage() {
                     className="rounded-xl"
                   >
                     <Search className="mr-2 h-4 w-4" />
-                    {searching ? "..." : "Search"}
+                    {searching ? "..." : "检索"}
                   </Button>
                 </div>
               </div>
@@ -660,9 +661,9 @@ export default function RAGPage() {
               {searchDone && searchResults.length === 0 && !searching && (
                 <div className="border-border bg-card flex flex-col items-center justify-center rounded-xl border py-12 text-center">
                   <Search className="text-muted-foreground mb-3 h-8 w-8" />
-                  <p className="text-foreground text-sm font-medium">No results found</p>
+                  <p className="text-foreground text-sm font-medium">没有检索到结果</p>
                   <p className="text-muted-foreground mt-1 text-xs">
-                    Try a different query or check another collection
+                    换一个问法，或检查其他集合
                   </p>
                 </div>
               )}
@@ -699,7 +700,7 @@ export default function RAGPage() {
                               rel="noopener noreferrer"
                               className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-[10px] font-medium"
                             >
-                              <Eye className="h-3 w-3" /> View source
+                              <Eye className="h-3 w-3" /> 查看来源
                             </a>
                           )}
                         </div>

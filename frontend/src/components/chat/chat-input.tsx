@@ -138,10 +138,11 @@ export function ChatInput({
 
   const handleFileSelect = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const files = e.target.files;
-      if (!files || files.length === 0) return;
+      if (!e.target.files || e.target.files.length === 0) return;
+      // Copy before resetting: the FileList is live and is emptied by clearing the input value.
+      const files = Array.from(e.target.files);
       e.target.value = "";
-      await uploadFiles(Array.from(files));
+      await uploadFiles(files);
     },
     [uploadFiles],
   );
