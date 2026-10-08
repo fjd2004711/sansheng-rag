@@ -1,38 +1,37 @@
 "use client";
 
-import { ArrowUpRight, BookOpen, Code2, FileSearch, Sparkles } from "lucide-react";
+import { ArrowUpRight, BookOpen, FileSearch, GitBranch, ShieldQuestion, Sparkles } from "lucide-react";
 
 import { useAuth } from "@/hooks";
 
 const PROMPTS = [
   {
     icon: FileSearch,
-    title: "Summarize my docs",
-    prompt: "Summarize the key points from my latest indexed documents.",
+    title: "查找事实",
+    prompt: "知识库里关于系统发布前置条件的规定是什么？",
   },
   {
     icon: BookOpen,
-    title: "Explain a concept",
-    prompt: "Explain how vector search and RAG work together — keep it under 200 words.",
+    title: "归纳要点",
+    prompt: "请归纳知识库中最近入库文档的关键内容，并标注来源。",
   },
   {
-    icon: Code2,
-    title: "Write some code",
-    prompt: "Write a Python function that hashes a password with bcrypt and verifies it.",
+    icon: GitBranch,
+    title: "观察自纠错",
+    prompt: "用一个比较含糊的说法询问某个具体凭证或代码，观察右侧 Trace 如何诊断并改写查询。",
   },
   {
-    icon: Sparkles,
-    title: "Brainstorm",
-    prompt: "Give me 5 ideas for an onboarding email sequence for a developer tool.",
+    icon: ShieldQuestion,
+    title: "测试拒答",
+    prompt: "问一个知识库里肯定没有的问题，看系统是否拒答而不是编造。",
   },
 ];
 
 interface ChatEmptyStateProps {
   onPick: (prompt: string) => void;
-  agentLabel?: string;
 }
 
-export function ChatEmptyState({ onPick, agentLabel = "pydantic_ai" }: ChatEmptyStateProps) {
+export function ChatEmptyState({ onPick }: ChatEmptyStateProps) {
   const { user } = useAuth();
   const firstName = user?.full_name?.split(" ")[0] || user?.email?.split("@")[0];
 
@@ -43,10 +42,10 @@ export function ChatEmptyState({ onPick, agentLabel = "pydantic_ai" }: ChatEmpty
           <Sparkles className="h-5 w-5" />
         </div>
         <h2 className="text-foreground font-display text-2xl font-semibold tracking-tight md:text-3xl">
-          {firstName ? `How can I help, ${firstName}?` : "How can I help today?"}
+          {firstName ? `${firstName}，想查点什么？` : "想查点什么？"}
         </h2>
         <p className="text-muted-foreground mx-auto mt-2 max-w-md text-sm leading-relaxed">
-          Ask anything — get streaming answers with tool calls and citations from your knowledge.
+          基于知识库回答，附带引用；检索或回答不可靠时会先诊断原因再有界纠错，或明确拒答。
         </p>
       </div>
 
@@ -72,15 +71,6 @@ export function ChatEmptyState({ onPick, agentLabel = "pydantic_ai" }: ChatEmpty
         ))}
       </div>
 
-      <div className="text-muted-foreground mt-8 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs">
-        <kbd className="border-border bg-card rounded px-1.5 py-0.5 font-mono text-[10px]">⌘K</kbd>
-        <span>command palette</span>
-        <span className="text-border">·</span>
-        <kbd className="border-border bg-card rounded px-1.5 py-0.5 font-mono text-[10px]">/</kbd>
-        <span>slash commands</span>
-        <span className="text-border">·</span>
-        <span className="text-muted-foreground/70">Powered by {agentLabel}</span>
-      </div>
     </div>
   );
 }
