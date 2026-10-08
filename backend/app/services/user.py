@@ -114,9 +114,11 @@ class UserService:
             email=user_in.email,
             hashed_password=hashed_password,
             full_name=user_in.full_name,
-            role=UserRole.ADMIN.value if is_first_user else user_in.role.value,
+            role=UserRole.ADMIN.value if is_first_user else UserRole.USER.value,
             is_app_admin=is_first_user,
         )
+        # Registration returns an access boundary. Commit before returning so an immediate login can read the account.
+        await self.db.commit()
         return user
 
     async def authenticate(self, email: str, password: str) -> User:

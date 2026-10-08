@@ -90,7 +90,10 @@ async def create_collection(
     Also creates a matching KnowledgeBase row (idempotent) so the collection
     shows up on /kb as well as /rag.
     """
-    await vector_store.create_collection(name)
+    try:
+        await vector_store.create_collection(name)
+    except ValueError as exc:
+        raise BadRequestError(message=str(exc)) from exc
     return RAGMessageResponse(message=f"Collection '{name}' created successfully.")
 
 

@@ -6,7 +6,7 @@ from uuid import uuid4
 import pytest
 
 from app.core.exceptions import AlreadyExistsError, AuthenticationError, NotFoundError
-from app.schemas.user import UserCreate, UserUpdate
+from app.schemas.user import UserCreate, UserRole, UserUpdate
 from app.services.user import UserService
 
 
@@ -115,6 +115,20 @@ class TestUserServicePostgresql:
 
             assert result == mock_user
             mock_repo.create.assert_called_once()
+            user_service.db.commit.assert_awaited_once()
+
+    @pytest.mark.anyio
+    async def test_register_ignores_untrusted_admin_role(self, user_service: UserService, mock_user: MockUser):
+        scalar_one_result = MagicMock()
+        scalar_one_result.scalar_one.return_value = 1
+        user_service.db.execute = AsyncMock(return_value=scalar_one_result)
+        with patch("app.services.user.user_repo") as mock_repo:
+            mock_repo.get_by_email = AsyncMock(return_value=None)
+            mock_repo.create = AsyncMock(return_value=mock_user)
+            await user_service.register(
+                UserCreate(email="member@example.com", password="password123", role=UserRole.ADMIN)
+            )
+            assert mock_repo.create.await_args.kwargs["role"] == UserRole.USER.value
 
     @pytest.mark.anyio
     async def test_register_duplicate_email(self, user_service: UserService, mock_user: MockUser):

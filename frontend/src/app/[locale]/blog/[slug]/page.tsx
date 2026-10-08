@@ -52,7 +52,7 @@ export async function generateMetadata({
 function formatDate(iso: string, locale: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString(locale === "pl" ? "pl-PL" : "en-US", {
+  return d.toLocaleDateString(String(locale) === "pl" ? "pl-PL" : "en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -154,7 +154,7 @@ export default async function BlogPostPage({
             <div className="border-foreground/10 mt-16 flex items-center gap-4 border-t pt-8">
               <span aria-hidden className="bg-brand h-1 w-1 rounded-full" />
               <span className="text-foreground/45 font-mono text-[11px] tracking-wider uppercase">
-                {locale === "pl" ? "koniec wpisu" : "end of post"}
+                end of post
               </span>
               <span aria-hidden className="bg-foreground/10 h-px flex-1" />
               <Link

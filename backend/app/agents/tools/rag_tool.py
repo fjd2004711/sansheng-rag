@@ -39,8 +39,8 @@ def _format_results(results: list[Any]) -> str:
         page = result.metadata.get("page_num", "")
         chunk = result.metadata.get("chunk_num", "")
         col = result.metadata.get("collection", "")
-        page_info = f", page {page}" if page else ""
-        chunk_info = f", chunk {chunk}" if chunk else ""
+        page_info = f", page {page}" if page is not None else ""
+        chunk_info = f", chunk {chunk}" if chunk is not None else ""
         col_info = f" [{col}]" if col else ""
         formatted.append(
             f"[{i}] Source: {source}{page_info}{chunk_info}{col_info} (score: {result.score:.3f})\n"

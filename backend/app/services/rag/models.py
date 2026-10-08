@@ -82,6 +82,7 @@ class IngestionResult(BaseModel):
     status: IngestionStatus = IngestionStatus.NEW
     message: str | None = None
     error_message: str | None = None
+    chunk_count: int = 0
     document_id: str | None = None
 
 

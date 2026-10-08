@@ -7,7 +7,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 WORKDIR /app
 
 # Install uv
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
+RUN python -m pip install --no-cache-dir "uv==0.7.3"
 ENV UV_COMPILE_BYTECODE=1
 ENV UV_LINK_MODE=copy
 
@@ -15,7 +15,7 @@ ENV UV_LINK_MODE=copy
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=uv.lock,target=uv.lock \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    uv sync --frozen --no-install-project --no-dev
+    UV_HTTP_TIMEOUT=30 UV_HTTP_RETRIES=2 UV_CONCURRENT_DOWNLOADS=4 uv sync --frozen --no-install-project --no-dev
 
 # Copy application
 COPY . /app
@@ -33,8 +33,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 WORKDIR /app
 
 # Copy virtual environment from builder
-COPY --from=builder /app/.venv /app/.venv
-COPY --from=builder /app /app
+COPY --from=builder --chown=1000:1000 /app /app
 
 # Add venv to path
 ENV PATH="/app/.venv/bin:$PATH"
@@ -42,7 +41,7 @@ ENV PATH="/app/.venv/bin:$PATH"
 # Create non-root user and writable directories
 RUN adduser --disabled-password --gecos "" appuser && \
     mkdir -p /app/media /app/data /app/chroma_data /app/models_cache && \
-    chown -R appuser:appuser /app
+    chown appuser:appuser /app/media /app/data /app/chroma_data /app/models_cache
 USER appuser
 
 EXPOSE 8010

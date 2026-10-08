@@ -137,6 +137,8 @@ class Settings(BaseSettings):
     LLM_PROVIDER: str = "openai"
     QDRANT_HOST: str = "localhost"
     QDRANT_PORT: int = 6333
+    QDRANT_HTTPS: bool = False
+    QDRANT_TIMEOUT_SECONDS: int = 30
     QDRANT_API_KEY: str = ""
     EMBEDDING_MODEL: str = "text-embedding-3-large"
     EMBEDDING_BASE_URL: str = "https://api.openai.com/v1"

@@ -29,7 +29,7 @@ export default async function CookiesPage({ params }: { params: Promise<{ locale
 
   return (
     <LegalPage title={t("title")} summary={t("summary")} lastUpdated={LAST_UPDATED} locale={locale}>
-      {locale === "pl" ? <CookiesBodyPl /> : <CookiesBodyEn />}
+      {String(locale) === "pl" ? <CookiesBodyPl /> : <CookiesBodyEn />}
     </LegalPage>
   );
 }

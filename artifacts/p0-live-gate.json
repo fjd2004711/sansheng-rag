@@ -1,0 +1,71 @@
+{
+  "phase": "P0",
+  "result": "PASS",
+  "checks": {
+    "upload_txt_markdown_docx_pdf": "PASS",
+    "parse_chunk_embed_qdrant_index": "PASS",
+    "dense_top_k_retrieval": "PASS",
+    "source_metadata_and_chunk_traceability": "PASS",
+    "original_file_download": "PASS"
+  },
+  "collection": "p0_live_gate_20261008100225",
+  "documents": [
+    {
+      "id": "8406dd06-78c5-4964-9b94-f8f8181167b8",
+      "collection_name": "p0_live_gate_20261008100225",
+      "filename": "p0-gate.pdf",
+      "filesize": 882,
+      "filetype": "pdf",
+      "status": "done",
+      "error_message": null,
+      "vector_document_id": "cfa4599a-5220-4743-bc15-19498b271f33",
+      "chunk_count": 1,
+      "has_file": true,
+      "created_at": "2026-10-08T02:02:31.645593+00:00",
+      "completed_at": "2026-10-08T02:02:32.511283+00:00"
+    },
+    {
+      "id": "3005b6d5-82d5-4a2e-bea3-e958f9aa6a77",
+      "collection_name": "p0_live_gate_20261008100225",
+      "filename": "p0-gate.docx",
+      "filesize": 36660,
+      "filetype": "docx",
+      "status": "done",
+      "error_message": null,
+      "vector_document_id": "54994f47-abac-4a04-820d-65e2d972ddd3",
+      "chunk_count": 1,
+      "has_file": true,
+      "created_at": "2026-10-08T02:02:31.454838+00:00",
+      "completed_at": "2026-10-08T02:02:32.284832+00:00"
+    },
+    {
+      "id": "184e5ffd-3700-4a5c-8293-878dd2db913b",
+      "collection_name": "p0_live_gate_20261008100225",
+      "filename": "p0-gate.md",
+      "filesize": 89,
+      "filetype": "md",
+      "status": "done",
+      "error_message": null,
+      "vector_document_id": "6ffa580c-9bd5-40cf-a4f9-488da8b6985c",
+      "chunk_count": 1,
+      "has_file": true,
+      "created_at": "2026-10-08T02:02:31.321043+00:00",
+      "completed_at": "2026-10-08T02:02:31.793442+00:00"
+    },
+    {
+      "id": "e0224bc4-1d56-4d18-9d1b-09bd159abf5c",
+      "collection_name": "p0_live_gate_20261008100225",
+      "filename": "p0-gate.txt",
+      "filesize": 74,
+      "filetype": "txt",
+      "status": "done",
+      "error_message": null,
+      "vector_document_id": "2f6c6f1c-d50b-4621-89a4-4ba7c28f1ede",
+      "chunk_count": 1,
+      "has_file": true,
+      "created_at": "2026-10-08T02:02:31.203803+00:00",
+      "completed_at": "2026-10-08T02:02:31.628034+00:00"
+    }
+  ],
+  "search_result_count": 4
+}
