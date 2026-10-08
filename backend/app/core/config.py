@@ -151,8 +151,11 @@ class Settings(BaseSettings):
     RAG_DEFAULT_COLLECTION: str = "documents"
     RAG_TOP_K: int = 10
     RAG_CHUNKING_STRATEGY: str = "recursive"  # recursive, markdown, or fixed
-    RAG_HYBRID_SEARCH: bool = False  # Enable BM25 + vector hybrid search
+    RAG_HYBRID_SEARCH: bool = False  # Enable independent BM25 + Dense + RRF
     RAG_ENABLE_OCR: bool = False  # OCR fallback for scanned PDFs (requires tesseract)
+    RAG_RERANKER_ENABLED: bool = False
+    RAG_RERANKER_MODEL: str = ""
+    RAG_RERANKER_CANDIDATE_LIMIT: int = 12
 
     CORS_ORIGINS: list[str] = [
         "http://localhost:3000",
@@ -186,6 +189,13 @@ class Settings(BaseSettings):
             chunking_strategy=self.RAG_CHUNKING_STRATEGY,
             enable_hybrid_search=self.RAG_HYBRID_SEARCH,
             enable_ocr=self.RAG_ENABLE_OCR,
+            reranker_config=RerankerConfig(
+                enabled=self.RAG_RERANKER_ENABLED,
+                model=self.RAG_RERANKER_MODEL or self.AI_MODEL,
+                base_url=self.OPENAI_BASE_URL,
+                api_key=self.OPENAI_API_KEY,
+                candidate_limit=self.RAG_RERANKER_CANDIDATE_LIMIT,
+            ),
             embeddings_config=EmbeddingsConfig(
                 model=self.EMBEDDING_MODEL,
                 dim=self.EMBEDDING_DIMENSION,
@@ -196,7 +206,7 @@ class Settings(BaseSettings):
 
 
 # Rebuild Settings to resolve RAGSettings forward reference
-from app.services.rag.config import DocumentParser, EmbeddingsConfig, PdfParser, RAGSettings
+from app.services.rag.config import DocumentParser, EmbeddingsConfig, PdfParser, RAGSettings, RerankerConfig
 
 Settings.model_rebuild()
 

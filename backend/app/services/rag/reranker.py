@@ -1,85 +1,133 @@
-"""Reranker implementations for RAG retrieval quality improvement."""
+"""P1 reranker implementations."""
 
+from __future__ import annotations
+
+import json
 import logging
+import re
 from abc import ABC, abstractmethod
+from typing import Any
 
-from app.services.rag.config import RAGSettings
+from openai import AsyncOpenAI
+
+from app.services.rag.config import RAGSettings, RerankerConfig
 from app.services.rag.models import SearchResult
 
 logger = logging.getLogger(__name__)
 
 
 class BaseReranker(ABC):
-    """Abstract base for reranker providers."""
+    """Abstract base for document relevance rerankers."""
 
     @abstractmethod
     async def rerank(
-        self,
-        query: str,
-        results: list[SearchResult],
-        top_k: int,
+        self, query: str, results: list[SearchResult], top_k: int
     ) -> list[SearchResult]: ...
-
-    @abstractmethod
-    def warmup(self) -> None: ...
 
     @property
     @abstractmethod
     def name(self) -> str: ...
 
 
-class RerankService:
-    """Orchestrates reranking with the configured reranker provider."""
+class LLMJSONReranker(BaseReranker):
+    """Use the configured OpenAI-compatible chat model as a deterministic relevance reranker."""
 
-    def __init__(self, settings: RAGSettings):
-        self.settings = settings
-        config = settings.reranker_config  # type: ignore[attr-defined]
-        self._reranker: BaseReranker | None = None
-
-        if self._reranker is None:
-            logger.warning(
-                "[RERANKER] No reranker configured (model: %s). Reranking will be skipped.",
-                config.model,
-            )
+    def __init__(self, config: RerankerConfig) -> None:
+        self.config = config
+        # Deliberately use the provider client rather than an in-graph Runnable.
+        # A nested LangChain invocation inherits the Agent stream callbacks and its
+        # JSON control response becomes a user-visible text_delta.
+        self._client = AsyncOpenAI(base_url=config.base_url, api_key=config.api_key)
 
     @property
-    def reranker(self) -> BaseReranker | None:
-        return self._reranker
+    def name(self) -> str:
+        return f"llm-json:{self.config.model}"
+
+    async def rerank(
+        self, query: str, results: list[SearchResult], top_k: int
+    ) -> list[SearchResult]:
+        candidates = results[: self.config.candidate_limit]
+        if not candidates:
+            return []
+
+        payload = [
+            {"id": index, "text": result.content[:1600]}
+            for index, result in enumerate(candidates)
+        ]
+        prompt = (
+            "Rank the evidence passages by relevance to the user query. "
+            "Return only a JSON array ordered from most to least relevant. "
+            'Each item must contain {"id": integer, "score": number from 0 to 100}.\n'
+            f"Query: {query}\nCandidates: {json.dumps(payload, ensure_ascii=False)}"
+        )
+        response = await self._client.chat.completions.create(
+            model=self.config.model,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0,
+        )
+        rankings = _parse_rankings(response.choices[0].message.content or "")
+        if not rankings:
+            logger.warning("Reranker returned no parseable ranking; preserving RRF order")
+            return candidates[:top_k]
+
+        ranked: list[SearchResult] = []
+        seen: set[int] = set()
+        for candidate_id, score in rankings:
+            if candidate_id < 0 or candidate_id >= len(candidates) or candidate_id in seen:
+                continue
+            seen.add(candidate_id)
+            result = candidates[candidate_id]
+            ranked.append(
+                SearchResult(
+                    content=result.content,
+                    score=score / 100.0,
+                    metadata={**result.metadata, "reranker_score": score},
+                    parent_doc_id=result.parent_doc_id,
+                )
+            )
+        # Keep valid candidates omitted by a malformed partial reply, after ranked items.
+        ranked.extend(result for index, result in enumerate(candidates) if index not in seen)
+        return ranked[:top_k]
+
+
+def _parse_rankings(content: Any) -> list[tuple[int, float]]:
+    text = content if isinstance(content, str) else str(content)
+    match = re.search(r"\[[\s\S]*\]", text)
+    if not match:
+        return []
+    try:
+        value = json.loads(match.group(0))
+    except json.JSONDecodeError:
+        return []
+    if not isinstance(value, list):
+        return []
+
+    rankings: list[tuple[int, float]] = []
+    for item in value:
+        if not isinstance(item, dict):
+            continue
+        candidate_id, score = item.get("id"), item.get("score")
+        if isinstance(candidate_id, int) and isinstance(score, (int, float)):
+            rankings.append((candidate_id, float(score)))
+    return rankings
+
+
+class RerankService:
+    """Create and run the configured P1 reranker."""
+
+    def __init__(self, settings: RAGSettings):
+        self.config = settings.reranker_config
+        self._reranker: BaseReranker | None = (
+            LLMJSONReranker(self.config) if self.config.enabled else None
+        )
 
     @property
     def is_enabled(self) -> bool:
         return self._reranker is not None
 
     async def rerank(
-        self,
-        query: str,
-        results: list[SearchResult],
-        top_k: int,
+        self, query: str, results: list[SearchResult], top_k: int
     ) -> list[SearchResult]:
-        if not self._reranker:
-            logger.debug("[RERANKER] No reranker configured, returning original results")
+        if self._reranker is None:
             return results[:top_k]
-
-        logger.debug(
-            "[RERANKER] Starting reranking with %s, query: '%.50s...', results: %d, top_k: %d",
-            self._reranker.name,
-            query,
-            len(results),
-            top_k,
-        )
-
-        for i, r in enumerate(results[:5]):
-            logger.debug("[RERANKER] Pre-rerank #%d: score=%.4f", i + 1, r.score)
-
-        reranked = await self._reranker.rerank(query, results, top_k)
-
-        for i, r in enumerate(reranked[:5]):
-            logger.debug("[RERANKER] Post-rerank #%d: score=%.4f", i + 1, r.score)
-
-        return reranked
-
-    def warmup(self) -> None:
-        if self._reranker:
-            logger.info("[RERANKER] Warming up %s", self._reranker.name)
-            self._reranker.warmup()
-            logger.info("[RERANKER] %s warmup complete", self._reranker.name)
+        return await self._reranker.rerank(query, results, top_k)

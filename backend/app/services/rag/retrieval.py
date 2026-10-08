@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 from app.services.rag.config import RAGSettings
 from app.services.rag.models import SearchResult
+from app.services.rag.sparse import bm25_index
 from app.services.rag.vectorstore import BaseVectorStore
 
 if TYPE_CHECKING:
@@ -60,67 +61,50 @@ class RetrievalService(BaseRetrievalService):
         bm25_results: list[SearchResult],
         k: int = 60,
     ) -> list[SearchResult]:
-        """Reciprocal Rank Fusion of vector and BM25 results."""
+        """Fuse independently retrieved Dense and full-corpus BM25 rankings."""
         scores: dict[str, float] = {}
         result_map: dict[str, SearchResult] = {}
 
-        for rank, r in enumerate(vector_results):
-            key = _result_key(r)
-            scores[key] = scores.get(key, 0) + 1.0 / (k + rank + 1)
-            result_map[key] = r
+        for rank, result in enumerate(vector_results, start=1):
+            key = _result_key(result)
+            scores[key] = scores.get(key, 0.0) + 1.0 / (k + rank)
+            result_map[key] = result
 
-        for rank, r in enumerate(bm25_results):
-            key = _result_key(r)
-            scores[key] = scores.get(key, 0) + 1.0 / (k + rank + 1)
-            if key not in result_map:
-                result_map[key] = r
+        for rank, result in enumerate(bm25_results, start=1):
+            key = _result_key(result)
+            scores[key] = scores.get(key, 0.0) + 1.0 / (k + rank)
+            if key in result_map:
+                dense = result_map[key]
+                result_map[key] = SearchResult(
+                    content=dense.content,
+                    score=dense.score,
+                    metadata={**dense.metadata, "bm25_score": result.score},
+                    parent_doc_id=dense.parent_doc_id,
+                )
+            else:
+                result_map[key] = result
 
-        sorted_keys = sorted(scores, key=lambda x: scores[x], reverse=True)
         return [
             SearchResult(
                 content=result_map[key].content,
                 score=scores[key],
-                metadata=result_map[key].metadata,
+                metadata={**result_map[key].metadata, "rrf_score": scores[key]},
                 parent_doc_id=result_map[key].parent_doc_id,
             )
-            for key in sorted_keys
+            for key in sorted(scores, key=scores.get, reverse=True)
         ]
 
     async def _bm25_search(
-        self, query: str, collection_name: str, limit: int
+        self, query: str, collection_name: str, limit: int, filter_expr: str = ""
     ) -> list[SearchResult]:
-        try:
-            from rank_bm25 import BM25Okapi
-        except ImportError:
-            logger.warning("rank-bm25 not installed, skipping BM25 search")
-            return []
-
-        docs = await self.store.get_documents(collection_name)
-        if not docs:
-            return []
-
-        all_results = await self.store.search(
-            collection_name=collection_name, query=query, limit=min(limit * 10, 100)
+        """Retrieve from the complete collection BM25 index, never Dense candidates."""
+        return await bm25_index.search(
+            store=self.store,
+            collection_name=collection_name,
+            query=query,
+            limit=limit,
+            filter_expr=filter_expr,
         )
-        if not all_results:
-            return []
-
-        corpus = [r.content.lower().split() for r in all_results]
-        bm25 = BM25Okapi(corpus)
-        query_tokens = query.lower().split()
-        bm25_scores = bm25.get_scores(query_tokens)
-
-        scored = sorted(zip(all_results, bm25_scores), key=lambda x: x[1], reverse=True)
-        return [
-            SearchResult(
-                content=r.content,
-                score=float(s),
-                metadata=r.metadata,
-                parent_doc_id=r.parent_doc_id,
-            )
-            for r, s in scored[:limit]
-            if s > 0
-        ]
 
     async def retrieve(
         self,
@@ -131,7 +115,7 @@ class RetrievalService(BaseRetrievalService):
         filter: str = "",
         use_reranker: bool = False,
     ) -> list[SearchResult]:
-        should_rerank = use_reranker and self._reranker_enabled
+        should_rerank = self._reranker_enabled and (self.settings.reranker_config.enabled or use_reranker)
 
         # Fetch 3x when reranking: gives the reranker room to eliminate weak candidates
         fetch_multiplier = 3 if should_rerank else 2
@@ -147,12 +131,21 @@ class RetrievalService(BaseRetrievalService):
 
         start_time = time.time()
 
-        pipeline_results = await self.store.search(
+        dense_results = await self.store.search(
             collection_name=collection_name,
             query=query,
             filter_expr=filter,
             limit=limit * fetch_multiplier,
         )
+        pipeline_results = [
+            SearchResult(
+                content=result.content,
+                score=result.score,
+                metadata={**result.metadata, "dense_score": result.score},
+                parent_doc_id=result.parent_doc_id,
+            )
+            for result in dense_results
+        ]
 
         search_time = time.time() - start_time
         logger.info(
@@ -162,7 +155,12 @@ class RetrievalService(BaseRetrievalService):
         )
 
         if self._hybrid_enabled:
-            bm25_results = await self._bm25_search(query, collection_name, limit * fetch_multiplier)
+            bm25_results = await self._bm25_search(
+                query,
+                collection_name,
+                limit * fetch_multiplier,
+                filter_expr=filter,
+            )
             if bm25_results:
                 pipeline_results = self._rrf_fuse(pipeline_results, bm25_results)
                 logger.info("[RETRIEVAL] Hybrid search: fused %d results", len(pipeline_results))

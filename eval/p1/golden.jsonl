@@ -1,0 +1,6 @@
+{"id":"aurora","query":"What code identifies the emergency rollback procedure?","gold_filename":"rollback.txt"}
+{"id":"glacier","query":"Which identifier defines annual audit evidence retention?","gold_filename":"audit-policy.txt"}
+{"id":"nebula","query":"Which key is used by the cache invalidation procedure?","gold_filename":"cache-runbook.txt"}
+{"id":"orbit","query":"What token is required for temporary production access?","gold_filename":"security-standard.txt"}
+{"id":"comet","query":"Which runbook code is required before database recovery?","gold_filename":"backup-procedure.txt"}
+{"id":"marble","query":"What reference identifies lineage reconciliation jobs?","gold_filename":"data-catalog.txt"}

@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any
 from app.core.config import settings
 from app.core.exceptions import ExternalServiceError
 from app.services.rag.embeddings import EmbeddingService
+from app.services.rag.reranker import RerankService
 from app.services.rag.retrieval import RetrievalService
 from app.services.rag.vectorstore import QdrantVectorStore
 
@@ -26,7 +27,11 @@ def get_retrieval_service() -> "BaseRetrievalService":
     rag_settings = settings.rag
     embedding_service = EmbeddingService(rag_settings)
     vector_store = QdrantVectorStore(rag_settings, embedding_service)
-    _retrieval_service = RetrievalService(vector_store, rag_settings)
+    _retrieval_service = RetrievalService(
+        vector_store,
+        rag_settings,
+        rerank_service=RerankService(rag_settings),
+    )
     return _retrieval_service
 
 

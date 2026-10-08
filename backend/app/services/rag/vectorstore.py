@@ -30,6 +30,13 @@ class BaseVectorStore(ABC):
         pass
 
     @abstractmethod
+    async def list_chunks(
+        self, collection_name: str, filter_expr: str = ""
+    ) -> list[SearchResult]:
+        """Return every stored chunk for a collection's sparse retrieval index."""
+        pass
+
+    @abstractmethod
     async def delete_collection(self, collection_name: str) -> None:
         pass
 
@@ -218,6 +225,41 @@ class QdrantVectorStore(BaseVectorStore):
             )
             for hit in query_response.points
         ]
+
+    async def list_chunks(
+        self, collection_name: str, filter_expr: str = ""
+    ) -> list[SearchResult]:
+        """Scroll every Qdrant point so BM25 indexes the full collection."""
+        qdrant_filter = None
+        if filter_expr and "parent_doc_id" in filter_expr:
+            match = re.search(r'parent_doc_id\s*==\s*"([^"\\]+)"', filter_expr)
+            if match:
+                qdrant_filter = Filter(
+                    must=[FieldCondition(key="parent_doc_id", match=MatchValue(value=match.group(1)))]
+                )
+
+        offset = None
+        chunks: list[SearchResult] = []
+        while True:
+            records, offset = await self.client.scroll(
+                collection_name=collection_name,
+                scroll_filter=qdrant_filter,
+                limit=256,
+                with_payload=True,
+                offset=offset,
+            )
+            chunks.extend(
+                SearchResult(
+                    content=record.payload.get("content", ""),
+                    score=0.0,
+                    metadata=record.payload.get("metadata", {}),
+                    parent_doc_id=record.payload.get("parent_doc_id"),
+                )
+                for record in records
+            )
+            if offset is None:
+                break
+        return chunks
 
     async def get_collection_info(self, collection_name: str) -> CollectionInfo:
         info = await self.client.get_collection(collection_name)
