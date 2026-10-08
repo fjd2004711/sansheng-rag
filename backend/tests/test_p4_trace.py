@@ -36,7 +36,9 @@ async def test_collect_evidence_forces_retrieval_when_model_skipped_search_tool(
         [{"step": "retrieve", "round": 1, "status": "COMPLETE", "detail": {}}],
     )
     with (
-        patch("app.services.agent_session.search_knowledge_base", AsyncMock(return_value=envelope)) as search,
+        patch(
+            "app.services.agent_session.search_knowledge_base", AsyncMock(return_value=envelope)
+        ) as search,
         patch("app.services.agent_session.send_event", AsyncMock()) as send,
     ):
         evidence = await session._collect_evidence("Vega P1?", [])
@@ -45,7 +47,9 @@ async def test_collect_evidence_forces_retrieval_when_model_skipped_search_tool(
     assert evidence == "[1] Source: vega.md\nP1 response is 15 minutes"
     send.assert_awaited_once()
     assert send.await_args.args[1] == "agent_trace"
-    assert session._turn_trace == [{"step": "retrieve", "round": 1, "status": "COMPLETE", "detail": {}}]
+    assert session._turn_trace == [
+        {"step": "retrieve", "round": 1, "status": "COMPLETE", "detail": {}}
+    ]
 
 
 @pytest.mark.anyio

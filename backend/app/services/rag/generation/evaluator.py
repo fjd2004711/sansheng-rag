@@ -72,9 +72,7 @@ class AnswerEvaluator:
                 pass
         return _fallback_assessment(question, answer, evidence)
 
-    async def diagnose(
-        self, question: str, assessment: AnswerAssessment
-    ) -> AnswerDiagnosis:
+    async def diagnose(self, question: str, assessment: AnswerAssessment) -> AnswerDiagnosis:
         prompt = (
             "Create one focused sub-query for a RAG answer failure. Return only JSON with keys "
             "failure_type (insufficient_evidence|incomplete|out_of_scope), sub_query (string or "
@@ -130,8 +128,10 @@ class AnswerEvaluator:
 
 
 def _has_evidence(evidence: str) -> bool:
-    return bool(evidence.strip()) and "KNOWLEDGE_BASE_ABSTAIN" not in evidence and not evidence.startswith(
-        "No relevant documents"
+    return (
+        bool(evidence.strip())
+        and "KNOWLEDGE_BASE_ABSTAIN" not in evidence
+        and not evidence.startswith("No relevant documents")
     )
 
 

@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Awaitable, Callable, Protocol
+from collections.abc import Awaitable, Callable
+from typing import Protocol
 
 from langgraph.graph import END, START, StateGraph
 
-from app.services.rag.generation.evaluator import AnswerEvaluator, _ABSTAIN_MESSAGE, _has_evidence
+from app.services.rag.generation.evaluator import _ABSTAIN_MESSAGE, AnswerEvaluator, _has_evidence
 from app.services.rag.generation.models import (
     AnswerAssessment,
     AnswerFailureType,
@@ -14,7 +15,6 @@ from app.services.rag.generation.models import (
     GenerationCorrectionState,
     GenerationTraceEvent,
 )
-
 
 # A failed re-verification still yields a partial answer when it is at least this faithful.
 _PARTIAL_MIN_GROUNDEDNESS = 0.7
@@ -83,9 +83,7 @@ class GenerationCorrector:
         graph.add_edge("partial", END)
         return graph.compile()
 
-    async def run(
-        self, question: str, answer: str, evidence: str
-    ) -> GenerationCorrectionResult:
+    async def run(self, question: str, answer: str, evidence: str) -> GenerationCorrectionResult:
         state = await self.graph.ainvoke(
             {
                 "question": question,
@@ -121,7 +119,11 @@ class GenerationCorrector:
             "trace": self._append_trace(
                 state,
                 step="answer_diagnose",
-                status=("ABSTAIN" if diagnosis.failure_type == AnswerFailureType.OUT_OF_SCOPE else "RETRIEVE"),
+                status=(
+                    "ABSTAIN"
+                    if diagnosis.failure_type == AnswerFailureType.OUT_OF_SCOPE
+                    else "RETRIEVE"
+                ),
                 detail={
                     "failure_type": diagnosis.failure_type.value,
                     "failure_reason": diagnosis.failure_reason,
@@ -131,7 +133,9 @@ class GenerationCorrector:
             ),
         }
 
-    async def _retrieve_missing(self, state: GenerationCorrectionState) -> GenerationCorrectionState:
+    async def _retrieve_missing(
+        self, state: GenerationCorrectionState
+    ) -> GenerationCorrectionState:
         query = state.get("sub_query") or state["question"]
         evidence = await self.evidence_search(query)
         return {
@@ -267,7 +271,9 @@ class GenerationCorrector:
                     "completeness": assessment.completeness,
                     "answer_relevance": assessment.answer_relevance,
                     "citation_coverage": assessment.citation_coverage,
-                    "failure_type": assessment.failure_type.value if assessment.failure_type else None,
+                    "failure_type": assessment.failure_type.value
+                    if assessment.failure_type
+                    else None,
                     "failure_reason": assessment.failure_reason,
                     "missing_information": assessment.missing_information,
                     "claim_count": len(assessment.claims),

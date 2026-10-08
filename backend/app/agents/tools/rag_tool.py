@@ -114,7 +114,9 @@ async def _retrieve_once(
         if not all_collections:
             return []
         if len(all_collections) == 1:
-            return await service.retrieve(query=query, collection_name=all_collections[0], limit=top_k)
+            return await service.retrieve(
+                query=query, collection_name=all_collections[0], limit=top_k
+            )
         return await service.retrieve_multi(
             query=query, collection_names=all_collections, limit=top_k
         )

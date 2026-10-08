@@ -47,10 +47,10 @@ class EvidenceEvaluator:
             "differently from the question, and even if the question also needs simple arithmetic or "
             "a date comparison on top of those facts. Mark it insufficient only when a needed fact "
             "is truly absent. Return only JSON with "
-            'keys relevance_scores (0..1 array), sufficient (boolean), missing_information '
-            '(string array), failure_type (insufficient_evidence|ambiguous_query|out_of_scope|'
-            'irrelevant_evidence|null), failure_reason (string). '
-            'Write failure_reason and every missing_information item in Chinese, as plain sentences a non-technical reader understands (say what is missing or wrong, not internal terms). \n'
+            "keys relevance_scores (0..1 array), sufficient (boolean), missing_information "
+            "(string array), failure_type (insufficient_evidence|ambiguous_query|out_of_scope|"
+            "irrelevant_evidence|null), failure_reason (string). "
+            "Write failure_reason and every missing_information item in Chinese, as plain sentences a non-technical reader understands (say what is missing or wrong, not internal terms). \n"
             f"Question: {question}\nQuery: {query}\nEvidence: {json.dumps(payload, ensure_ascii=False)}"
         )
         parsed = _json_object(await self._complete(prompt))
@@ -69,11 +69,11 @@ class EvidenceEvaluator:
     ) -> Diagnosis:
         prompt = (
             "Diagnose an evidence retrieval failure. Return only JSON with keys action "
-            '(rewrite|expand|abstain), rewritten_query (string or null), missing_information '
-            '(string array), failure_type (insufficient_evidence|ambiguous_query|out_of_scope|'
-            'irrelevant_evidence), failure_reason (string). '
-            'rewritten_query must be ONE short search phrase (under 30 characters, keywords only, no sentence, no explanation). '
-            'Write failure_reason and every missing_information item in Chinese, as plain sentences a non-technical reader understands (say what is missing or wrong, not internal terms). Prefer abstain only when the '
+            "(rewrite|expand|abstain), rewritten_query (string or null), missing_information "
+            "(string array), failure_type (insufficient_evidence|ambiguous_query|out_of_scope|"
+            "irrelevant_evidence), failure_reason (string). "
+            "rewritten_query must be ONE short search phrase (under 30 characters, keywords only, no sentence, no explanation). "
+            "Write failure_reason and every missing_information item in Chinese, as plain sentences a non-technical reader understands (say what is missing or wrong, not internal terms). Prefer abstain only when the "
             "knowledge base is unlikely to contain the answer.\n"
             f"Question: {question}\nCurrent query: {query}\nAssessment: {assessment.model_dump_json()}"
         )
@@ -135,7 +135,9 @@ def clean_query(candidate: str, question: str) -> str:
     retrieval pollutes the second round. When nothing usable is left, ask again with the question
     plus a generic "具体规定" so the retry still differs from the first search.
     """
-    first_line = (candidate or "").strip().splitlines()[0].strip() if (candidate or "").strip() else ""
+    first_line = (
+        (candidate or "").strip().splitlines()[0].strip() if (candidate or "").strip() else ""
+    )
     if first_line and len(first_line) <= MAX_QUERY_CHARS:
         return first_line
     if first_line:

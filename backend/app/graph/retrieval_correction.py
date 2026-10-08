@@ -167,7 +167,9 @@ class CorrectiveRetriever:
                     "relevance_scores": assessment.relevance_scores,
                     "sufficient": assessment.sufficient,
                     "missing_information": assessment.missing_information,
-                    "failure_type": assessment.failure_type.value if assessment.failure_type else None,
+                    "failure_type": assessment.failure_type.value
+                    if assessment.failure_type
+                    else None,
                     "failure_reason": assessment.failure_reason,
                 },
             ),
@@ -264,7 +266,5 @@ class CorrectiveRetriever:
         status: str,
         detail: dict[str, object],
     ) -> list[dict[str, object]]:
-        event = CorrectionTraceEvent(
-            step=step, round=round, status=status, detail=detail
-        )
+        event = CorrectionTraceEvent(step=step, round=round, status=status, detail=detail)
         return [*state["trace"], event.model_dump(mode="json")]

@@ -309,7 +309,9 @@ class AgentSession:
         answer against empty evidence would wrongly report that the knowledge base has no answer,
         so run the same corrective retrieval here and let P3 verify against its evidence.
         """
-        searched = [call for call in collected_tool_calls if call.get("tool_name") == "search_documents"]
+        searched = [
+            call for call in collected_tool_calls if call.get("tool_name") == "search_documents"
+        ]
         if not searched:
             logger.warning("agent_skipped_search_tool: forcing retrieval for verification")
             visible, trace = extract_rag_trace(await search_knowledge_base(question))
