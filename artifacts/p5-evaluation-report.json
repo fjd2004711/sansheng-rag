@@ -1,0 +1,503 @@
+{
+  "methodology": "Fixed adversarial corpus with 40 near-topic distractors. Baseline and Hybrid use the supplied initial query; Corrective and Full execute the bounded P2 workflow. Retrieval corrective success means an initially absent top-5 expected source entered the final top-5 after P2. Generation corrective success means P3 corrected its seeded unsupported draft and the final verifier passed. Tokens are character-based estimates because the local provider exposes no billable usage.",
+  "scenario_count": 3,
+  "corpus_document_count": 42,
+  "modes": [
+    {
+      "name": "Baseline RAG",
+      "metrics": {
+        "Recall@5": 0.0,
+        "Recall@10": 0.0,
+        "MRR": 0.0,
+        "nDCG": 0.0,
+        "Groundedness": 0.0,
+        "Completeness": 0.0,
+        "Answer Relevance": 0.0,
+        "Citation Accuracy": 0.0,
+        "Retrieval Corrective Success Rate": 0.0,
+        "Generation Corrective Success Rate": 0.0,
+        "Corrective Success Rate": 0.0,
+        "Abstention Accuracy": 0.0,
+        "Average Retrieval Rounds": 1.0,
+        "Latency (ms)": 3303.78,
+        "Estimated Tokens": 160.4
+      },
+      "rows": [
+        {
+          "id": "atlas-correction",
+          "initial_rank": null,
+          "rank": null,
+          "rounds": 1,
+          "abstained": false,
+          "expected_abstain": false,
+          "answer": "The required value is CRIMSON-SEAL [1].",
+          "assessment": {
+            "groundedness": 0.0,
+            "completeness": 0.0,
+            "answer_relevance": 0.0,
+            "citation_coverage": 0.0,
+            "sufficient": false,
+            "failure_type": "hallucination",
+            "failure_reason": "The answer claims 'CRIMSON-SEAL' is a required credential, but the evidence only discusses 'Atlas deployment schedule milestones' and does not mention any credential or compliance requirement. The cited source [1] does not support the claim.",
+            "missing_information": [
+              "What specific credential is required for Atlas compliance?",
+              "Any mention of 'CRIMSON-SEAL' in the evidence"
+            ],
+            "claims": [
+              {
+                "claim": "The required value is CRIMSON-SEAL",
+                "supported": false,
+                "citation_indices": [],
+                "reason": "No evidence supports the claim that 'CRIMSON-SEAL' is a required credential. The cited source [1] discusses deployment milestones, not compliance credentials."
+              }
+            ]
+          },
+          "latency_ms": 3391.35,
+          "estimated_tokens": 167.2,
+          "retrieval_corrective_success": 0.0,
+          "generation_corrective_success": 0.0
+        },
+        {
+          "id": "orion-correction",
+          "initial_rank": null,
+          "rank": null,
+          "rounds": 1,
+          "abstained": false,
+          "expected_abstain": false,
+          "answer": "The required value is ORION-RECOVER-17 [1].",
+          "assessment": {
+            "groundedness": 0.0,
+            "completeness": 0.0,
+            "answer_relevance": 0.0,
+            "citation_coverage": 0.0,
+            "sufficient": false,
+            "failure_type": "hallucination",
+            "failure_reason": "The answer introduces a specific code 'ORION-RECOVER-17' that is not mentioned or implied in any of the provided evidence. The evidence only discusses 'Orion meeting calendar deadline' values (1, 2, 4, 11, 12) and their associated activities, with no reference to 'ORION-RECOVER-17'.",
+            "missing_information": [],
+            "claims": [
+              {
+                "claim": "The required value is ORION-RECOVER-17",
+                "supported": false,
+                "citation_indices": [],
+                "reason": "No evidence supports the claim that 'ORION-RECOVER-17' is required for Orion recovery. The provided evidence discusses meeting calendar deadlines, not recovery codes."
+              }
+            ]
+          },
+          "latency_ms": 3320.66,
+          "estimated_tokens": 155.8,
+          "retrieval_corrective_success": 0.0,
+          "generation_corrective_success": 0.0
+        },
+        {
+          "id": "out-of-scope",
+          "initial_rank": null,
+          "rank": null,
+          "rounds": 1,
+          "abstained": false,
+          "expected_abstain": true,
+          "answer": "The required value is UNKNOWN-PLACEHOLDER [1].",
+          "assessment": {
+            "groundedness": 0.0,
+            "completeness": 0.0,
+            "answer_relevance": 0.0,
+            "citation_coverage": 0.0,
+            "sufficient": false,
+            "failure_type": "hallucination",
+            "failure_reason": "The answer claims a planet won an 'interstellar league,' but the evidence discusses 'Orion meeting calendar deadlines' with no mention of interstellar leagues, planets, or winners. The placeholder 'UNKNOWN-PLACEHOLDER' indicates no valid answer was derived from the evidence, yet the answer is presented as if it were factual.",
+            "missing_information": [
+              "Information about an interstellar league",
+              "Information about which planet won it",
+              "Any connection between Orion and interstellar leagues"
+            ],
+            "claims": [
+              {
+                "claim": "The required value is UNKNOWN-PLACEHOLDER",
+                "supported": false,
+                "citation_indices": [],
+                "reason": "The placeholder indicates no evidence supports this claim. It is not grounded in any provided evidence."
+              }
+            ]
+          },
+          "latency_ms": 3199.33,
+          "estimated_tokens": 158.2,
+          "retrieval_corrective_success": 0.0,
+          "generation_corrective_success": 0.0
+        }
+      ]
+    },
+    {
+      "name": "Hybrid RAG",
+      "metrics": {
+        "Recall@5": 0.0,
+        "Recall@10": 0.0,
+        "MRR": 0.0,
+        "nDCG": 0.0,
+        "Groundedness": 0.0,
+        "Completeness": 0.0,
+        "Answer Relevance": 0.0,
+        "Citation Accuracy": 0.0,
+        "Retrieval Corrective Success Rate": 0.0,
+        "Generation Corrective Success Rate": 0.0,
+        "Corrective Success Rate": 0.0,
+        "Abstention Accuracy": 0.0,
+        "Average Retrieval Rounds": 1.0,
+        "Latency (ms)": 5675.7033,
+        "Estimated Tokens": 157.6
+      },
+      "rows": [
+        {
+          "id": "atlas-correction",
+          "initial_rank": null,
+          "rank": null,
+          "rounds": 1,
+          "abstained": false,
+          "expected_abstain": false,
+          "answer": "The required value is CRIMSON-SEAL [1].",
+          "assessment": {
+            "groundedness": 0.0,
+            "completeness": 0.0,
+            "answer_relevance": 0.0,
+            "citation_coverage": 0.0,
+            "sufficient": false,
+            "failure_type": "hallucination",
+            "failure_reason": "The answer introduces a credential 'CRIMSON-SEAL' that is not mentioned or implied in any of the provided evidence. The evidence only discusses 'Atlas deployment schedule milestones' and their tracking of release planning, calendar ownership, and Friday readiness review. There is no mention of any compliance credential or 'CRIMSON-SEAL'.",
+            "missing_information": [],
+            "claims": [
+              {
+                "claim": "The required value is CRIMSON-SEAL",
+                "supported": false,
+                "citation_indices": [],
+                "reason": "No evidence supports the claim that 'CRIMSON-SEAL' is a required credential for Atlas compliance. The provided evidence discusses deployment milestones, not compliance credentials."
+              }
+            ]
+          },
+          "latency_ms": 5718.21,
+          "estimated_tokens": 167.5,
+          "retrieval_corrective_success": 0.0,
+          "generation_corrective_success": 0.0
+        },
+        {
+          "id": "orion-correction",
+          "initial_rank": null,
+          "rank": null,
+          "rounds": 1,
+          "abstained": false,
+          "expected_abstain": false,
+          "answer": "The required value is ORION-RECOVER-17 [1].",
+          "assessment": {
+            "groundedness": 0.0,
+            "completeness": 0.0,
+            "answer_relevance": 0.0,
+            "citation_coverage": 0.0,
+            "sufficient": false,
+            "failure_type": "hallucination",
+            "failure_reason": "The answer claims 'ORION-RECOVER-17' is the required code, but none of the provided evidence mentions 'ORION-RECOVER-17' or any recovery-related code. The evidence only discusses 'Orion meeting calendar deadline' values, which are unrelated to recovery codes.",
+            "missing_information": [
+              "The actual recovery code used by Orion",
+              "Any mention of 'ORION-RECOVER-17' in the evidence"
+            ],
+            "claims": [
+              {
+                "claim": "The required value is ORION-RECOVER-17",
+                "supported": false,
+                "citation_indices": [],
+                "reason": "No evidence supports this claim. The provided evidence discusses meeting calendar deadlines, not recovery codes."
+              }
+            ]
+          },
+          "latency_ms": 5973.91,
+          "estimated_tokens": 155.8,
+          "retrieval_corrective_success": 0.0,
+          "generation_corrective_success": 0.0
+        },
+        {
+          "id": "out-of-scope",
+          "initial_rank": null,
+          "rank": null,
+          "rounds": 1,
+          "abstained": false,
+          "expected_abstain": true,
+          "answer": "The required value is UNKNOWN-PLACEHOLDER [1].",
+          "assessment": {
+            "groundedness": 0.0,
+            "completeness": 0.0,
+            "answer_relevance": 0.0,
+            "citation_coverage": 0.0,
+            "sufficient": false,
+            "failure_type": "hallucination",
+            "failure_reason": "The answer claims a specific planet won the interstellar league, but the evidence contains no information about interstellar leagues, planets, or any related competition. The placeholder '[1]' references a credential requirement, not a factual answer. This constitutes a hallucination.",
+            "missing_information": [],
+            "claims": [
+              {
+                "claim": "The required value is UNKNOWN-PLACEHOLDER [1].",
+                "supported": false,
+                "citation_indices": [
+                  1
+                ],
+                "reason": "The citation [1] refers to a credential requirement, not a planetary victory in an interstellar league. The claim is not supported by the evidence and is a placeholder, not a factual assertion."
+              }
+            ]
+          },
+          "latency_ms": 5334.99,
+          "estimated_tokens": 149.5,
+          "retrieval_corrective_success": 0.0,
+          "generation_corrective_success": 0.0
+        }
+      ]
+    },
+    {
+      "name": "Corrective RAG",
+      "metrics": {
+        "Recall@5": 1.0,
+        "Recall@10": 1.0,
+        "MRR": 1.0,
+        "nDCG": 1.0,
+        "Groundedness": 0.5357,
+        "Completeness": 0.5357,
+        "Answer Relevance": 0.0833,
+        "Citation Accuracy": 1.0,
+        "Retrieval Corrective Success Rate": 0.6667,
+        "Generation Corrective Success Rate": 0.0,
+        "Corrective Success Rate": 0.6667,
+        "Abstention Accuracy": 1.0,
+        "Average Retrieval Rounds": 1.6667,
+        "Latency (ms)": 13249.9333,
+        "Estimated Tokens": 149.3667
+      },
+      "rows": [
+        {
+          "id": "atlas-correction",
+          "initial_rank": null,
+          "rank": 1,
+          "rounds": 2,
+          "abstained": false,
+          "expected_abstain": false,
+          "answer": "The required value is CRIMSON-SEAL [1].",
+          "assessment": {
+            "groundedness": 0.5714285714285714,
+            "completeness": 0.5714285714285714,
+            "answer_relevance": 0.0,
+            "citation_coverage": 1.0,
+            "sufficient": false,
+            "failure_type": "incomplete",
+            "failure_reason": "The answer could not be fully verified against cited evidence.",
+            "missing_information": [],
+            "claims": [
+              {
+                "claim": "The required value is CRIMSON-SEAL [1].",
+                "supported": false,
+                "citation_indices": [
+                  1
+                ],
+                "reason": "Lexical fallback used because structured answer assessment was unavailable."
+              }
+            ]
+          },
+          "latency_ms": 14350.92,
+          "estimated_tokens": 156.8,
+          "retrieval_corrective_success": 1.0,
+          "generation_corrective_success": 0.0
+        },
+        {
+          "id": "orion-correction",
+          "initial_rank": null,
+          "rank": 1,
+          "rounds": 2,
+          "abstained": false,
+          "expected_abstain": false,
+          "answer": "The required value is ORION-RECOVER-17 [1].",
+          "assessment": {
+            "groundedness": 0.5,
+            "completeness": 0.5,
+            "answer_relevance": 0.16666666666666666,
+            "citation_coverage": 1.0,
+            "sufficient": false,
+            "failure_type": "hallucination",
+            "failure_reason": "The answer could not be fully verified against cited evidence.",
+            "missing_information": [],
+            "claims": [
+              {
+                "claim": "The required value is ORION-RECOVER-17 [1].",
+                "supported": false,
+                "citation_indices": [
+                  1
+                ],
+                "reason": "Lexical fallback used because structured answer assessment was unavailable."
+              }
+            ]
+          },
+          "latency_ms": 17436.89,
+          "estimated_tokens": 148.5,
+          "retrieval_corrective_success": 1.0,
+          "generation_corrective_success": 0.0
+        },
+        {
+          "id": "out-of-scope",
+          "initial_rank": null,
+          "rank": null,
+          "rounds": 1,
+          "abstained": true,
+          "expected_abstain": true,
+          "answer": "知识库中没有找到足以回答该问题的证据。",
+          "assessment": {
+            "groundedness": 1.0,
+            "completeness": 1.0,
+            "answer_relevance": 1.0,
+            "citation_coverage": 1.0,
+            "sufficient": true
+          },
+          "latency_ms": 7961.99,
+          "estimated_tokens": 142.8,
+          "retrieval_corrective_success": 0.0,
+          "generation_corrective_success": 0.0
+        }
+      ]
+    },
+    {
+      "name": "Full Self-Correcting RAG",
+      "metrics": {
+        "Recall@5": 1.0,
+        "Recall@10": 1.0,
+        "MRR": 1.0,
+        "nDCG": 1.0,
+        "Groundedness": 1.0,
+        "Completeness": 1.0,
+        "Answer Relevance": 0.75,
+        "Citation Accuracy": 1.0,
+        "Retrieval Corrective Success Rate": 0.6667,
+        "Generation Corrective Success Rate": 0.3333,
+        "Corrective Success Rate": 0.6667,
+        "Abstention Accuracy": 1.0,
+        "Average Retrieval Rounds": 1.6667,
+        "Latency (ms)": 14361.69,
+        "Estimated Tokens": 152.4
+      },
+      "rows": [
+        {
+          "id": "atlas-correction",
+          "initial_rank": null,
+          "rank": 1,
+          "rounds": 2,
+          "abstained": false,
+          "expected_abstain": false,
+          "answer": "Atlas compliance requires the CRIMSON-SEAL credential before release [1].",
+          "assessment": {
+            "groundedness": 1.0,
+            "completeness": 1.0,
+            "answer_relevance": 0.5,
+            "citation_coverage": 1.0,
+            "sufficient": true,
+            "failure_type": null,
+            "failure_reason": "",
+            "missing_information": [],
+            "claims": [
+              {
+                "claim": "Atlas compliance requires the CRIMSON-SEAL credential before release [1].",
+                "supported": true,
+                "citation_indices": [
+                  1
+                ],
+                "reason": "Lexical fallback used because structured answer assessment was unavailable."
+              }
+            ]
+          },
+          "latency_ms": 17459.0,
+          "estimated_tokens": 165.2,
+          "retrieval_corrective_success": 1.0,
+          "generation_corrective_success": 1.0
+        },
+        {
+          "id": "orion-correction",
+          "initial_rank": null,
+          "rank": 1,
+          "rounds": 2,
+          "abstained": false,
+          "expected_abstain": false,
+          "answer": "The required value is UNKNOWN-PLACEHOLDER [1].",
+          "assessment": {
+            "groundedness": 1.0,
+            "completeness": 1.0,
+            "answer_relevance": 1.0,
+            "citation_coverage": 1.0,
+            "sufficient": true,
+            "failure_type": null,
+            "failure_reason": "",
+            "missing_information": [],
+            "claims": [
+              {
+                "claim": "The required value is UNKNOWN-PLACEHOLDER [1].",
+                "supported": true,
+                "citation_indices": [
+                  1
+                ],
+                "reason": "The placeholder 'UNKNOWN-PLACEHOLDER' is not supported by the evidence. The evidence states 'ORION-RECOVER-17' as the required code, not 'UNKNOWN-PLACEHOLDER'."
+              }
+            ]
+          },
+          "latency_ms": 17475.52,
+          "estimated_tokens": 149.2,
+          "retrieval_corrective_success": 1.0,
+          "generation_corrective_success": 0.0
+        },
+        {
+          "id": "out-of-scope",
+          "initial_rank": null,
+          "rank": null,
+          "rounds": 1,
+          "abstained": true,
+          "expected_abstain": true,
+          "answer": "知识库中没有找到足以回答该问题的证据。",
+          "assessment": {
+            "groundedness": 1.0,
+            "completeness": 1.0,
+            "answer_relevance": 1.0,
+            "citation_coverage": 1.0,
+            "sufficient": true
+          },
+          "latency_ms": 8150.55,
+          "estimated_tokens": 142.8,
+          "retrieval_corrective_success": 0.0,
+          "generation_corrective_success": 0.0
+        }
+      ]
+    }
+  ],
+  "ablations": [
+    {
+      "component": "BM25",
+      "metric": "Recall@5",
+      "with_component": 0.0,
+      "without_component": 0.0
+    },
+    {
+      "component": "Reranker",
+      "metric": "MRR",
+      "with_component": 0.0,
+      "without_component": 0.0
+    },
+    {
+      "component": "Evidence Judge",
+      "metric": "Retrieval Corrective Success Rate",
+      "with_component": 0.6667,
+      "without_component": 0.0
+    },
+    {
+      "component": "Query Rewrite",
+      "metric": "Recall@5",
+      "with_component": 1.0,
+      "without_component": 0.0
+    },
+    {
+      "component": "Groundedness Judge",
+      "metric": "Groundedness",
+      "with_component": 1.0,
+      "without_component": 0.5357
+    },
+    {
+      "component": "Completeness Judge",
+      "metric": "Completeness",
+      "with_component": 1.0,
+      "without_component": 0.5357
+    }
+  ]
+}

@@ -74,7 +74,8 @@
     "responseRatings": "Response ratings",
     "allConversations": "All conversations",
     "settingsSection": "Settings",
-    "billingSection": "Billing"
+    "billingSection": "Billing",
+    "evaluation": "Evaluation"
   },
   "auth": {
     "login": "Login",
