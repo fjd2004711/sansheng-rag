@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import type { ChatMessage, ChatMessageFile } from "@/types";
+import { progressText } from "@/lib/agent-trace-labels";
 import { ToolCallCard } from "./tool-call-card";
 import { MarkdownContent } from "./markdown-content";
 import { CopyButton } from "./copy-button";
@@ -226,6 +227,10 @@ export function MessageItem({ message, groupPosition, onRegenerate }: MessageIte
             parts.length === 0 &&
             (!message.toolCalls || message.toolCalls.length === 0);
 
+          // The answer text is only sent after verification finishes, so say what is happening meanwhile.
+          const hasText = Boolean(message.content) || parts.some((part) => part.type === "text" && part.content);
+          const showProgress = !isUser && Boolean(message.isStreaming) && !hasText && !showPlaceholder;
+
           return (
             <>
               {showPlaceholder && (
@@ -240,6 +245,17 @@ export function MessageItem({ message, groupPosition, onRegenerate }: MessageIte
                     <span className="bg-muted-foreground/40 h-1.5 w-1.5 animate-bounce rounded-full [animation-delay:300ms]" />
                   </div>
                   <span className="text-muted-foreground text-xs">正在思考...</span>
+                </div>
+              )}
+
+              {showProgress && (
+                <div className="text-muted-foreground flex items-center gap-2 px-1 text-sm" role="status" aria-live="polite">
+                  <span className="flex gap-1" aria-hidden="true">
+                    <span className="bg-muted-foreground/50 h-1.5 w-1.5 animate-bounce rounded-full [animation-delay:0ms]" />
+                    <span className="bg-muted-foreground/50 h-1.5 w-1.5 animate-bounce rounded-full [animation-delay:150ms]" />
+                    <span className="bg-muted-foreground/50 h-1.5 w-1.5 animate-bounce rounded-full [animation-delay:300ms]" />
+                  </span>
+                  {progressText(message.agentTrace?.[message.agentTrace.length - 1])}
                 </div>
               )}
 

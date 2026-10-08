@@ -5,41 +5,11 @@ import "@xyflow/react/dist/style.css";
 import { Activity, Check, CircleAlert, Search, ShieldCheck, WandSparkles } from "lucide-react";
 import type { AgentTraceEvent } from "@/types";
 import { cn } from "@/lib/utils";
+import { TRACE_FAILURE_LABELS, TRACE_STATUS_LABELS, TRACE_STEP_LABELS } from "@/lib/agent-trace-labels";
 
-const LABELS: Record<string, string> = {
-  retrieve: "检索资料",
-  evidence_evaluate: "判断资料够不够用",
-  failure_diagnose: "分析为什么没找到",
-  query_rewrite: "换个问法",
-  answer_verify: "核对回答",
-  answer_diagnose: "分析回答的不足",
-  retrieve_missing: "补充检索",
-  regenerate: "依据资料重新作答",
-  answer_reverify: "再次核对回答",
-  abstain: "如实告知查不到",
-  max_rounds_reached: "已达纠错次数上限",
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  PASS: "通过",
-  COMPLETE: "完成",
-  FAIL: "未通过",
-  REWRITE: "改写后重试",
-  EXPAND: "扩大范围重试",
-  RETRIEVE: "补充检索",
-  ABSTAIN: "拒答",
-  STOP: "已停止",
-  EMPTY: "无结果",
-};
-
-const FAILURE_LABELS: Record<string, string> = {
-  insufficient_evidence: "资料不足",
-  ambiguous_query: "问题含糊",
-  out_of_scope: "资料库里没有相关内容",
-  irrelevant_evidence: "找到的资料不相关",
-  hallucination: "回答里有缺乏依据的说法",
-  incomplete: "回答不完整",
-};
+const LABELS = TRACE_STEP_LABELS;
+const STATUS_LABELS = TRACE_STATUS_LABELS;
+const FAILURE_LABELS = TRACE_FAILURE_LABELS;
 
 function iconFor(step: string) {
   if (step.includes("retriev")) return Search;
