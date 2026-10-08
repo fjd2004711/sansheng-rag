@@ -8,6 +8,7 @@ from app.core.config import settings
 from app.services.rag.documents import DocumentProcessor
 from app.services.rag.embeddings import EmbeddingService
 from app.services.rag.models import Document, IngestionResult, IngestionStatus
+from app.services.rag.sparse import invalidate_bm25_index
 from app.services.rag.vectorstore import BaseVectorStore
 from app.services.rag.vectorstore import QdrantVectorStore as VectorStore
 
@@ -108,6 +109,7 @@ class IngestionService:
                 collection_name=collection_name,
                 document=document,
             )
+            invalidate_bm25_index(collection_name)
 
             action = "replaced" if existing_id else "ingested"
 
@@ -168,6 +170,7 @@ class IngestionService:
                 collection_name=collection_name,
                 document_id=document_id,
             )
+            invalidate_bm25_index(collection_name)
             await self._emit(
                 "rag.document.deleted",
                 {

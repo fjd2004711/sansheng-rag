@@ -1,0 +1,13 @@
+{"filename":"rollback.txt","content":"The emergency rollback procedure is identified by code AURORA-17. Operators must notify the incident commander before executing it."}
+{"filename":"incident-response.txt","content":"During an emergency incident, operators notify the commander and follow the standard rollback checklist."}
+{"filename":"release-notes.txt","content":"The deployment process includes a standard rollback plan for failed releases."}
+{"filename":"audit-policy.txt","content":"Audit policy identifier GLACIER-42 defines annual evidence retention for finance records."}
+{"filename":"finance-handbook.txt","content":"Finance teams retain audit evidence and prepare annual records for review."}
+{"filename":"cache-runbook.txt","content":"Cache invalidation procedure uses key NEBULA-88 and requires a warmup check afterward."}
+{"filename":"performance-guide.txt","content":"Application performance improves after cache warmup and careful invalidation."}
+{"filename":"security-standard.txt","content":"Security exception token ORBIT-53 is required for temporary production access."}
+{"filename":"access-guide.txt","content":"Temporary production access requires a reviewed security exception and manager approval."}
+{"filename":"backup-procedure.txt","content":"Database restoration runbook code COMET-31 requires snapshot verification before recovery."}
+{"filename":"recovery-guide.txt","content":"Recovery teams verify snapshots before restoring database services."}
+{"filename":"data-catalog.txt","content":"The analytics catalog uses reference MARBLE-64 for lineage reconciliation jobs."}
+{"filename":"analytics-guide.txt","content":"Lineage reconciliation aligns analytics datasets and catalog references."}

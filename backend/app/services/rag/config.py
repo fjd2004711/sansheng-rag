@@ -117,6 +117,16 @@ class PdfParser(BaseModel):
     method: str = "pymupdf"
 
 
+class RerankerConfig(BaseModel):
+    """P1 relevance-reranker settings."""
+
+    enabled: bool = False
+    model: str = ""
+    base_url: str = ""
+    api_key: str = ""
+    candidate_limit: int = 12
+
+
 class RAGSettings(BaseModel):
     """RAG pipeline configuration."""
 
@@ -131,6 +141,7 @@ class RAGSettings(BaseModel):
     chunking_strategy: str = "recursive"
     enable_hybrid_search: bool = False
     enable_ocr: bool = False
+    reranker_config: RerankerConfig = Field(default_factory=RerankerConfig)
 
     embeddings_config: EmbeddingsConfig = Field(default_factory=EmbeddingsConfig)
 

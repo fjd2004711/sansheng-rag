@@ -1,0 +1,47 @@
+{
+  "phase": "P1",
+  "status": "PASS",
+  "scope": "Hybrid Retrieval",
+  "checks": {
+    "full_corpus_bm25": "PASS",
+    "dense_bm25_rrf_score_traceability": "PASS",
+    "retrieval_evaluation": "PASS",
+    "hybrid_value_proof": "PASS",
+    "p0_regression": "PASS",
+    "automated_tests": "PASS",
+    "llm_reranker": "PASS"
+  },
+  "evaluation": {
+    "case_count": 6,
+    "baseline": {
+      "RecallAt5": 1,
+      "RecallAt10": 1,
+      "MRRAt5": 0.9166666666666666,
+      "nDCGAt5": 0.9384882922619097
+    },
+    "hybrid_rrf": {
+      "RecallAt5": 1,
+      "RecallAt10": 1,
+      "MRRAt5": 0.9166666666666666,
+      "nDCGAt5": 0.9384882922619097
+    },
+    "hybrid_rrf_reranked": {
+      "RecallAt5": 1,
+      "RecallAt10": 1,
+      "MRRAt5": 1,
+      "nDCGAt5": 1
+    },
+    "interpretation": "RRF retained baseline retrieval coverage; the full Hybrid pipeline improved MRR@5 and nDCG@5 while preserving Recall@5 and Recall@10."
+  },
+  "evidence": {
+    "retrieval_report": "artifacts/p1-retrieval-report.json",
+    "acceptance": "docs/P1_ACCEPTANCE.md",
+    "backend_tests": "logs/backend-p1-pytest.log"
+  },
+  "test_summary": {
+    "backend": "192 passed, 4 skipped",
+    "p0_live_gate": "PASS",
+    "p0_stream_gate": "PASS",
+    "frontend_and_backend_health": "HTTP 200"
+  }
+}
