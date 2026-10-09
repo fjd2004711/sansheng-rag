@@ -11,6 +11,7 @@ from app.api.routes.v1 import (
     health,
     llm_config,
     rag,
+    usage,
     users,
 )
 
@@ -25,3 +26,4 @@ v1_router.include_router(agent.router, tags=["agent"])
 v1_router.include_router(rag.router, prefix="/rag", tags=["rag"])
 v1_router.include_router(files.router, tags=["files"])
 v1_router.include_router(llm_config.router, tags=["llm-config"])
+v1_router.include_router(usage.router, tags=["usage"])

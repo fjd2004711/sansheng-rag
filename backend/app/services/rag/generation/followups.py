@@ -10,6 +10,7 @@ from collections.abc import Awaitable, Callable
 from openai import AsyncOpenAI
 
 from app.core.llm_runtime import current_llm
+from app.core.usage_meter import record_openai_response
 from app.services.rag.generation.evaluator import _ABSTAIN_MESSAGE, _has_evidence
 
 logger = logging.getLogger(__name__)
@@ -29,6 +30,7 @@ async def _complete(prompt: str) -> str:
         temperature=0.3,
         extra_body=llm.extra_body,
     )
+    record_openai_response(response)
     return response.choices[0].message.content or ""
 
 

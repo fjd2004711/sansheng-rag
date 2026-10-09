@@ -10,6 +10,7 @@ import { Activity, History } from "lucide-react";
 import { useChatSidebarStore } from "@/stores/chat-sidebar-store";
 import { LibraryPopover } from "./library-popover";
 import { ModelSettings } from "./model-settings";
+import { UsagePopover } from "./usage-popover";
 import { ChatInput } from "./chat-input";
 import { FilePreviewPanel } from "./file-preview-panel";
 import { SourcesPanel } from "./sources-panel";
@@ -376,6 +377,7 @@ function ChatUI({
                 </span>
                 <LibraryPopover />
                 <ModelSettings />
+                <UsagePopover />
               </div>
             </div>
           </div>

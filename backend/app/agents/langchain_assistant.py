@@ -97,6 +97,7 @@ class LangChainAssistant:
             api_key=self._llm.api_key,
             base_url=self._llm.base_url,
             extra_body=self._llm.extra_body,
+            stream_usage=True,
             **openai_kwargs,
         )
 

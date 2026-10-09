@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ShieldAlert } from "lucide-react";
 
 import { FeedbackPanel } from "@/components/admin/feedback-panel";
+import { UsagePanel } from "@/components/admin/usage-panel";
 import { UsersPanel } from "@/components/admin/users-panel";
 import { Button, Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui";
 import { useAuth } from "@/hooks";
@@ -29,15 +30,19 @@ export default function AdminPage() {
     <div className="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 sm:px-6">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">管理</h1>
-        <p className="text-muted-foreground mt-1 text-sm">管理账号，查看用户对回答的反馈。</p>
+        <p className="text-muted-foreground mt-1 text-sm">管理账号，查看用户反馈和 token 用量。</p>
       </header>
       <Tabs defaultValue="feedback">
         <TabsList>
           <TabsTrigger value="feedback">用户反馈</TabsTrigger>
+          <TabsTrigger value="usage">用量</TabsTrigger>
           <TabsTrigger value="users">账号</TabsTrigger>
         </TabsList>
         <TabsContent value="feedback" className="mt-4">
           <FeedbackPanel />
+        </TabsContent>
+        <TabsContent value="usage" className="mt-4">
+          <UsagePanel />
         </TabsContent>
         <TabsContent value="users" className="mt-4">
           <UsersPanel />

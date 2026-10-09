@@ -38,6 +38,11 @@ def server_default_llm() -> LLMRuntime:
 _current: ContextVar[LLMRuntime | None] = ContextVar("current_llm", default=None)
 
 
+def current_llm_runtime_or_none() -> LLMRuntime | None:
+    """The user's own runtime bound to this context, or None when the server default applies."""
+    return _current.get()
+
+
 def current_llm() -> LLMRuntime:
     return _current.get() or server_default_llm()
 
