@@ -27,6 +27,8 @@ from app.db.session import get_db_context
 from app.services.user import UserService
 from app.services.conversation import ConversationService
 from app.services.feedback import FeedbackService
+from app.services.eval_candidate import EvalCandidateService
+from app.services.insights import InsightsService
 from app.services.llm_config import LLMConfigService
 from app.services.usage import UsageService
 
@@ -69,6 +71,22 @@ def get_usage_service(db: DBSession) -> UsageService:
 
 
 UsageSvc = Annotated[UsageService, Depends(get_usage_service)]
+
+
+def get_insights_service(db: DBSession) -> InsightsService:
+    """Create InsightsService instance with database session."""
+    return InsightsService(db)
+
+
+InsightsSvc = Annotated[InsightsService, Depends(get_insights_service)]
+
+
+def get_eval_candidate_service(db: DBSession) -> EvalCandidateService:
+    """Create EvalCandidateService instance with database session."""
+    return EvalCandidateService(db)
+
+
+EvalCandidateSvc = Annotated[EvalCandidateService, Depends(get_eval_candidate_service)]
 
 
 from app.services.rag_document import RAGDocumentService

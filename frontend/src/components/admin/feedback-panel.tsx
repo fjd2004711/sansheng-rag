@@ -23,6 +23,7 @@ interface FeedbackItem {
   comment: string | null;
   created_at: string;
   user_email: string;
+  message_id: string;
   question: string | null;
   answer: string;
 }
@@ -106,10 +107,69 @@ export function FeedbackPanel() {
                   {item.answer}
                 </p>
               </div>
+              {item.question && <AddToEval item={item} />}
             </li>
           ))}
         </ul>
       )}
+    </div>
+  );
+}
+
+/** Queue this question for the evaluation set, with what a correct answer must contain. */
+function AddToEval({ item }: { item: FeedbackItem }) {
+  const [open, setOpen] = useState(false);
+  const [phrase, setPhrase] = useState("");
+  const [abstain, setAbstain] = useState(false);
+  const [done, setDone] = useState(false);
+
+  if (done) return <p className="text-xs text-emerald-600">已加入评测候选</p>;
+  if (!open) {
+    return (
+      <button type="button" onClick={() => setOpen(true)} className="text-muted-foreground hover:text-foreground text-xs underline">
+        加入评测集
+      </button>
+    );
+  }
+  const submit = async () => {
+    try {
+      await apiClient.post("/v1/eval-candidates", {
+        question: item.question,
+        expected_phrase: phrase,
+        abstain,
+        source_message_id: item.message_id,
+        note: item.reason ? REASON_LABELS[item.reason] : null,
+      });
+      setDone(true);
+    } catch (error) {
+      toast.error(getErrorMessage(error, "加入失败"));
+    }
+  };
+  return (
+    <div className="flex flex-wrap items-center gap-2 text-sm">
+      <input
+        value={phrase}
+        disabled={abstain}
+        onChange={(event) => setPhrase(event.target.value)}
+        placeholder="正确答案里必须出现的关键词"
+        aria-label="正确答案关键词"
+        className="bg-background min-w-[14rem] flex-1 rounded-lg border px-2.5 py-1 text-sm disabled:opacity-50"
+      />
+      <label className="flex items-center gap-1.5 text-xs">
+        <input type="checkbox" checked={abstain} onChange={(event) => setAbstain(event.target.checked)} />
+        应当拒答
+      </label>
+      <button
+        type="button"
+        disabled={!abstain && !phrase.trim()}
+        onClick={() => void submit()}
+        className="bg-foreground text-background rounded-lg px-3 py-1 text-xs disabled:opacity-40"
+      >
+        保存
+      </button>
+      <button type="button" onClick={() => setOpen(false)} className="text-muted-foreground text-xs">
+        取消
+      </button>
     </div>
   );
 }
