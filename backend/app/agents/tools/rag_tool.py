@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any
 
 from app.core.config import settings
 from app.core.exceptions import ExternalServiceError
+from app.core.kb_scope import current_scope
 from app.graph.retrieval_correction import CorrectiveRetriever
 from app.services.rag.embeddings import EmbeddingService
 from app.services.rag.guard import guard_event, mark_if_suspicious
@@ -102,6 +103,10 @@ async def _retrieve_once(
     collections: list[str] | None,
     top_k: int,
 ) -> list["SearchResult"]:
+    scope = current_scope()
+    if scope is not None:
+        # A bound scope (the signed-in user's shared + private libraries) overrides any requested name.
+        return await _retrieve_in_scope(service, query=query, top_k=top_k, scope=scope)
     default_collection = settings.rag.collection_name
     target_collection = collection or default_collection
 
@@ -126,6 +131,24 @@ async def _retrieve_once(
         raise ExternalServiceError(
             message="Failed to list knowledge base collections", details={"error": str(exc)}
         ) from exc
+
+
+async def _retrieve_in_scope(
+    service: Any, *, query: str, top_k: int, scope: Any
+) -> list["SearchResult"]:
+    # Restricting to named files is a post-filter, so over-fetch to keep enough candidates.
+    limit = top_k * 4 if scope.filenames else top_k
+    if len(scope.collections) > 1:
+        results = await service.retrieve_multi(
+            query=query, collection_names=scope.collections, limit=limit
+        )
+    else:
+        results = await service.retrieve(
+            query=query, collection_name=scope.collections[0], limit=limit
+        )
+    if scope.filenames:
+        results = [r for r in results if r.metadata.get("filename") in scope.filenames]
+    return results[:top_k]
 
 
 async def search_knowledge_base(

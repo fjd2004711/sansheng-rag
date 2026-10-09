@@ -106,6 +106,8 @@ class RAGLibrary(BaseSchema):
 
     collection: str
     documents: list[RAGLibraryDocument]
+    # The caller's own private documents (only ever theirs).
+    personal: list[RAGLibraryDocument] = []
 
 
 class RAGTrackedDocumentList(BaseSchema):

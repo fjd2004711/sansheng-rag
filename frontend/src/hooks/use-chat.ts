@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { nanoid } from "nanoid";
 import { useWebSocket } from "./use-websocket";
+import { currentScopePayload } from "@/stores/retrieval-scope-store";
 import { useChatStore, useAuthStore } from "@/stores";
 import type {
   AskUserAnswer,
@@ -440,6 +441,8 @@ export function useChat(options: UseChatOptions = {}) {
         conversation_id: conversationId || null,
       };
       if (fileIds?.length) payload.file_ids = fileIds;
+      const scope = currentScopePayload();
+      if (scope) payload.scope = scope;
       if (modelRef.current) payload.model = modelRef.current;
       if (temperatureRef.current !== null) payload.temperature = temperatureRef.current;
       if (thinkingEffortRef.current !== null) payload.thinking_effort = thinkingEffortRef.current;
