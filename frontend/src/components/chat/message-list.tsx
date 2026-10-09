@@ -7,12 +7,14 @@ import { MessageItem } from "./message-item";
 interface MessageListProps {
   messages: ChatMessage[];
   onRegenerate?: (messageId: string) => void;
+  /** Replace a sent question with new text and ask again (drops everything after it). */
+  onEdit?: (messageId: string, content: string) => void;
   onShowTrace?: (messageId: string) => void;
   selectedTraceId?: string | null;
   onAsk?: (question: string) => void;
 }
 
-export function MessageList({ messages, onRegenerate, onShowTrace, selectedTraceId, onAsk }: MessageListProps) {
+export function MessageList({ messages, onRegenerate, onEdit, onShowTrace, selectedTraceId, onAsk }: MessageListProps) {
     const getGroupPosition = (
     message: ChatMessage,
   ): "first" | "middle" | "last" | "single" | undefined => {
@@ -48,6 +50,7 @@ export function MessageList({ messages, onRegenerate, onShowTrace, selectedTrace
                 ? () => onRegenerate(message.id)
                 : undefined
             }
+            onEdit={onEdit && message.role === "user" ? (content) => onEdit(message.id, content) : undefined}
             onShowTrace={onShowTrace && message.agentTrace?.length ? () => onShowTrace(message.id) : undefined}
             traceSelected={selectedTraceId === message.id}
           />

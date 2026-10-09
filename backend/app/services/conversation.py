@@ -199,6 +199,23 @@ class ConversationService:
             agent_trace=data.agent_trace,
         )
 
+    async def truncate_from_message(
+        self, conversation_id: UUID, message_id: UUID, *, user_id: UUID
+    ) -> int:
+        """Delete a message and everything after it (edit-and-resend / regenerate).
+
+        Only the conversation's owner may do this.
+        """
+        await self.get_conversation(conversation_id, user_id=user_id)
+        message = await conversation_repo.get_message_by_id(self.db, message_id)
+        if message is None or message.conversation_id != conversation_id:
+            raise NotFoundError(
+                message="Message not found", details={"message_id": str(message_id)}
+            )
+        return await conversation_repo.delete_messages_from(
+            self.db, conversation_id=conversation_id, message=message
+        )
+
     async def delete_message(self, message_id: UUID) -> bool:
         deleted = await conversation_repo.delete_message(self.db, message_id)
         if not deleted:

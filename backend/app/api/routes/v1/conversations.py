@@ -146,3 +146,20 @@ async def add_message(
         data,
         user_id=current_user.id,
     )
+
+
+@router.delete(
+    "/{conversation_id}/messages/{message_id}/and-after",
+    status_code=status.HTTP_204_NO_CONTENT,
+    response_model=None,
+)
+async def truncate_from_message(
+    conversation_id: UUID,
+    message_id: UUID,
+    conversation_service: ConversationSvc,
+    current_user: CurrentUser,
+) -> None:
+    """Delete this message and all later ones, so it can be edited and sent again."""
+    await conversation_service.truncate_from_message(
+        conversation_id, message_id, user_id=current_user.id
+    )

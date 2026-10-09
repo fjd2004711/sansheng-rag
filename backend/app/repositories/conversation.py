@@ -4,11 +4,13 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
+from sqlalchemy import delete as sql_delete
 from sqlalchemy import func, select
 from sqlalchemy import update as sql_update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.db.models.chat_file import ChatFile
 from app.db.models.conversation import Conversation, Message, ToolCall
 
 
@@ -186,6 +188,27 @@ async def create_message(
     )
 
     return message
+
+
+async def delete_messages_from(db: AsyncSession, *, conversation_id: UUID, message: Message) -> int:
+    """Delete ``message`` and every later message of the conversation; return how many went.
+
+    Files attached to the deleted messages are detached first (not deleted) so an edited
+    message can be sent again with the same attachments.
+    """
+    later = select(Message.id).where(
+        Message.conversation_id == conversation_id, Message.created_at >= message.created_at
+    )
+    await db.execute(
+        sql_update(ChatFile).where(ChatFile.message_id.in_(later)).values(message_id=None)
+    )
+    result = await db.execute(
+        sql_delete(Message).where(
+            Message.conversation_id == conversation_id, Message.created_at >= message.created_at
+        )
+    )
+    await db.flush()
+    return int(result.rowcount or 0)
 
 
 async def delete_message(db: AsyncSession, message_id: UUID) -> bool:

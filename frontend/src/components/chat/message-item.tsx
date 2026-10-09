@@ -14,7 +14,8 @@ import { MarkdownContent } from "./markdown-content";
 import { CopyButton } from "./copy-button";
 import { useFilePreviewStore } from "@/stores";
 import { useSourcesPanelStore } from "@/stores/sources-panel-store";
-import { Bot, FileText, Globe, Paperclip, RefreshCw, User } from "lucide-react";
+import { Bot, FileText, Globe, Paperclip, Pencil, RefreshCw, User } from "lucide-react";
+import { useState } from "react";
 import Image from "next/image";
 import { useAuthStore } from "@/stores";
 import { getFileUrl } from "@/lib/file-api";
@@ -123,13 +124,16 @@ interface MessageItemProps {
   message: ChatMessage;
   groupPosition?: "first" | "middle" | "last" | "single";
   onRegenerate?: () => void;
+  onEdit?: (content: string) => void;
   /** Show this answer's operation flow in the side panel. */
   onShowTrace?: () => void;
   traceSelected?: boolean;
 }
 
-export function MessageItem({ message, groupPosition, onRegenerate, onShowTrace, traceSelected }: MessageItemProps) {
+export function MessageItem({ message, groupPosition, onRegenerate, onEdit, onShowTrace, traceSelected }: MessageItemProps) {
   const isUser = message.role === "user";
+  const [editing, setEditing] = useState(false);
+  const [draftText, setDraftText] = useState(message.content);
   const openPreview = useFilePreviewStore((s) => s.open);
   const openSources = useSourcesPanelStore((s) => s.open);
   const { user: authUser, avatarVersion } = useAuthStore();
@@ -342,7 +346,36 @@ export function MessageItem({ message, groupPosition, onRegenerate, onShowTrace,
                       isStreaming={Boolean(message.isStreaming)}
                     />
                   )}
-                  {message.content && (
+                  {isUser && editing && onEdit && (
+                    <div className="w-full space-y-2">
+                      <textarea
+                        value={draftText}
+                        onChange={(event) => setDraftText(event.target.value)}
+                        rows={3}
+                        autoFocus
+                        aria-label="编辑问题"
+                        className="bg-background border-border w-full resize-y rounded-xl border px-3 py-2 text-sm outline-none focus:border-foreground/40"
+                      />
+                      <p className="text-muted-foreground text-xs">重新提问会删除这条消息和之后的所有对话。</p>
+                      <div className="flex justify-end gap-2">
+                        <button type="button" onClick={() => setEditing(false)} className="hover:bg-accent rounded-md px-3 py-1 text-xs">
+                          取消
+                        </button>
+                        <button
+                          type="button"
+                          disabled={!draftText.trim() || draftText.trim() === message.content}
+                          onClick={() => {
+                            setEditing(false);
+                            onEdit(draftText.trim());
+                          }}
+                          className="bg-foreground text-background rounded-md px-3 py-1 text-xs disabled:opacity-40"
+                        >
+                          重新提问
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  {message.content && !(isUser && editing) && (
                     <TextBubble
                       text={message.content}
                       showCursor={!isUser && Boolean(message.isStreaming)}
@@ -406,6 +439,20 @@ export function MessageItem({ message, groupPosition, onRegenerate, onShowTrace,
                 isUser ? "bg-secondary hover:bg-secondary/80" : "bg-muted hover:bg-muted/80",
               )}
             />
+            {isUser && onEdit && (
+              <button
+                type="button"
+                onClick={() => {
+                  setDraftText(message.content);
+                  setEditing(true);
+                }}
+                title="编辑后重新提问"
+                aria-label="编辑后重新提问"
+                className="bg-secondary hover:bg-secondary/80 text-foreground/70 hover:text-foreground inline-flex h-6 w-6 items-center justify-center rounded-md transition-colors sm:opacity-0 sm:group-hover:opacity-100"
+              >
+                <Pencil className="h-3 w-3" />
+              </button>
+            )}
             {!isUser && onRegenerate && (
               <button
                 type="button"

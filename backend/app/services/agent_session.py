@@ -250,7 +250,7 @@ class AgentSession:
             await send_event(self.websocket, "error", {"message": "Empty message"})
             return
         try:
-            self.current_conversation_id, newly_created, organization_id = await persist_user_turn(
+            self.current_conversation_id, newly_created, user_message_id = await persist_user_turn(
                 self.user,
                 user_message,
                 file_ids,
@@ -270,11 +270,16 @@ class AgentSession:
             )
 
         await send_event(self.websocket, "user_prompt", {"content": user_message})
+        if user_message_id:
+            await send_event(self.websocket, "user_message_saved", {"message_id": user_message_id})
         self._turn_trace = []
         if self._followup_task and not self._followup_task.done():
             self._followup_task.cancel()
 
         try:
+            if data.get("resync"):
+                # The client edited or regenerated: what the session remembers is stale.
+                self._history_conversation_id = None
             await self._sync_history(user_message, newly_created)
             question = await self._standalone_question(user_message)
             assistant = get_agent(
