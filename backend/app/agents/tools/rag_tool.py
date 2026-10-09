@@ -8,6 +8,7 @@ from app.core.config import settings
 from app.core.exceptions import ExternalServiceError
 from app.graph.retrieval_correction import CorrectiveRetriever
 from app.services.rag.embeddings import EmbeddingService
+from app.services.rag.guard import guard_event, mark_if_suspicious
 from app.services.rag.reranker import RerankService
 from app.services.rag.retrieval import RetrievalService
 from app.services.rag.vectorstore import QdrantVectorStore
@@ -60,7 +61,7 @@ def _format_results(results: list[Any]) -> str:
         score_line = f"Scores: {', '.join(component_scores)}\n" if component_scores else ""
         formatted.append(
             f"[{i}] Source: {source}{page_info}{chunk_info}{col_info} (score: {result.score:.3f})\n"
-            f"{score_line}{result.content}"
+            f"{score_line}{mark_if_suspicious(result.content)[0]}"
         )
     return (
         "Search results (cite inline using [1], [2], etc. — do NOT list sources at the end):\n\n"
@@ -139,7 +140,9 @@ async def search_knowledge_base(
     correction_config = settings.rag.correction_config
 
     if not correction_config.enabled:
-        return _format_results(await configured_retriever.search(query))
+        found = await configured_retriever.search(query)
+        flag = guard_event(found)
+        return _append_trace(_format_results(found), [flag]) if flag else _format_results(found)
 
     result = await CorrectiveRetriever(
         configured_retriever, max_rounds=correction_config.max_rounds
@@ -158,7 +161,11 @@ async def search_knowledge_base(
         )
     else:
         output = _format_results(result.retrieved_docs)
-    return _append_trace(output, [event.model_dump(mode="json") for event in result.trace])
+    trace = [event.model_dump(mode="json") for event in result.trace]
+    flag = guard_event(result.retrieved_docs)
+    if flag:
+        trace.append(flag)
+    return _append_trace(output, trace)
 
 
 def _append_trace(output: str, trace: list[dict[str, Any]]) -> str:

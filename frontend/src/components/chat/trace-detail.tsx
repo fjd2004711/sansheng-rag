@@ -194,6 +194,24 @@ export function StepBody({ event, chunks }: { event: AgentTraceEvent; chunks: Re
           {str(d.rewritten_query) && <Query label="准备改搜" value={str(d.rewritten_query)!} />}
         </div>
       );
+    case "content_guard": {
+      const flagged = Array.isArray(d.flagged) ? (d.flagged as Array<{ source: string; patterns: string[] }>) : [];
+      return (
+        <div className="space-y-1.5">
+          <Reason title="已拦截">
+            下面这些资料片段里含有像“指令”的文字（例如“忽略以上要求”）。系统只把它们当作普通资料，不会照着执行。
+          </Reason>
+          <ul className="list-disc space-y-0.5 pl-5 text-sm">
+            {flagged.map((item, index) => (
+              <li key={index}>
+                {item.source}
+                <span className="text-muted-foreground text-xs">（{item.patterns.join("、")}）</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      );
+    }
     case "question_condense":
       return (
         <div className="space-y-1.5 text-sm">

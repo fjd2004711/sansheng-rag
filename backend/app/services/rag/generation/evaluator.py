@@ -18,6 +18,7 @@ from app.services.rag.generation.models import (
     AnswerFailureType,
     ClaimVerification,
 )
+from app.services.rag.guard import UNTRUSTED_NOTE
 
 _ABSTAIN_MESSAGE = "知识库中没有找到足以回答该问题的证据。"
 _DATE_RULE = (
@@ -120,7 +121,10 @@ class AnswerEvaluator:
     async def _complete(self, prompt: str) -> str:
         response = await self._client.chat.completions.create(
             model=self._model,
-            messages=[{"role": "user", "content": prompt}],
+            messages=[
+                {"role": "system", "content": UNTRUSTED_NOTE},
+                {"role": "user", "content": prompt},
+            ],
             temperature=0,
             extra_body=self._extra_body,
         )
