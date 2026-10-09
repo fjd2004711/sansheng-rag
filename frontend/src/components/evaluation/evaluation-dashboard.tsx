@@ -112,7 +112,7 @@ function CompareBar({ label, without, withValue }: { label: string; without: num
   );
 }
 
-export function EvaluationDashboard() {
+export function BenchmarkDashboard() {
   const [report, setReport] = useState<Report | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showRows, setShowRows] = useState(false);

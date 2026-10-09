@@ -31,6 +31,7 @@ from app.services.app_settings import AppSettingsService
 from app.services.eval_candidate import EvalCandidateService
 from app.services.insights import InsightsService
 from app.services.llm_config import LLMConfigService
+from app.services.quality import QualityService
 from app.services.usage import UsageService
 
 
@@ -96,6 +97,14 @@ def get_app_settings_service(db: DBSession) -> AppSettingsService:
 
 
 AppSettingsSvc = Annotated[AppSettingsService, Depends(get_app_settings_service)]
+
+
+def get_quality_service(db: DBSession) -> QualityService:
+    """Create QualityService instance with database session."""
+    return QualityService(db)
+
+
+QualitySvc = Annotated[QualityService, Depends(get_quality_service)]
 
 
 from app.services.rag_document import RAGDocumentService

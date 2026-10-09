@@ -2,11 +2,10 @@ import { test, expect } from "@playwright/test";
 
 const NAME = `e2e-${Date.now()}.md`;
 
-test("知识库：上传 → 入库 → 检索验证 → 删除", async ({ page }) => {
+test("知识库：我的资料 上传 → 入库 → 删除", async ({ page }) => {
   test.setTimeout(150_000);
   await page.goto("/rag");
   await expect(page.getByRole("heading", { name: "知识库" })).toBeVisible();
-  await expect(page.getByText("对话正在使用这个资料集")).toBeVisible({ timeout: 20_000 });
 
   await page.locator('input[type="file"]').setInputFiles({
     name: NAME,
@@ -17,19 +16,19 @@ test("知识库：上传 → 入库 → 检索验证 → 删除", async ({ page 
   await expect(row).toBeVisible({ timeout: 20_000 });
   await expect(row.getByText("已入库")).toBeVisible({ timeout: 90_000 });
 
-  await page.getByRole("tab", { name: "检索验证" }).click();
-  await page.getByPlaceholder(/退休手续要提前/).fill("ZEBRA-QUARTZ-4417");
-  await page.keyboard.press("Enter");
-  await expect(page.getByText(NAME).first()).toBeVisible({ timeout: 30_000 });
-
-  await page.getByRole("tab", { name: "文件" }).click();
   await row.getByTitle("删除").click();
   await page.getByRole("button", { name: "删除", exact: true }).last().click();
   await expect(row).toBeHidden({ timeout: 20_000 });
 });
 
-test("评测页：先给结论并说明样本量", async ({ page }) => {
+test("共享资料：普通用户只读（管理员看到管理界面）", async ({ page }) => {
+  await page.goto("/rag");
+  await page.getByRole("tab", { name: /共享资料/ }).click();
+  await expect(page.getByText(/只能查看|新建资料集/).first()).toBeVisible({ timeout: 20_000 });
+});
+
+test("质量页：按真实使用统计，没有记录时给出引导", async ({ page }) => {
   await page.goto("/evaluation");
-  await expect(page.getByRole("heading", { name: "一眼看结论" })).toBeVisible();
-  await expect(page.getByText(/只有 3 道专门设计的难题/)).toBeVisible();
+  await expect(page.getByRole("heading", { name: "回答质量" })).toBeVisible();
+  await expect(page.getByText(/条回答的核对结果|这段时间还没有记录/)).toBeVisible({ timeout: 20_000 });
 });
