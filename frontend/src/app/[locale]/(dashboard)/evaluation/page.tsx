@@ -1,5 +1,5 @@
-import { EvaluationDashboard } from "@/components/evaluation/evaluation-dashboard";
+import { QualityDashboard } from "@/components/evaluation/quality-dashboard";
 
 export default function EvaluationPage() {
-  return <EvaluationDashboard />;
+  return <QualityDashboard />;
 }

@@ -12,6 +12,7 @@ from app.api.routes.v1 import (
     health,
     insights,
     llm_config,
+    quality,
     rag,
     rag_settings,
     usage,
@@ -33,3 +34,4 @@ v1_router.include_router(usage.router, tags=["usage"])
 v1_router.include_router(insights.router, tags=["insights"])
 v1_router.include_router(eval_candidates.router, tags=["eval"])
 v1_router.include_router(rag_settings.router, tags=["settings"])
+v1_router.include_router(quality.router, tags=["quality"])
