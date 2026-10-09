@@ -127,6 +127,30 @@ class ConversationReadWithMessages(ConversationRead):
     messages: list[MessageRead] = Field(default_factory=list)
 
 
+class ConversationSearchHit(BaseSchema):
+    """One conversation that matched a search, with a bit of the matching text."""
+
+    id: UUID
+    title: str | None = None
+    updated_at: datetime
+    snippet: str | None = None
+
+
+class ConversationSearchResults(BaseSchema):
+    items: list[ConversationSearchHit]
+
+
+def make_snippet(text: str | None, query: str, *, radius: int = 40) -> str | None:
+    """A short excerpt of ``text`` around the first match of ``query`` (None when no text)."""
+    if not text:
+        return None
+    flat = " ".join(text.split())
+    at = flat.lower().find(query.strip().lower())
+    start = max(0, at - radius) if at >= 0 else 0
+    end = min(len(flat), (at if at >= 0 else 0) + len(query) + radius)
+    return ("…" if start > 0 else "") + flat[start:end] + ("…" if end < len(flat) else "")
+
+
 class ConversationList(BaseSchema):
     """Schema for listing conversations."""
 

@@ -58,6 +58,33 @@ async def get_conversations_by_user(
     return list(result.scalars().all())
 
 
+async def search_conversations(
+    db: AsyncSession, *, user_id: UUID, pattern: str, limit: int = 20
+) -> list[tuple[Conversation, str | None]]:
+    """The user's conversations whose title or message text matches ``pattern`` (an ILIKE pattern).
+
+    Each hit carries the text of one matching message (None when only the title matched).
+    """
+    by_message = (
+        select(Message.conversation_id, func.max(Message.content).label("content"))
+        .where(Message.content.ilike(pattern, escape="\\"))
+        .group_by(Message.conversation_id)
+        .subquery()
+    )
+    query = (
+        select(Conversation, by_message.c.content)
+        .outerjoin(by_message, by_message.c.conversation_id == Conversation.id)
+        .where(
+            Conversation.user_id == user_id,
+            Conversation.title.ilike(pattern, escape="\\") | (by_message.c.content.is_not(None)),
+        )
+        .order_by(func.coalesce(Conversation.updated_at, Conversation.created_at).desc())
+        .limit(limit)
+    )
+    result = await db.execute(query)
+    return [(row[0], row[1]) for row in result.all()]
+
+
 async def count_conversations(
     db: AsyncSession,
     user_id: UUID | None = None,

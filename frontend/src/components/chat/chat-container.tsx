@@ -6,7 +6,8 @@ import { useChat } from "@/hooks";
 import { AgentTracePanel } from "./agent-trace-panel";
 import { ChatEmptyState } from "./chat-empty-state";
 import { TraceDetailSheet } from "./trace-detail";
-import { Activity, History } from "lucide-react";
+import { Activity, Download, History } from "lucide-react";
+import { conversationToMarkdown, downloadText } from "@/lib/export-markdown";
 import { useChatSidebarStore } from "@/stores/chat-sidebar-store";
 import { LibraryPopover } from "./library-popover";
 import { ModelSettings } from "./model-settings";
@@ -306,6 +307,7 @@ function ChatUI({
   onStop,
 }: ChatUIProps) {
   const tc = useTranslations("common");
+  const exportTitle = (messages.find((m) => m.role === "user")?.content ?? "").slice(0, 40);
   // Below lg the side column is hidden; the same flow opens in a drawer instead.
   const [flowOpen, setFlowOpen] = useState(false);
   return (
@@ -404,6 +406,21 @@ function ChatUI({
                 <LibraryPopover />
                 <ModelSettings />
                 <UsagePopover />
+                {messages.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      downloadText(
+                        `${exportTitle || "对话记录"}.md`,
+                        conversationToMarkdown(exportTitle, messages),
+                      )
+                    }
+                    className="text-muted-foreground hover:text-foreground hover:bg-foreground/5 inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-xs transition-colors"
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    导出
+                  </button>
+                )}
               </div>
             </div>
           </div>

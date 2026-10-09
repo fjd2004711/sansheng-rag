@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useConversations } from "@/hooks";
 import { Button, ResizeHandle, Skeleton } from "@/components/ui";
+import { ConversationSearch } from "./conversation-search";
 import { useResizableWidth } from "@/hooks/use-resizable-width";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from "@/components/ui";
 import { cn } from "@/lib/utils";
@@ -420,7 +421,9 @@ export function ConversationSidebar({ className }: ConversationSidebarProps) {
             <ChevronLeft className="h-4 w-4" aria-hidden />
           </Button>
         </div>
-        <ConversationList {...listProps} />
+        <ConversationSearch onSelect={selectConversation}>
+          <ConversationList {...listProps} />
+        </ConversationSearch>
       </aside>
 
       <Sheet open={isOpen} onOpenChange={close}>
@@ -430,7 +433,14 @@ export function ConversationSidebar({ className }: ConversationSidebarProps) {
             <SheetClose onClick={close} />
           </SheetHeader>
           <div className="flex h-[calc(100%-48px)] flex-col">
-            <ConversationList {...listProps} onNavigate={close} />
+            <ConversationSearch
+              onSelect={(id) => {
+                selectConversation(id);
+                close();
+              }}
+            >
+              <ConversationList {...listProps} onNavigate={close} />
+            </ConversationSearch>
           </div>
         </SheetContent>
       </Sheet>
