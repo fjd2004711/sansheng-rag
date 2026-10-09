@@ -16,6 +16,7 @@ from app.services.rag.correction.models import (
     EvidenceAssessment,
     FailureType,
 )
+from app.services.rag.guard import UNTRUSTED_NOTE
 from app.services.rag.models import SearchResult
 
 
@@ -118,7 +119,10 @@ class EvidenceEvaluator:
     async def _complete(self, prompt: str) -> str:
         response = await self._client.chat.completions.create(
             model=self._model,
-            messages=[{"role": "user", "content": prompt}],
+            messages=[
+                {"role": "system", "content": UNTRUSTED_NOTE},
+                {"role": "user", "content": prompt},
+            ],
             temperature=0,
             extra_body=self._extra_body,
         )
