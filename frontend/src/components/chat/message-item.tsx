@@ -19,6 +19,8 @@ import Image from "next/image";
 import { useAuthStore } from "@/stores";
 import { getFileUrl } from "@/lib/file-api";
 import { extractSources } from "@/lib/chat-sources";
+import { citationStatus, finalClaims } from "@/lib/claims";
+import { ClaimChecklist } from "./claim-checklist";
 import type { SourceItem } from "@/lib/chat-sources";
 
 function ThinkingBlock({ text, open, isStreaming }: { text: string; open: boolean; isStreaming: boolean }) {
@@ -50,12 +52,14 @@ function TextBubble({
   isUser,
   onCiteClick,
   citeTitle,
+  citeStatus,
 }: {
   text: string;
   showCursor: boolean;
   isUser: boolean;
   onCiteClick?: (index: number) => void;
   citeTitle?: (index: number) => string | undefined;
+  citeStatus?: (index: number) => "ok" | "bad" | undefined;
 }) {
   return (
     <div
@@ -70,7 +74,7 @@ function TextBubble({
         <p className="text-sm break-words whitespace-pre-wrap">{text}</p>
       ) : (
         <div className="prose-sm max-w-none text-sm">
-          <MarkdownContent content={text} onCiteClick={onCiteClick} citeTitle={citeTitle} />
+          <MarkdownContent content={text} onCiteClick={onCiteClick} citeTitle={citeTitle} citeStatus={citeStatus} />
           {showCursor && (
             <span className="ml-1 inline-block h-4 w-1.5 animate-pulse rounded-full bg-current" />
           )}
@@ -142,6 +146,9 @@ export function MessageItem({ message, groupPosition, onRegenerate, onShowTrace,
     const passage = source.content ? `：${source.content.replace(/\s+/g, " ").slice(0, 80)}…` : "";
     return `${source.title}${source.subtitle ? `（${source.subtitle}）` : ""}${passage}\n点击查看原文`;
   };
+  const claims = !isUser && !message.isStreaming ? finalClaims(message.agentTrace) : [];
+  const statusByCitation = citationStatus(claims);
+  const citeStatus = (n: number) => statusByCitation.get(n);
   const onCiteClick = hasSources
     ? (index: number) => openSources(sources, index)
     : undefined;
@@ -319,6 +326,7 @@ export function MessageItem({ message, groupPosition, onRegenerate, onShowTrace,
                         isUser={isUser}
                         onCiteClick={onCiteClick}
                         citeTitle={citeTitle}
+                        citeStatus={citeStatus}
                       />
                     );
                   }
@@ -341,6 +349,7 @@ export function MessageItem({ message, groupPosition, onRegenerate, onShowTrace,
                       isUser={isUser}
                       onCiteClick={onCiteClick}
                       citeTitle={citeTitle}
+                      citeStatus={citeStatus}
                     />
                   )}
                   {message.toolCalls && message.toolCalls.length > 0 && (
@@ -367,6 +376,8 @@ export function MessageItem({ message, groupPosition, onRegenerate, onShowTrace,
             onShowDetail={() => openTraceDetail(message.id)}
           />
         )}
+
+        {claims.length > 0 && <ClaimChecklist claims={claims} sources={sources} />}
 
         {!isUser && !message.isStreaming && message.content && !message.isTemporaryId && activeConversationId && (
           <FeedbackBar conversationId={activeConversationId} messageId={message.id} feedback={message.feedback} />
