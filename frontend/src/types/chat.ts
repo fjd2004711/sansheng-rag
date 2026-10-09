@@ -58,6 +58,8 @@ export interface AgentTraceEvent {
   round: number;
   status: string;
   detail: Record<string, unknown>;
+  /** Milliseconds from the start of the turn to the end of this step. */
+  at_ms?: number;
 }
 
 export interface ToolCall {

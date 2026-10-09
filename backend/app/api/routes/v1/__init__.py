@@ -6,9 +6,11 @@ from app.api.routes.v1 import (
     agent,
     auth,
     conversations,
+    eval_candidates,
     feedback,
     files,
     health,
+    insights,
     llm_config,
     rag,
     usage,
@@ -27,3 +29,5 @@ v1_router.include_router(rag.router, prefix="/rag", tags=["rag"])
 v1_router.include_router(files.router, tags=["files"])
 v1_router.include_router(llm_config.router, tags=["llm-config"])
 v1_router.include_router(usage.router, tags=["usage"])
+v1_router.include_router(insights.router, tags=["insights"])
+v1_router.include_router(eval_candidates.router, tags=["eval"])

@@ -17,6 +17,7 @@ import "@xyflow/react/dist/style.css";
 import { Activity, Check, CircleAlert, Search, ShieldCheck, WandSparkles, X } from "lucide-react";
 import type { AgentTraceEvent } from "@/types";
 import { cn } from "@/lib/utils";
+import { formatSeconds, stepSeconds } from "@/lib/step-timing";
 import { ResizeHandle } from "@/components/ui";
 import { useResizableWidth } from "@/hooks/use-resizable-width";
 import { StepBody, chunksOf, type RetrievedChunk } from "./trace-detail";
@@ -83,7 +84,7 @@ function describe(event: AgentTraceEvent): string | undefined {
   }
 }
 
-function TraceNode({ data, selected }: NodeProps<Node<{ event: AgentTraceEvent }>>) {
+function TraceNode({ data, selected }: NodeProps<Node<{ event: AgentTraceEvent; seconds?: number }>>) {
   const { event } = data;
   const Icon = iconFor(event.step);
   const pass = event.status === "PASS" || event.status === "COMPLETE";
@@ -109,6 +110,7 @@ function TraceNode({ data, selected }: NodeProps<Node<{ event: AgentTraceEvent }
           <p className="truncate text-sm font-semibold">{LABELS[event.step] ?? event.step}</p>
           <p className="text-muted-foreground text-[11px]">
             第 {event.round} 轮 · {STATUS_LABELS[event.status] ?? event.status}
+            {typeof data.seconds === "number" && ` · ${formatSeconds(data.seconds)}`}
           </p>
         </div>
         {pass && <Check className="h-4 w-4 text-emerald-600" />}
@@ -201,7 +203,7 @@ export function AgentTracePanel({
         position: { x: 18, y: 16 + index * 128 },
         draggable: false,
         selected: index === selected,
-        data: { event },
+        data: { event, seconds: stepSeconds(trace, index) },
       })),
     [trace, selected],
   );

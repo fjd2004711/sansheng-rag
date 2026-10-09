@@ -3,6 +3,7 @@
 import asyncio
 import contextlib
 import logging
+import time
 from typing import Any, ClassVar
 
 from fastapi import WebSocket, WebSocketDisconnect
@@ -72,6 +73,7 @@ class AgentSession:
         self._turn_evidence = ""
         self._followup_task: asyncio.Task[None] | None = None
         self._turn_message_id: str | None = None
+        self._turn_started = time.monotonic()
         self._history_conversation_id: str | None = None
 
     async def handle_frame(self, data: dict[str, Any]) -> None:
@@ -273,6 +275,7 @@ class AgentSession:
         if user_message_id:
             await send_event(self.websocket, "user_message_saved", {"message_id": user_message_id})
         self._turn_trace = []
+        self._turn_started = time.monotonic()
         if self._followup_task and not self._followup_task.done():
             self._followup_task.cancel()
 
@@ -427,6 +430,8 @@ class AgentSession:
 
     async def _send_trace(self, event: dict[str, Any]) -> None:
         """Record a trace event for persistence and push it to the client."""
+        # Milliseconds since the turn began, when this step finished; the UI derives per-step time from it.
+        event = {**event, "at_ms": int((time.monotonic() - self._turn_started) * 1000)}
         self._turn_trace.append(event)
         await send_event(self.websocket, "agent_trace", event)
 

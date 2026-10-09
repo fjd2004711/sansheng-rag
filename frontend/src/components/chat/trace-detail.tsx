@@ -13,6 +13,7 @@ import {
 } from "@/lib/agent-trace-labels";
 import { deriveVerdict } from "@/lib/answer-verdict";
 import { cn } from "@/lib/utils";
+import { formatSeconds, stepSeconds, totalSeconds } from "@/lib/step-timing";
 import { useTraceDetailStore } from "@/stores/trace-detail-store";
 import { useChatStore } from "@/stores/chat-store";
 import type { AgentTraceEvent } from "@/types";
@@ -322,7 +323,17 @@ export function StepBody({ event, chunks }: { event: AgentTraceEvent; chunks: Re
   }
 }
 
-function StepCard({ event, index, chunks }: { event: AgentTraceEvent; index: number; chunks: RetrievedChunk[] }) {
+function StepCard({
+  event,
+  index,
+  chunks,
+  seconds,
+}: {
+  event: AgentTraceEvent;
+  index: number;
+  chunks: RetrievedChunk[];
+  seconds?: number;
+}) {
   const good = event.status === "PASS" || event.status === "COMPLETE";
   return (
     <li className="relative pl-10">
@@ -339,6 +350,7 @@ function StepCard({ event, index, chunks }: { event: AgentTraceEvent; index: num
         <span className="text-muted-foreground text-xs">
           第 {event.round} 轮 · {TRACE_STATUS_LABELS[event.status] ?? event.status}
         </span>
+        {seconds !== undefined && <span className="text-muted-foreground ml-auto text-xs tabular-nums">耗时 {formatSeconds(seconds)}</span>}
       </div>
       <StepBody event={event} chunks={chunks} />
     </li>
@@ -348,6 +360,7 @@ function StepCard({ event, index, chunks }: { event: AgentTraceEvent; index: num
 function Summary({ trace }: { trace: AgentTraceEvent[] }) {
   const verdict = deriveVerdict(trace, "");
   if (!verdict) return null;
+  const total = totalSeconds(trace);
   const searched = verdict.queries.map((query) => `「${query}」`).join("、");
   const outcome = {
     verified: "一次检索就找到了足够的资料，回答通过核对。",
@@ -361,6 +374,7 @@ function Summary({ trace }: { trace: AgentTraceEvent[] }) {
       <p className="font-semibold">一句话总结</p>
       <p>
         系统搜索了 {verdict.searches} 次{searched ? `（${searched}）` : ""}。{outcome}
+        {total !== undefined && `（整个过程约 ${formatSeconds(total)}）`}
       </p>
       {verdict.reason && (
         <p className="text-muted-foreground">
@@ -399,7 +413,7 @@ export function TraceDetailSheet() {
   let latestChunks: RetrievedChunk[] = [];
   const cards = trace.map((event, i) => {
     if (event.step === "retrieve") latestChunks = chunksOf(event.detail);
-    return <StepCard key={`${i}-${event.step}`} event={event} index={i} chunks={latestChunks} />;
+    return <StepCard key={`${i}-${event.step}`} event={event} index={i} chunks={latestChunks} seconds={stepSeconds(trace, i)} />;
   });
 
   return (
