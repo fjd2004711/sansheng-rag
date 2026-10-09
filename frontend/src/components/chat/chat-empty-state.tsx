@@ -1,83 +1,75 @@
 "use client";
 
-import { ArrowUpRight, BookOpen, FileSearch, GitBranch, ShieldQuestion, Sparkles } from "lucide-react";
+import Link from "next/link";
 
+import { Mascot } from "@/components/brand/mascot";
 import { useAuth } from "@/hooks";
-
-const PROMPTS = [
-  {
-    icon: FileSearch,
-    title: "退休返聘",
-    prompt: "返聘教师每周最多可以上几节课？",
-  },
-  {
-    icon: BookOpen,
-    title: "退休手续",
-    prompt: "办理退休手续要提前多久申请？",
-  },
-  {
-    icon: GitBranch,
-    title: "课时津贴",
-    prompt: "超课时津贴每节多少钱？",
-  },
-  {
-    icon: ShieldQuestion,
-    title: "职称申报",
-    prompt: "申报高级教师职称需要满足哪些条件？",
-  },
-];
+import { useLibrary } from "@/hooks/use-library";
+import { ROUTES } from "@/lib/constants";
+import { useRetrievalScopeStore } from "@/stores/retrieval-scope-store";
 
 interface ChatEmptyStateProps {
   onPick: (prompt: string) => void;
 }
 
+function greeting(hour: number): string {
+  if (hour < 5) return "夜深了";
+  if (hour < 11) return "早上好";
+  if (hour < 14) return "中午好";
+  if (hour < 18) return "下午好";
+  return "晚上好";
+}
+
+const stem = (filename: string) => filename.replace(/\.[^.]+$/, "");
+
+/**
+ * No canned questions: the only suggestions are built from the documents this person can actually ask about,
+ * so they are always relevant and disappear when there is nothing to suggest.
+ */
 export function ChatEmptyState({ onPick }: ChatEmptyStateProps) {
   const { user } = useAuth();
-  const firstName = user?.full_name?.split(" ")[0] || user?.email?.split("@")[0];
+  const { library, loading } = useLibrary();
+  const sources = useRetrievalScopeStore((state) => state.sources);
+  const name = user?.full_name?.split(" ")[0] || user?.email?.split("@")[0];
+
+  const mine = library?.personal ?? [];
+  const shared = library?.documents ?? [];
+  const pool = sources === "mine" ? mine : sources === "shared" ? shared : [...mine, ...shared];
+  const picks = pool.slice(0, 3);
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 py-12 md:py-16">
-      <div className="text-center">
-        <div className="bg-muted text-foreground mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-2xl">
-          <Sparkles className="h-5 w-5" />
+    <div className="mx-auto flex w-full max-w-xl flex-col items-center px-4 py-12 text-center md:py-16">
+      <Mascot size={104} />
+      <h2 className="text-foreground mt-5 text-2xl font-semibold tracking-tight md:text-3xl">
+        {greeting(new Date().getHours())}
+        {name ? `，${name}` : ""}
+      </h2>
+      <p className="text-muted-foreground mt-2 text-sm">问我资料里的事，我查证之后再回答。</p>
+
+      {!loading && picks.length > 0 && (
+        <div className="mt-7 flex flex-wrap justify-center gap-2">
+          {picks.map((doc) => (
+            <button
+              key={doc.filename}
+              type="button"
+              onClick={() => onPick(`《${stem(doc.filename)}》主要讲了什么？`)}
+              className="border-border hover:bg-accent max-w-full truncate rounded-full border px-3.5 py-1.5 text-sm transition-colors"
+              title={doc.filename}
+            >
+              《{stem(doc.filename)}》讲了什么
+            </button>
+          ))}
         </div>
-        <h2 className="text-foreground font-display text-2xl font-semibold tracking-tight md:text-3xl">
-          {firstName ? `${firstName}，想查点什么？` : "想查点什么？"}
-        </h2>
-        <p className="text-muted-foreground mx-auto mt-2 max-w-md text-sm leading-relaxed">
-          基于知识库回答，附带引用；检索或回答不可靠时会先诊断原因再有界纠错，或明确拒答。
+      )}
+      {!loading && pool.length === 0 && (
+        <p className="text-muted-foreground mt-6 text-sm">
+          还没有可用的资料，先去
+          <Link href={ROUTES.RAG} className="text-foreground mx-1 underline underline-offset-2">
+            知识库
+          </Link>
+          添加。
         </p>
-      </div>
-
-      <div className="mt-8 grid gap-3 sm:grid-cols-2">
-        {PROMPTS.map((p) => (
-          <button
-            key={p.title}
-            type="button"
-            onClick={() => onPick(p.prompt)}
-            className="group border-border bg-card hover:border-foreground/30 hover:bg-accent flex items-start gap-3 rounded-xl border p-4 text-left transition-colors"
-          >
-            <span className="bg-muted text-muted-foreground group-hover:text-foreground flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors">
-              <p.icon className="h-4 w-4" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="text-foreground text-sm font-medium">{p.title}</p>
-              <p className="text-muted-foreground mt-0.5 line-clamp-2 text-xs leading-relaxed">
-                {p.prompt}
-              </p>
-            </div>
-            <ArrowUpRight className="text-muted-foreground/50 group-hover:text-foreground mt-0.5 h-4 w-4 shrink-0 transition-colors" />
-          </button>
-        ))}
-      </div>
-
-      <ul className="text-muted-foreground mx-auto mt-8 max-w-md space-y-1 text-left text-xs leading-relaxed">
-        <li>✓ 只根据资料库里的文件回答，并标明每句话的出处</li>
-        <li>✓ 找不到或不确定时会直接告诉你，不会编造</li>
-        <li>✓ 检索不理想时，会自动换个问法重新查，整个过程都能展开查看</li>
-        <li>✗ 不能回答资料以外的内容，也不能上网查询</li>
-      </ul>
+      )}
     </div>
   );
 }
-

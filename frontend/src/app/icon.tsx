@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-/** Dynamic favicon — black square with a lime brand dot. Renders at 32×32. */
+/** Dynamic favicon — 小证's face: lime square, two eyes. Renders at 32×32. */
 export const size = { width: 32, height: 32 };
 export const contentType = "image/png";
 export const dynamic = "force-static";
@@ -14,18 +14,13 @@ export default function Icon() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "#0E0E0C",
-        borderRadius: "6px",
+        background: "#C5F94A",
+        borderRadius: "10px",
+        gap: 6,
       }}
     >
-      <div
-        style={{
-          width: 14,
-          height: 14,
-          borderRadius: "9999px",
-          background: "#C5F94A",
-        }}
-      />
+      <div style={{ width: 5, height: 9, borderRadius: 9999, background: "#1E2410" }} />
+      <div style={{ width: 5, height: 9, borderRadius: 9999, background: "#1E2410" }} />
     </div>,
     { ...size },
   );
