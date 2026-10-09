@@ -194,6 +194,15 @@ export function StepBody({ event, chunks }: { event: AgentTraceEvent; chunks: Re
           {str(d.rewritten_query) && <Query label="准备改搜" value={str(d.rewritten_query)!} />}
         </div>
       );
+    case "question_condense":
+      return (
+        <div className="space-y-1.5 text-sm">
+          <p className="text-muted-foreground text-xs">这是一个追问，系统结合前面的对话把它补全，再去检索：</p>
+          <Query label="你问的" value={str(d.from) ?? "—"} />
+          <ArrowRight className="text-muted-foreground ml-3 h-4 w-4 rotate-90" />
+          <Query label="补全为" value={str(d.to) ?? "—"} />
+        </div>
+      );
     case "query_rewrite":
       return (
         <div className="space-y-1.5 text-sm">
