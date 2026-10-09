@@ -8,6 +8,8 @@ from math import log2
 from pathlib import Path
 from uuid import uuid4
 
+from eval_stats import bootstrap_ci, rank_for_all
+
 from app.core.config import settings
 from app.graph.generation_correction import GenerationCorrector
 from app.graph.retrieval_correction import CorrectiveRetriever
@@ -29,12 +31,20 @@ def load_scenarios() -> list[dict[str, object]]:
     return [json.loads(line) for line in (ROOT / "p5-scenarios.jsonl").read_text().splitlines() if line]
 
 
+CHUNK_CHARS = 500
+
+
 def make_document(name: str, text: str) -> Document:
+    """Short texts stay one chunk; long documents are split so retrieval has to find the right passage."""
     doc_id = f"p5-{name}"
+    pieces = [text[i : i + CHUNK_CHARS] for i in range(0, len(text), CHUNK_CHARS)] or [text]
     return Document(
         id=doc_id,
         pages=[DocumentPage(page_num=1, content=text, parent_doc_id=doc_id)],
-        chunked_pages=[DocumentPageChunk(page_num=1, content=text, chunk_content=text, parent_doc_id=doc_id, chunk_id=str(uuid4()), chunk_num=0)],
+        chunked_pages=[
+            DocumentPageChunk(page_num=1, content=text, chunk_content=piece, parent_doc_id=doc_id, chunk_id=str(uuid4()), chunk_num=number)
+            for number, piece in enumerate(pieces)
+        ],
         metadata=DocumentMetadata(filename=name, filesize=len(text), filetype=".txt"),
     )
 
@@ -81,10 +91,16 @@ def evidence_text(results: list[SearchResult]) -> str:
     return "\n\n".join(f"[{i}] {r.content}" for i, r in enumerate(results, 1))
 
 
-def rank_for(results: list[SearchResult], phrase: str) -> int | None:
-    if not phrase:
-        return None
-    return next((index for index, item in enumerate(results, 1) if phrase.lower() in item.content.lower()), None)
+def rank_for(results: list[SearchResult], phrases: list[str]) -> int | None:
+    """Rank at which every required phrase has been retrieved (multi-hop needs all of them)."""
+    return rank_for_all([item.content for item in results], phrases)
+
+
+def required_phrases(scenario: dict[str, object]) -> list[str]:
+    many = scenario.get("expected_phrases")
+    if isinstance(many, list) and many:
+        return [str(item) for item in many]
+    return [str(scenario["expected_phrase"])] if scenario.get("expected_phrase") else []
 
 
 def metric(rows: list[dict[str, object]], key: str) -> float:
@@ -104,9 +120,10 @@ async def evaluate_mode(name: str, scenarios: list[dict[str, object]], service: 
         start = time.perf_counter()
         question = str(scenario["question"])
         expected = str(scenario["expected_phrase"])
+        phrases = required_phrases(scenario)
         should_abstain = bool(scenario["abstain"])
         initial_results = await service.retrieve(str(scenario["initial_query"]), COLLECTION, limit=5)
-        initial_rank = rank_for(initial_results, expected)
+        initial_rank = rank_for(initial_results, phrases)
         retrieval_corrective_success = 0.0
         if corrective:
             outcome = await CorrectiveRetriever(BoundRetriever(service), EvidenceEvaluator(), max_rounds=2).run(question, str(scenario["initial_query"]))
@@ -114,7 +131,7 @@ async def evaluate_mode(name: str, scenarios: list[dict[str, object]], service: 
         else:
             results, rounds, abstained = initial_results, 1, False
         evidence = evidence_text(results)
-        hit_rank = rank_for(results, expected)
+        hit_rank = rank_for(results, phrases)
         if corrective and not should_abstain:
             retrieval_corrective_success = float(
                 initial_rank is None and hit_rank is not None and hit_rank <= 5
@@ -148,8 +165,18 @@ async def evaluate_mode(name: str, scenarios: list[dict[str, object]], service: 
     mrr = sum(1 / rank for rank in ranks) / max(len(answered), 1)
     ndcg = sum(1 / log2(rank + 1) for rank in ranks) / max(len(answered), 1)
     assessments = [r["assessment"] for r in answered]
+    # Per-scenario outcomes, resampled to show how much the headline numbers depend on which scenarios were drawn.
+    hit_flags = [float(r["rank"] is not None and int(r["rank"]) <= 5) for r in answered]
+    abstain_flags = [float(bool(r["abstained"]) == bool(r["expected_abstain"])) for r in abstentions]
+    confidence = {
+        "Recall@5": list(bootstrap_ci(hit_flags)),
+        "Abstention Accuracy": list(bootstrap_ci(abstain_flags)),
+        "Groundedness": list(bootstrap_ci([float(a["groundedness"]) for a in assessments if isinstance(a.get("groundedness"), (int, float))])),
+    }
     return {
         "name": name,
+        "confidence_95": confidence,
+        "scenario_counts": {"answerable": len(answered), "abstain": len(abstentions)},
         "metrics": {
             "Recall@5": round(recall5, 4), "Recall@10": round(recall5, 4), "MRR": round(mrr, 4), "nDCG": round(ndcg, 4),
             "Groundedness": metric(assessments, "groundedness"), "Completeness": metric(assessments, "completeness"),
