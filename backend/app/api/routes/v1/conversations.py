@@ -9,10 +9,13 @@ from app.schemas.conversation import (
     ConversationList,
     ConversationRead,
     ConversationReadWithMessages,
+    ConversationSearchHit,
+    ConversationSearchResults,
     ConversationUpdate,
     MessageCreate,
     MessageList,
     MessageRead,
+    make_snippet,
 )
 
 router = APIRouter()
@@ -34,6 +37,28 @@ async def list_conversations(
         include_archived=include_archived,
     )
     return ConversationList(items=items, total=total)  # ty: ignore[invalid-argument-type]
+
+
+@router.get("/search", response_model=ConversationSearchResults)
+async def search_conversations(
+    conversation_service: ConversationSvc,
+    current_user: CurrentUser,
+    q: str = Query(..., min_length=1, max_length=100),
+    limit: int = Query(20, ge=1, le=50),
+) -> Any:
+    """Search the current user's conversations by title and message text."""
+    hits = await conversation_service.search(current_user.id, q, limit=limit)
+    return ConversationSearchResults(
+        items=[
+            ConversationSearchHit(
+                id=conversation.id,
+                title=conversation.title,
+                updated_at=conversation.updated_at or conversation.created_at,
+                snippet=make_snippet(content, q),
+            )
+            for conversation, content in hits
+        ]
+    )
 
 
 @router.post("", response_model=ConversationRead, status_code=status.HTTP_201_CREATED)

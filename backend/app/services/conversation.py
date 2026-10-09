@@ -7,6 +7,7 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundError
+from app.core.sanitize import escape_sql_like
 from app.db.models.conversation import Conversation, Message, ToolCall
 from app.repositories import chat_file_repo, conversation_repo
 from app.schemas.conversation import (
@@ -87,6 +88,18 @@ class ConversationService:
             include_archived=include_archived,
         )
         return items, total
+
+    async def search(
+        self, user_id: UUID, query: str, *, limit: int = 20
+    ) -> list[tuple[Conversation, str | None]]:
+        """Search the caller's own conversations by title and message text."""
+        text = query.strip()
+        if not text:
+            return []
+        pattern = f"%{escape_sql_like(text[:100])}%"
+        return await conversation_repo.search_conversations(
+            self.db, user_id=user_id, pattern=pattern, limit=limit
+        )
 
     async def create_conversation(
         self,
