@@ -149,3 +149,18 @@ export async function ingestFile(
   const endpoint = `${RAG_API_ROUTES.COLLECTIONS_INGEST(collectionName)}${replace ? "?replace=true" : ""}`;
   return apiClient.post<RAGIngestResult>(endpoint, formData);
 }
+
+/** The signed-in user's own private library (nobody else can read it). */
+export async function listMyDocuments(): Promise<RAGTrackedDocumentList> {
+  return apiClient.get<RAGTrackedDocumentList>("/v1/rag/my/documents");
+}
+
+export async function uploadMyFile(file: File): Promise<RAGIngestResult> {
+  const formData = new FormData();
+  formData.append("file", file);
+  return apiClient.post<RAGIngestResult>("/v1/rag/my/ingest", formData);
+}
+
+export async function deleteMyDocument(docId: string): Promise<void> {
+  return apiClient.delete(`/v1/rag/my/documents/${docId}`);
+}
