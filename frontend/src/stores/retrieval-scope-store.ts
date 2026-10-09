@@ -1,40 +1,37 @@
 "use client";
 
 import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 export type SourceChoice = "all" | "shared" | "mine";
 
 interface RetrievalScopeState {
+  /** Which library the next question is answered from. */
   sources: SourceChoice;
-  /** When non-empty, only these files may be used to answer. */
-  filenames: string[];
   /** Skip the claim-by-claim check for a quicker, unchecked answer. */
   fast: boolean;
-  setFast: (fast: boolean) => void;
   setSources: (sources: SourceChoice) => void;
-  toggleFile: (filename: string) => void;
-  clearFiles: () => void;
+  setFast: (fast: boolean) => void;
 }
 
-/** What the next question is allowed to be answered from. Kept for the browser session only. */
-export const useRetrievalScopeStore = create<RetrievalScopeState>((set) => ({
-  sources: "all",
-  filenames: [],
-  fast: false,
-  setFast: (fast) => set({ fast }),
-  setSources: (sources) => set({ sources }),
-  toggleFile: (filename) =>
-    set((state) => ({
-      filenames: state.filenames.includes(filename)
-        ? state.filenames.filter((name) => name !== filename)
-        : [...state.filenames, filename],
-    })),
-  clearFiles: () => set({ filenames: [] }),
-}));
+export const useRetrievalScopeStore = create<RetrievalScopeState>()(
+  persist(
+    (set) => ({
+      sources: "all",
+      fast: false,
+      setSources: (sources) => set({ sources }),
+      setFast: (fast) => set({ fast }),
+    }),
+    {
+      name: "rag.scope",
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({ sources: state.sources }),
+    },
+  ),
+);
 
-/** The `scope` field of a chat frame; omitted entirely when nothing is narrowed. */
-export function currentScopePayload(): { sources: SourceChoice; filenames?: string[] } | undefined {
-  const { sources, filenames } = useRetrievalScopeStore.getState();
-  if (sources === "all" && filenames.length === 0) return undefined;
-  return filenames.length ? { sources, filenames } : { sources };
+/** The `scope` field of a chat frame; omitted when every library is in play. */
+export function currentScopePayload(): { sources: SourceChoice } | undefined {
+  const { sources } = useRetrievalScopeStore.getState();
+  return sources === "all" ? undefined : { sources };
 }

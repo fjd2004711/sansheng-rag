@@ -20,11 +20,13 @@ interface KbUploadProps {
   formats: string[];
   /** Called after at least one file was accepted by the server. */
   onUploaded: () => void;
+  /** Upload somewhere other than `collection` (the signed-in user's own library). */
+  upload?: (file: File) => Promise<unknown>;
 }
 
 let uploadSeq = 0;
 
-export function KbUpload({ collection, formats, onUploaded }: KbUploadProps) {
+export function KbUpload({ collection, formats, onUploaded, upload }: KbUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [items, setItems] = useState<UploadItem[]>([]);
   const [dragging, setDragging] = useState(false);
@@ -49,7 +51,7 @@ export function KbUpload({ collection, formats, onUploaded }: KbUploadProps) {
           }
           setItems((prev) => [...prev, { id, name: file.name, state: "uploading" }]);
           try {
-            await ingestFile(collection, file);
+            await (upload ? upload(file) : ingestFile(collection, file));
             accepted++;
             patch(id, null);
           } catch (error) {
@@ -62,7 +64,7 @@ export function KbUpload({ collection, formats, onUploaded }: KbUploadProps) {
         onUploaded();
       }
     },
-    [collection, formats, onUploaded],
+    [collection, formats, onUploaded, upload],
   );
 
   return (

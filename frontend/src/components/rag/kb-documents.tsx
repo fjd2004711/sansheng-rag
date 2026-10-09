@@ -32,7 +32,14 @@ const formatSize = (bytes?: number) => {
 
 const formatDate = (value?: string | null) => (value ? new Date(value).toLocaleString("zh-CN", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "—");
 
-export function KbDocuments({ documents, onDelete }: { documents: KbDocument[]; onDelete: (doc: KbDocument) => Promise<void> }) {
+export function KbDocuments({
+  documents,
+  onDelete,
+}: {
+  documents: KbDocument[];
+  /** Omit for a read-only list (no delete button). */
+  onDelete?: (doc: KbDocument) => Promise<void>;
+}) {
   const [pending, setPending] = useState<KbDocument | null>(null);
 
   return (
@@ -88,6 +95,7 @@ export function KbDocuments({ documents, onDelete }: { documents: KbDocument[]; 
                           <Eye className="h-4 w-4" />
                         </a>
                       )}
+                      {onDelete && (
                       <button
                         type="button"
                         title="删除"
@@ -96,6 +104,7 @@ export function KbDocuments({ documents, onDelete }: { documents: KbDocument[]; 
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
+                      )}
                     </span>
                   </td>
                 </tr>
@@ -114,7 +123,7 @@ export function KbDocuments({ documents, onDelete }: { documents: KbDocument[]; 
         cancelLabel="取消"
         destructive
         onConfirm={async () => {
-          if (pending) await onDelete(pending);
+          if (pending && onDelete) await onDelete(pending);
           setPending(null);
         }}
       />
