@@ -59,6 +59,8 @@ function describe(event: AgentTraceEvent): string | undefined {
       return str(d.rewritten_query)
         ? `${failure ?? "检索不理想"}，准备改问：「${str(d.rewritten_query)}」`
         : `${failure ?? "检索不理想"}，不再继续检索`;
+    case "question_condense":
+      return `「${str(d.from) ?? ""}」→「${str(d.to) ?? ""}」`;
     case "query_rewrite":
       return `「${str(d.from) ?? "原问法"}」→「${str(d.to) ?? ""}」`;
     case "answer_verify":

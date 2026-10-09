@@ -21,11 +21,13 @@ from app.db.session import get_db_context
 from app.graph.generation_correction import GenerationCorrector
 from app.services.agent import (
     build_message_history,
+    load_conversation_history,
     persist_assistant_turn,
     persist_user_turn,
     send_event,
 )
 from app.services.llm_config import load_runtime
+from app.services.rag.generation.condense import condense_question
 from app.services.rag.generation.followups import suggest_followups
 from app.services.usage import UsageService
 
@@ -68,6 +70,7 @@ class AgentSession:
         self._turn_evidence = ""
         self._followup_task: asyncio.Task[None] | None = None
         self._turn_message_id: str | None = None
+        self._history_conversation_id: str | None = None
 
     async def handle_frame(self, data: dict[str, Any]) -> None:
         """Dispatch one incoming WebSocket frame.
@@ -165,6 +168,37 @@ class AgentSession:
                 meter, runtime, kind="answer", message_id=self._turn_message_id
             )
 
+    async def _sync_history(self, user_message: str, newly_created: bool) -> None:
+        """Make the in-memory history the one of the conversation this turn belongs to."""
+        conversation_id = self.current_conversation_id
+        if conversation_id == self._history_conversation_id:
+            return
+        self._history_conversation_id = conversation_id
+        if newly_created or not conversation_id:
+            self.conversation_history = []
+            return
+        try:
+            self.conversation_history = await load_conversation_history(
+                conversation_id, current_prompt=user_message
+            )
+        except Exception:
+            logger.warning("history_resume_failed", exc_info=True)
+            self.conversation_history = []
+
+    async def _standalone_question(self, user_message: str) -> str:
+        """Resolve a follow-up against earlier turns and record the rewrite in the trace."""
+        question = await condense_question(user_message, self.conversation_history)
+        if question != user_message:
+            await self._send_trace(
+                {
+                    "step": "question_condense",
+                    "round": 0,
+                    "status": "COMPLETE",
+                    "detail": {"from": user_message, "to": question},
+                }
+            )
+        return question
+
     async def _record_usage(
         self,
         meter: UsageMeter,
@@ -220,18 +254,20 @@ class AgentSession:
             self._followup_task.cancel()
 
         try:
+            await self._sync_history(user_message, newly_created)
+            question = await self._standalone_question(user_message)
             assistant = get_agent(
                 model_name=data.get("model"),
                 thinking_effort=data.get("thinking_effort"),
             )
             model_history = build_message_history(self.conversation_history)
-            model_history.append(HumanMessage(content=user_message))
+            model_history.append(HumanMessage(content=question))
             collected_tool_calls: list[dict[str, Any]] = []
             final_output = await self._stream_agent_response(
                 assistant, model_history, collected_tool_calls
             )
             final_output = await self._correct_answer_if_enabled(
-                user_message, final_output, collected_tool_calls
+                question, final_output, collected_tool_calls
             )
             if self._buffer_text_for_verification and final_output:
                 await self._stream_verified_output(final_output)

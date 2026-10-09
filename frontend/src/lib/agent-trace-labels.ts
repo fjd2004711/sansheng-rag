@@ -2,6 +2,7 @@ import type { AgentTraceEvent } from "@/types";
 
 /** Plain-Chinese names for the structured trace steps, shared by the flow panel and the live status line. */
 export const TRACE_STEP_LABELS: Record<string, string> = {
+  question_condense: "补全问题",
   retrieve: "检索资料",
   evidence_evaluate: "判断资料够不够用",
   failure_diagnose: "分析为什么没找到",
@@ -41,6 +42,8 @@ export const TRACE_FAILURE_LABELS: Record<string, string> = {
 export function progressText(last: AgentTraceEvent | undefined): string {
   if (!last) return "正在检索资料…";
   switch (last.step) {
+    case "question_condense":
+      return "正在检索资料…";
     case "retrieve":
       return "正在判断找到的资料够不够用…";
     case "evidence_evaluate":
