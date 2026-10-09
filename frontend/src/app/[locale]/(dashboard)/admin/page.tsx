@@ -6,6 +6,7 @@ import { ShieldAlert } from "lucide-react";
 import { EvalCandidatesPanel } from "@/components/admin/eval-candidates-panel";
 import { InsightsPanel } from "@/components/admin/insights-panel";
 import { FeedbackPanel } from "@/components/admin/feedback-panel";
+import { RagSettingsPanel } from "@/components/admin/rag-settings-panel";
 import { UsagePanel } from "@/components/admin/usage-panel";
 import { UsersPanel } from "@/components/admin/users-panel";
 import { Button, Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui";
@@ -39,6 +40,7 @@ export default function AdminPage() {
           <TabsTrigger value="feedback">用户反馈</TabsTrigger>
           <TabsTrigger value="gaps">知识缺口</TabsTrigger>
           <TabsTrigger value="eval">评测候选</TabsTrigger>
+          <TabsTrigger value="params">流程参数</TabsTrigger>
           <TabsTrigger value="usage">用量</TabsTrigger>
           <TabsTrigger value="users">账号</TabsTrigger>
         </TabsList>
@@ -50,6 +52,9 @@ export default function AdminPage() {
         </TabsContent>
         <TabsContent value="eval" className="mt-4">
           <EvalCandidatesPanel />
+        </TabsContent>
+        <TabsContent value="params" className="mt-4">
+          <RagSettingsPanel />
         </TabsContent>
         <TabsContent value="usage" className="mt-4">
           <UsagePanel />

@@ -13,7 +13,8 @@ from starlette.middleware.cors import CORSMiddleware
 from app.api.exception_handlers import register_exception_handlers
 from app.api.router import api_router
 from app.core.config import settings
-from app.db.session import close_db
+from app.db.session import close_db, get_db_context
+from app.services.app_settings import load_saved_rag
 from app.core.logging import setup_logging
 from app.core.middleware import RequestIDMiddleware
 from app.services.rag.embeddings import EmbeddingService
@@ -51,6 +52,11 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[LifespanState, None]:
             state["vector_store"] = vector_store
         except Exception as e:
             logger.error("Qdrant connection failed: %s. Vector store will not be available.", e)
+    try:
+        async with get_db_context() as db:
+            await load_saved_rag(db)
+    except Exception as e:
+        logger.warning("Could not load saved RAG settings: %s", e)
     yield state
     if "vector_store" in state:
         with suppress(Exception):

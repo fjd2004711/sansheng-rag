@@ -47,9 +47,11 @@ async def test_collect_evidence_forces_retrieval_when_model_skipped_search_tool(
     assert evidence == "[1] Source: vega.md\nP1 response is 15 minutes"
     send.assert_awaited_once()
     assert send.await_args.args[1] == "agent_trace"
-    assert session._turn_trace == [
+    # Each recorded step also carries ``at_ms`` (time since the turn began), which is not under test here.
+    assert [{k: v for k, v in e.items() if k != "at_ms"} for e in session._turn_trace] == [
         {"step": "retrieve", "round": 1, "status": "COMPLETE", "detail": {}}
     ]
+    assert isinstance(session._turn_trace[0]["at_ms"], int)
 
 
 @pytest.mark.anyio

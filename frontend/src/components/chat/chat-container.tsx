@@ -6,7 +6,9 @@ import { useChat } from "@/hooks";
 import { AgentTracePanel } from "./agent-trace-panel";
 import { ChatEmptyState } from "./chat-empty-state";
 import { TraceDetailSheet } from "./trace-detail";
-import { Activity, Download, History } from "lucide-react";
+import { Activity, Download, History, Zap } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useRetrievalScopeStore } from "@/stores/retrieval-scope-store";
 import { conversationToMarkdown, downloadText } from "@/lib/export-markdown";
 import { useChatSidebarStore } from "@/stores/chat-sidebar-store";
 import { LibraryPopover } from "./library-popover";
@@ -307,6 +309,8 @@ function ChatUI({
   onStop,
 }: ChatUIProps) {
   const tc = useTranslations("common");
+  const fast = useRetrievalScopeStore((state) => state.fast);
+  const setFast = useRetrievalScopeStore((state) => state.setFast);
   const exportTitle = (messages.find((m) => m.role === "user")?.content ?? "").slice(0, 40);
   // Below lg the side column is hidden; the same flow opens in a drawer instead.
   const [flowOpen, setFlowOpen] = useState(false);
@@ -406,6 +410,19 @@ function ChatUI({
                 <LibraryPopover />
                 <ModelSettings />
                 <UsagePopover />
+                <button
+                  type="button"
+                  aria-pressed={fast}
+                  onClick={() => setFast(!fast)}
+                  title={fast ? "快速模式已开：回答立即显示，但不会逐条核对" : "开启后跳过逐条核对，回答更快但未经检查"}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-xs transition-colors",
+                    fast ? "bg-amber-500/15 text-amber-700 dark:text-amber-400" : "text-muted-foreground hover:text-foreground hover:bg-foreground/5",
+                  )}
+                >
+                  <Zap className="h-3.5 w-3.5" />
+                  快速模式
+                </button>
                 {messages.length > 0 && (
                   <button
                     type="button"

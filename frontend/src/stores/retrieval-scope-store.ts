@@ -8,6 +8,9 @@ interface RetrievalScopeState {
   sources: SourceChoice;
   /** When non-empty, only these files may be used to answer. */
   filenames: string[];
+  /** Skip the claim-by-claim check for a quicker, unchecked answer. */
+  fast: boolean;
+  setFast: (fast: boolean) => void;
   setSources: (sources: SourceChoice) => void;
   toggleFile: (filename: string) => void;
   clearFiles: () => void;
@@ -17,6 +20,8 @@ interface RetrievalScopeState {
 export const useRetrievalScopeStore = create<RetrievalScopeState>((set) => ({
   sources: "all",
   filenames: [],
+  fast: false,
+  setFast: (fast) => set({ fast }),
   setSources: (sources) => set({ sources }),
   toggleFile: (filename) =>
     set((state) => ({
