@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { nanoid } from "nanoid";
 import { useWebSocket } from "./use-websocket";
-import { currentScopePayload } from "@/stores/retrieval-scope-store";
+import { currentScopePayload, useRetrievalScopeStore } from "@/stores/retrieval-scope-store";
 import { useChatStore, useAuthStore } from "@/stores";
 import type {
   AskUserAnswer,
@@ -455,6 +455,7 @@ export function useChat(options: UseChatOptions = {}) {
         payload.resync = true;
         resyncRef.current = false;
       }
+      if (useRetrievalScopeStore.getState().fast) payload.fast = true;
       const scope = currentScopePayload();
       if (scope) payload.scope = scope;
       if (modelRef.current) payload.model = modelRef.current;

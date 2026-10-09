@@ -13,6 +13,7 @@ from app.api.routes.v1 import (
     insights,
     llm_config,
     rag,
+    rag_settings,
     usage,
     users,
 )
@@ -31,3 +32,4 @@ v1_router.include_router(llm_config.router, tags=["llm-config"])
 v1_router.include_router(usage.router, tags=["usage"])
 v1_router.include_router(insights.router, tags=["insights"])
 v1_router.include_router(eval_candidates.router, tags=["eval"])
+v1_router.include_router(rag_settings.router, tags=["settings"])

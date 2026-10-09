@@ -46,6 +46,10 @@ class AgentSession:
 
     # Control frames this session implements, beyond `stop`. Anything else with
     # a `type` is ignored rather than treated as a prompt.
+    # Defaults so a session built without __init__ (tests) still works.
+    _turn_started: float = 0.0
+    _fast: bool = False
+
     _HANDLED_FRAME_TYPES: ClassVar[frozenset[str]] = frozenset({"message"})
 
     def __init__(
@@ -73,6 +77,7 @@ class AgentSession:
         self._turn_evidence = ""
         self._followup_task: asyncio.Task[None] | None = None
         self._turn_message_id: str | None = None
+        self._fast = False
         self._turn_started = time.monotonic()
         self._history_conversation_id: str | None = None
 
@@ -280,6 +285,8 @@ class AgentSession:
             self._followup_task.cancel()
 
         try:
+            # "Fast mode": the user trades the claim-by-claim check for a quicker, unchecked answer.
+            self._fast = bool(data.get("fast"))
             if data.get("resync"):
                 # The client edited or regenerated: what the session remembers is stale.
                 self._history_conversation_id = None
@@ -358,7 +365,9 @@ class AgentSession:
         # If not, _stream_update_event falls back to the final message's
         # reasoning so thinking is shown for providers that don't stream it.
         self._thinking_streamed = False
-        self._buffer_text_for_verification = settings.rag.generation_correction_config.enabled
+        self._buffer_text_for_verification = (
+            settings.rag.generation_correction_config.enabled and not self._fast
+        )
 
         await send_event(self.websocket, "model_request_start", {})
 
@@ -397,7 +406,7 @@ class AgentSession:
     ) -> str:
         """Apply P3 verification after generation, before final text reaches the client."""
         config = settings.rag.generation_correction_config
-        if not config.enabled or not answer:
+        if self._fast or not config.enabled or not answer:
             return answer
         evidence = await self._collect_evidence(question, collected_tool_calls)
         self._turn_evidence = evidence
