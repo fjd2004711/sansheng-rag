@@ -7,6 +7,8 @@ export interface MarkdownContentProps {
   onCiteClick?: (index: number) => void;
   /** Hover text for a citation marker, e.g. the file name and the quoted passage. */
   citeTitle?: (index: number) => string | undefined;
+  /** Colours a citation by whether the claims relying on it were verified. */
+  citeStatus?: (index: number) => "ok" | "bad" | undefined;
 }
 
 /**
@@ -31,7 +33,7 @@ const MarkdownContentImpl = dynamic(
   },
 );
 
-export function MarkdownContent({ content, onCiteClick, citeTitle }: MarkdownContentProps) {
-  return <MarkdownContentImpl content={content} onCiteClick={onCiteClick} citeTitle={citeTitle} />;
+export function MarkdownContent({ content, onCiteClick, citeTitle, citeStatus }: MarkdownContentProps) {
+  return <MarkdownContentImpl content={content} onCiteClick={onCiteClick} citeTitle={citeTitle} citeStatus={citeStatus} />;
 }
 

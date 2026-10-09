@@ -28,7 +28,7 @@ function preprocessCitations(content: string): string {
   return content.replace(/\[(\d{1,3})\](?![\(:])/g, (_, n) => `[[${n}]](#cite-${n})`);
 }
 
-export function MarkdownContent({ content, onCiteClick, citeTitle }: MarkdownContentProps) {
+export function MarkdownContent({ content, onCiteClick, citeTitle, citeStatus }: MarkdownContentProps) {
   const processed = onCiteClick ? preprocessCitations(content) : content;
   return (
     <ReactMarkdown
@@ -89,7 +89,7 @@ export function MarkdownContent({ content, onCiteClick, citeTitle }: MarkdownCon
                     e.preventDefault();
                     onCiteClick(n);
                   }}
-                  className="bg-foreground/10 text-foreground/70 hover:bg-foreground/20 mx-0.5 inline-flex h-[1.1em] cursor-pointer items-center rounded px-1 align-middle font-mono text-[0.72em] font-semibold tabular-nums transition-colors"
+                  className={`${citeStatus?.(n) === "ok" ? "bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25 dark:text-emerald-400" : citeStatus?.(n) === "bad" ? "bg-amber-500/20 text-amber-700 hover:bg-amber-500/30 dark:text-amber-400" : "bg-foreground/10 text-foreground/70 hover:bg-foreground/20"} mx-0.5 inline-flex h-[1.1em] cursor-pointer items-center rounded px-1 align-middle font-mono text-[0.72em] font-semibold tabular-nums transition-colors`}
                   title={citeTitle?.(n) ?? `来源 [${n}]`}
                 >
                   {n}

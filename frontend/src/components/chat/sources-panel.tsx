@@ -139,7 +139,7 @@ function WebSourceRow({
 }
 
 export function SourcesPanel() {
-  const { isOpen, sources, highlightedIndex, close } = useSourcesPanelStore();
+  const { isOpen, sources, highlightedIndex, claim, close } = useSourcesPanelStore();
 
   useEffect(() => {
     if (!isOpen) return;
@@ -172,6 +172,13 @@ export function SourcesPanel() {
           <X className="h-4 w-4" />
         </button>
       </div>
+
+      {claim && (
+        <div className="border-foreground/8 bg-muted/40 border-b px-4 py-2.5 text-xs leading-relaxed">
+          <p className="text-foreground/45 mb-0.5 font-mono text-[10px] tracking-wider uppercase">回答里的这句话</p>
+          {claim}
+        </div>
+      )}
 
       {/* Body */}
       <div className="flex-1 space-y-5 overflow-y-auto px-4 py-4">
