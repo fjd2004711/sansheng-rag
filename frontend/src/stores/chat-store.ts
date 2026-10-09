@@ -34,6 +34,8 @@ interface ChatState {
   updateToolCallPart: (messageId: string, toolCallId: string, update: Partial<ToolCall>) => void;
   setStreaming: (streaming: boolean) => void;
   clearMessages: () => void;
+  /** Drop a message and everything after it (edit-and-resend / regenerate). */
+  truncateFrom: (messageId: string) => void;
 }
 
 export const useChatStore = create<ChatState>((set) => ({
@@ -148,4 +150,10 @@ export const useChatStore = create<ChatState>((set) => ({
   setStreaming: (streaming) => set({ isStreaming: streaming }),
 
   clearMessages: () => set({ messages: [] }),
+
+  truncateFrom: (messageId) =>
+    set((state) => {
+      const at = state.messages.findIndex((msg) => msg.id === messageId);
+      return at < 0 ? state : { messages: state.messages.slice(0, at) };
+    }),
 }));

@@ -20,6 +20,8 @@ import { ToolApprovalDialog } from "./tool-approval-dialog";
 import { QuestionPrompt, Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from "@/components/ui";
 import type { AgentTraceEvent, AnswerFeedback, PendingApproval, AskUserQuestion, AskUserAnswer, Decision } from "@/types";
 import { apiClient } from "@/lib/api-client";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/utils";
 import { buildAssistantParts } from "@/lib/conversation-to-chat";
 import { useConversationStore, useChatStore } from "@/stores";
 import { useConversations } from "@/hooks";
@@ -45,6 +47,7 @@ export function ChatContainer() {
     isConnected,
     isProcessing,
     sendMessage,
+    resendFrom,
     stopGeneration,
     clearMessages,
     queuedMessages,
@@ -153,19 +156,38 @@ export function ChatContainer() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  const handleResend = useCallback(
+    async (userIndex: number, content: string) => {
+      const m = messages[userIndex];
+      if (!m) return;
+      try {
+        await resendFrom(m.id, content, m.fileIds, m.files);
+      } catch (error) {
+        toast.error(getErrorMessage(error, "无法重新提问，请刷新后再试"));
+      }
+    },
+    [messages, resendFrom],
+  );
+
   const handleRegenerate = useCallback(
     (assistantMessageId: string) => {
       const idx = messages.findIndex((m) => m.id === assistantMessageId);
-      if (idx < 0) return;
       for (let i = idx - 1; i >= 0; i--) {
-        const m = messages[i];
-        if (m?.role === "user") {
-          sendMessage(m.content, m.fileIds, m.files);
+        if (messages[i]?.role === "user") {
+          void handleResend(i, messages[i]!.content);
           return;
         }
       }
     },
-    [messages, sendMessage],
+    [messages, handleResend],
+  );
+
+  const handleEdit = useCallback(
+    (messageId: string, content: string) => {
+      const idx = messages.findIndex((m) => m.id === messageId);
+      if (idx >= 0) void handleResend(idx, content);
+    },
+    [messages, handleResend],
   );
 
   // Restore the user's earlier ratings when a saved conversation is opened.
@@ -217,6 +239,7 @@ export function ChatContainer() {
       }
       sendMessage={sendMessage}
       onRegenerate={handleRegenerate}
+      onEdit={handleEdit}
       queuedMessages={queuedMessages}
       onCancelQueued={cancelQueued}
       messagesEndRef={messagesEndRef}
@@ -247,6 +270,7 @@ interface ChatUIProps {
     files?: import("@/types").ChatMessageFile[],
   ) => void;
   onRegenerate?: (messageId: string) => void;
+  onEdit?: (messageId: string, content: string) => void;
   queuedMessages?: import("@/hooks/use-chat").QueuedMessage[];
   onCancelQueued?: (id: string) => void;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
@@ -270,6 +294,7 @@ function ChatUI({
   isLoadingConversation,
   sendMessage,
   onRegenerate,
+  onEdit,
   queuedMessages,
   onCancelQueued,
   messagesEndRef,
@@ -320,6 +345,7 @@ function ChatUI({
             <MessageList
               messages={messages}
               onRegenerate={onRegenerate}
+              onEdit={onEdit}
               onShowTrace={onShowTrace}
               selectedTraceId={selectedTraceId}
               onAsk={(question) => sendMessage(question)}

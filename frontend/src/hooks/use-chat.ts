@@ -16,6 +16,7 @@ import type {
   WSEvent,
 } from "@/types";
 import { WS_URL } from "@/lib/constants";
+import { apiClient } from "@/lib/api-client";
 import { setUrlParam } from "@/lib/utils";
 import { useConversationStore } from "@/stores";
 /** A message the user typed while the agent was busy / socket offline.
@@ -63,6 +64,7 @@ export function useChat(options: UseChatOptions = {}) {
   // here (not in the chat history) so the UI can surface them as cancellable
   // "pending" entries above the input. The ref is the source of truth for the
   // drainer effect; the parallel state triggers re-renders for the UI.
+  const resyncRef = useRef(false);
   const messageQueueRef = useRef<QueuedMessage[]>([]);
   const [queuedMessages, setQueuedMessages] = useState<QueuedMessage[]>([]);
   const modelRef = useRef<string | null>(null);
@@ -161,6 +163,14 @@ export function useChat(options: UseChatOptions = {}) {
             const content = (wsEvent.data as { index: number; content: string }).content;
             appendTextDelta(currentMessageIdRef.current, content);
           }
+          break;
+        }
+
+        case "user_message_saved": {
+          // The prompt now has its database id, which edit / regenerate need.
+          const { message_id } = wsEvent.data as { message_id: string };
+          const lastUser = [...useChatStore.getState().messages].reverse().find((msg) => msg.role === "user");
+          if (lastUser) updateMessage(lastUser.id, (msg) => ({ ...msg, id: message_id }));
           break;
         }
 
@@ -441,6 +451,10 @@ export function useChat(options: UseChatOptions = {}) {
         conversation_id: conversationId || null,
       };
       if (fileIds?.length) payload.file_ids = fileIds;
+      if (resyncRef.current) {
+        payload.resync = true;
+        resyncRef.current = false;
+      }
       const scope = currentScopePayload();
       if (scope) payload.scope = scope;
       if (modelRef.current) payload.model = modelRef.current;
@@ -465,6 +479,19 @@ export function useChat(options: UseChatOptions = {}) {
       doSend(content, fileIds, files);
     },
     [isProcessing, isConnected, doSend],
+  );
+
+  /** Edit a sent question (or regenerate its answer): drop it and what followed, then ask again. */
+  const resendFrom = useCallback(
+    async (userMessageId: string, content: string, fileIds?: string[], files?: ChatMessageFile[]) => {
+      if (conversationId) {
+        await apiClient.delete(`/conversations/${conversationId}/messages/${userMessageId}/and-after`);
+      }
+      useChatStore.getState().truncateFrom(userMessageId);
+      resyncRef.current = true;
+      sendChatMessage(content, fileIds, files);
+    },
+    [conversationId, sendChatMessage],
   );
 
   const cancelQueued = useCallback((id: string) => {
@@ -561,6 +588,7 @@ export function useChat(options: UseChatOptions = {}) {
     connect,
     disconnect,
     sendMessage: sendChatMessage,
+    resendFrom,
     stopGeneration,
     clearMessages,
     queuedMessages,

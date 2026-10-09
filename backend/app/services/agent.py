@@ -105,11 +105,10 @@ async def persist_user_turn(
 ) -> tuple[str | None, bool, str | None]:
     """Resolve the conversation, persist the user message, and link any uploaded files.
 
-    Returns ``(conversation_id, was_newly_created, organization_id)``. When
+    Returns ``(conversation_id, was_newly_created, user_message_id)``. When
     ``was_newly_created`` is True the caller should emit a ``conversation_created``
-    WebSocket event. ``organization_id`` is the conversation's owning org (the user's
-    Personal org for new conversations) so usage events can be billed correctly;
-    None when teams are disabled or no org context is available.
+    WebSocket event. ``user_message_id`` is the stored prompt's id (None if it could not
+    be stored), so the client can edit or regenerate from it.
 
     Other failures to persist are logged and the turn goes on; an access refusal
     is not one of them.
@@ -120,7 +119,7 @@ async def persist_user_turn(
         AuthorizationError: It is shared with the user read-only.
     """
     newly_created = False
-    organization_id: str | None = None
+    user_message_id: str | None = None
     try:
         async with get_db_context() as db:
             conv_service = get_conversation_service(db)
@@ -151,6 +150,7 @@ async def persist_user_turn(
                 MessageCreate(role="user", content=user_message),
                 user_id=user.id,
             )
+            user_message_id = str(user_msg.id)
             if file_ids:
                 try:
                     await conv_service.link_files_to_message(user_msg.id, file_ids, user_id=user.id)
@@ -162,7 +162,7 @@ async def persist_user_turn(
     except Exception as e:
         logger.warning("Failed to persist conversation: %s", e)
 
-    return current_conversation_id, newly_created, organization_id
+    return current_conversation_id, newly_created, user_message_id
 
 
 def normalize_tool_args(args: Any) -> dict[str, Any]:

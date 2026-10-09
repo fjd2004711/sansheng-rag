@@ -132,6 +132,7 @@ export interface ChartSpec {
 
 export type WSEventType =
   | "user_prompt"
+  | "user_message_saved"
   | "user_prompt_processed"
   | "model_request_start"
   | "part_start"
