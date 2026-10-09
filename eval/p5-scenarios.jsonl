@@ -9,3 +9,5 @@
 {"id": "zh-expense", "question": "单笔差旅报销超过两千元要怎么提交？", "initial_query": "食堂菜单与营业时间", "expected_phrase": "报销-差旅-K12", "failure_type": "insufficient_evidence", "abstain": false}
 {"id": "out-of-scope-zh", "question": "公司明年的火星基地预算是多少？", "initial_query": "公司明年的火星基地预算是多少？", "expected_phrase": "", "failure_type": "out_of_scope", "abstain": true}
 {"id": "out-of-scope-en", "question": "Who won the 2031 deep-sea chess final?", "initial_query": "Who won the 2031 deep-sea chess final?", "expected_phrase": "", "failure_type": "out_of_scope", "abstain": true}
+{"id": "orion-multihop", "question": "Who owns Orion data-retention exceptions, and what phone extension reaches their escalation desk?", "initial_query": "Orion retention archive tiers", "expected_phrase": "EXT-8842", "expected_phrases": ["TEAM-KESTREL-31", "EXT-8842"], "failure_type": "insufficient_evidence", "abstain": false}
+{"id": "zephyr-long-document", "question": "What sign-off token is recorded for the Zephyr cold-storage audit?", "initial_query": "quarterly operations handbook procedures", "expected_phrase": "ZEPHYR-AUDIT-5521", "failure_type": "insufficient_evidence", "abstain": false}
