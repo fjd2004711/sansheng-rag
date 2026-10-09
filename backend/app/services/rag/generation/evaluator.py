@@ -9,7 +9,7 @@ from typing import Any
 from openai import AsyncOpenAI
 
 from app.core.clock import today_zh
-from app.core.config import settings
+from app.core.llm_runtime import current_llm
 from app.services.rag.correction.evaluator import clean_query
 from app.services.rag.generation.models import (
     AnswerAssessment,
@@ -30,11 +30,10 @@ class AnswerEvaluator:
     """Use isolated provider calls so evaluation control data never reaches the answer stream."""
 
     def __init__(self) -> None:
-        self._client = AsyncOpenAI(
-            base_url=settings.OPENAI_BASE_URL,
-            api_key=settings.OPENAI_API_KEY,
-        )
-        self._model = settings.AI_MODEL
+        llm = current_llm()
+        self._client = AsyncOpenAI(base_url=llm.base_url, api_key=llm.api_key)
+        self._model = llm.model
+        self._extra_body = llm.extra_body
 
     async def assess(self, question: str, answer: str, evidence: str) -> AnswerAssessment:
         if not _has_evidence(evidence):
@@ -122,7 +121,7 @@ class AnswerEvaluator:
             model=self._model,
             messages=[{"role": "user", "content": prompt}],
             temperature=0,
-            extra_body=settings.llm_extra_body,
+            extra_body=self._extra_body,
         )
         return response.choices[0].message.content or ""
 

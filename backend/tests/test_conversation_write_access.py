@@ -101,6 +101,10 @@ class TestRefusedTurn:
         session = AgentSession(MagicMock(), MagicMock(id=uuid.uuid4()))
         events: list[tuple[str, dict]] = []
 
+        @asynccontextmanager
+        async def _db():
+            yield MagicMock()
+
         async def _send_event(_websocket, event_type, data):
             events.append((event_type, data))
 
@@ -108,6 +112,8 @@ class TestRefusedTurn:
             patch("app.services.agent_session.persist_user_turn", AsyncMock(side_effect=refusal)),
             patch("app.services.agent_session.send_event", _send_event),
             patch("app.services.agent_session.persist_assistant_turn", AsyncMock()) as persisted,
+            patch("app.services.agent_session.get_db_context", _db),
+            patch("app.services.agent_session.load_runtime", AsyncMock(return_value=None)),
         ):
             await session.process_message(
                 {"message": "hello", "conversation_id": str(uuid.uuid4())}

@@ -1,3 +1,11 @@
 {"id":"atlas-correction","question":"What credential does Atlas compliance require?","initial_query":"deployment schedule milestones","expected_phrase":"CRIMSON-SEAL","failure_type":"insufficient_evidence","abstain":false}
 {"id":"orion-correction","question":"Which code must Orion recovery use?","initial_query":"meeting calendar deadlines","expected_phrase":"ORION-RECOVER-17","failure_type":"insufficient_evidence","abstain":false}
 {"id":"out-of-scope","question":"Which planet won the interstellar league?","initial_query":"Which planet won the interstellar league?","expected_phrase":"","failure_type":"out_of_scope","abstain":true}
+{"id": "helios-rollback", "question": "Which token authorizes a Helios rollback?", "initial_query": "Helios release schedule notes", "expected_phrase": "HELIOS-ROLLBACK-88", "failure_type": "insufficient_evidence", "abstain": false}
+{"id": "nebula-refund", "question": "What approval code do large Nebula refunds need?", "initial_query": "Nebula billing invoice cycle", "expected_phrase": "NEBULA-REFUND-4421", "failure_type": "insufficient_evidence", "abstain": false}
+{"id": "vega-onboarding", "question": "Which form must new Vega engineers complete before getting laptop access?", "initial_query": "Vega team lunch calendar", "expected_phrase": "VEGA-ONBOARD-07", "failure_type": "insufficient_evidence", "abstain": false}
+{"id": "lyra-retention", "question": "How long are Lyra audit logs retained and under which policy?", "initial_query": "Lyra dashboard color themes", "expected_phrase": "LYRA-RETAIN-400", "failure_type": "insufficient_evidence", "abstain": false}
+{"id": "zh-leave", "question": "请假超过三天需要谁签批、填写哪张表单？", "initial_query": "年度团建活动安排", "expected_phrase": "请假-审批-F9", "failure_type": "insufficient_evidence", "abstain": false}
+{"id": "zh-expense", "question": "单笔差旅报销超过两千元要怎么提交？", "initial_query": "食堂菜单与营业时间", "expected_phrase": "报销-差旅-K12", "failure_type": "insufficient_evidence", "abstain": false}
+{"id": "out-of-scope-zh", "question": "公司明年的火星基地预算是多少？", "initial_query": "公司明年的火星基地预算是多少？", "expected_phrase": "", "failure_type": "out_of_scope", "abstain": true}
+{"id": "out-of-scope-en", "question": "Who won the 2031 deep-sea chess final?", "initial_query": "Who won the 2031 deep-sea chess final?", "expected_phrase": "", "failure_type": "out_of_scope", "abstain": true}

@@ -14,6 +14,8 @@ export interface ChatMessage {
   timestamp: Date;
   toolCalls?: ToolCall[];
   isStreaming?: boolean;
+  /** Unverified answer text shown while the fact-check runs; replaced by the verified answer. */
+  draft?: string;
   /** Group ID for related messages in a multi-agent chain. */
   groupId?: string;
   /** IDs of attached files — kept for sending. Use ``files`` for rendering. */
@@ -134,6 +136,8 @@ export type WSEventType =
   | "model_request_start"
   | "part_start"
   | "text_delta"
+  | "draft_delta"
+  | "draft_clear"
   | "thinking_delta"
   | "tool_call_delta"
   | "call_tools_start"

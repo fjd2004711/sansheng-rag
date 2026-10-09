@@ -1,10 +1,25 @@
 "use client";
 
-import { Background, Handle, Position, ReactFlow, type Edge, type Node } from "@xyflow/react";
+import { useEffect, useMemo, useState } from "react";
+import {
+  Background,
+  Controls,
+  Handle,
+  Position,
+  ReactFlow,
+  ReactFlowProvider,
+  useReactFlow,
+  type Edge,
+  type Node,
+  type NodeProps,
+} from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { Activity, Check, CircleAlert, Search, ShieldCheck, WandSparkles } from "lucide-react";
+import { Activity, Check, CircleAlert, Search, ShieldCheck, WandSparkles, X } from "lucide-react";
 import type { AgentTraceEvent } from "@/types";
 import { cn } from "@/lib/utils";
+import { ResizeHandle } from "@/components/ui";
+import { useResizableWidth } from "@/hooks/use-resizable-width";
+import { StepBody, chunksOf, type RetrievedChunk } from "./trace-detail";
 import { useTraceDetailStore } from "@/stores/trace-detail-store";
 import { TRACE_FAILURE_LABELS, TRACE_STATUS_LABELS, TRACE_STEP_LABELS } from "@/lib/agent-trace-labels";
 
@@ -66,7 +81,7 @@ function describe(event: AgentTraceEvent): string | undefined {
   }
 }
 
-function TraceNode({ data }: { data: { event: AgentTraceEvent } }) {
+function TraceNode({ data, selected }: NodeProps<Node<{ event: AgentTraceEvent }>>) {
   const { event } = data;
   const Icon = iconFor(event.step);
   const pass = event.status === "PASS" || event.status === "COMPLETE";
@@ -76,7 +91,8 @@ function TraceNode({ data }: { data: { event: AgentTraceEvent } }) {
   return (
     <div
       className={cn(
-        "w-64 rounded-xl border bg-card px-3 py-2.5 shadow-sm",
+        "w-64 cursor-pointer rounded-xl border bg-card px-3 py-2.5 shadow-sm transition-shadow hover:shadow-md",
+        selected && "ring-2 ring-primary/60",
         pass && "border-emerald-500/30",
         fail && "border-amber-500/40",
         !pass && !fail && "border-border",
@@ -108,40 +124,125 @@ function TraceNode({ data }: { data: { event: AgentTraceEvent } }) {
 
 const nodeTypes = { trace: TraceNode };
 
+/** Re-fit the view whenever a step is added, so live updates stay in frame. */
+function RefitOnGrow({ count }: { count: number }) {
+  const { fitView } = useReactFlow();
+  useEffect(() => {
+    fitView({ padding: 0.12, duration: 200 });
+  }, [count, fitView]);
+  return null;
+}
+
+function StepDetail({
+  event,
+  index,
+  chunks,
+  onClose,
+}: {
+  event: AgentTraceEvent;
+  index: number;
+  chunks: RetrievedChunk[];
+  onClose: () => void;
+}) {
+  return (
+    <section className="bg-background absolute inset-x-0 bottom-0 z-10 flex max-h-[65%] flex-col border-t shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.25)]">
+      <header className="flex items-start gap-2 border-b px-4 py-2.5">
+        <div className="min-w-0 flex-1">
+          <h3 className="text-sm font-semibold">
+            第 {index + 1} 步 · {LABELS[event.step] ?? event.step}
+          </h3>
+          <p className="text-muted-foreground text-xs">
+            第 {event.round} 轮 · {STATUS_LABELS[event.status] ?? event.status}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="关闭详情"
+          className="text-muted-foreground hover:text-foreground rounded-md p-1"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </header>
+      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-3">
+        <StepBody event={event} chunks={chunks} />
+      </div>
+    </section>
+  );
+}
+
 export function AgentTracePanel({
   trace,
   title,
   messageId,
+  variant = "side",
 }: {
   trace: AgentTraceEvent[];
   title?: string;
   messageId?: string;
+  /** "side" is the resizable desktop column; "sheet" fills a narrow-screen drawer. */
+  variant?: "side" | "sheet";
 }) {
+  const sheet = variant === "sheet";
   const openDetail = useTraceDetailStore((state) => state.open);
-  const nodes: Node[] = trace.map((event, index) => ({
-    id: `${index}-${event.step}`,
-    type: "trace",
-    position: { x: 18, y: 16 + index * 128 },
-    draggable: false,
-    data: { event },
-  }));
-  const edges: Edge[] = nodes.slice(1).map((node, index) => ({
-    id: `edge-${index}`,
-    source: nodes[index]!.id,
-    target: node.id,
-    type: "smoothstep",
-    animated: trace[index + 1]?.status === "FAIL",
-    style: { stroke: "var(--color-border)", strokeWidth: 1.5 },
-  }));
+  const resize = useResizableWidth({ storageKey: "rag.trace.width", initial: 340, min: 280, max: 720, edge: "left" });
+  const [selected, setSelected] = useState<number | null>(null);
+
+  // A different answer's flow (or a shorter trace) invalidates the open card.
+  useEffect(() => setSelected(null), [messageId]);
+
+  const nodes: Node[] = useMemo(
+    () =>
+      trace.map((event, index) => ({
+        id: String(index),
+        type: "trace",
+        position: { x: 18, y: 16 + index * 128 },
+        draggable: false,
+        selected: index === selected,
+        data: { event },
+      })),
+    [trace, selected],
+  );
+  const edges: Edge[] = useMemo(
+    () =>
+      trace.slice(1).map((event, index) => ({
+        id: `edge-${index}`,
+        source: String(index),
+        target: String(index + 1),
+        type: "smoothstep",
+        animated: event.status === "FAIL",
+        style: { stroke: "var(--color-border)", strokeWidth: 1.5 },
+      })),
+    [trace],
+  );
+
+  const selectedEvent = selected !== null ? trace[selected] : undefined;
+  const selectedChunks = useMemo(() => {
+    // Each judgement refers to the chunks of the most recent search before it.
+    let latest: RetrievedChunk[] = [];
+    for (let i = 0; i <= (selected ?? -1); i++) {
+      if (trace[i]?.step === "retrieve") latest = chunksOf(trace[i]!.detail);
+    }
+    return latest;
+  }, [trace, selected]);
 
   return (
-    <aside className="bg-muted/15 hidden w-[340px] shrink-0 border-l lg:flex lg:flex-col">
+    <aside
+      style={sheet ? undefined : { width: resize.width }}
+      className={cn(
+        "bg-muted/15 relative flex-col",
+        sheet ? "flex h-full w-full" : "hidden shrink-0 border-l lg:flex",
+      )}
+    >
+      {!sheet && (
+        <ResizeHandle edge="left" label="调整运作流程宽度" dragging={resize.dragging} aria={resize.aria} {...resize.handleProps} />
+      )}
       <div className="border-b px-4 py-3">
         <div className="flex items-center gap-2">
           <Activity className="h-4 w-4" />
           <h2 className="text-sm font-semibold">运作流程</h2>
         </div>
-        <p className="text-muted-foreground mt-0.5 text-xs">每一步怎么找、怎么核对、怎么纠错</p>
+        <p className="text-muted-foreground mt-0.5 text-xs">滚轮缩放、拖动画布；点击卡片查看这一步的详情</p>
         {messageId && trace.length > 0 && (
           <button
             type="button"
@@ -177,24 +278,36 @@ export function AgentTracePanel({
           </ol>
         </div>
       ) : (
-        <div className="min-h-0 flex-1">
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            nodeTypes={nodeTypes}
-            fitView
-            fitViewOptions={{ padding: 0.12 }}
-            nodesDraggable={false}
-            nodesConnectable={false}
-            elementsSelectable={false}
-            zoomOnDoubleClick={false}
-            panOnDrag
-            proOptions={{ hideAttribution: true }}
-            preventScrolling={false}
-            zoomOnScroll={false}
-          >
-            <Background gap={16} size={1} />
-          </ReactFlow>
+        <div className="relative min-h-0 flex-1">
+          <ReactFlowProvider>
+            <ReactFlow
+              nodes={nodes}
+              edges={edges}
+              nodeTypes={nodeTypes}
+              fitView
+              fitViewOptions={{ padding: 0.12 }}
+              minZoom={0.3}
+              maxZoom={2}
+              nodesDraggable={false}
+              nodesConnectable={false}
+              elementsSelectable
+              zoomOnScroll
+              zoomOnPinch
+              zoomOnDoubleClick={false}
+              panOnDrag
+              preventScrolling
+              onNodeClick={(_, node) => setSelected(Number(node.id))}
+              onPaneClick={() => setSelected(null)}
+              proOptions={{ hideAttribution: true }}
+            >
+              <Background gap={16} size={1} />
+              <Controls showInteractive={false} position="top-right" />
+              <RefitOnGrow count={trace.length} />
+            </ReactFlow>
+          </ReactFlowProvider>
+          {selectedEvent && selected !== null && (
+            <StepDetail event={selectedEvent} index={selected} chunks={selectedChunks} onClose={() => setSelected(null)} />
+          )}
         </div>
       )}
     </aside>

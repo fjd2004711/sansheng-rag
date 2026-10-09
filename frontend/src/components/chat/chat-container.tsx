@@ -6,16 +6,17 @@ import { useChat } from "@/hooks";
 import { AgentTracePanel } from "./agent-trace-panel";
 import { ChatEmptyState } from "./chat-empty-state";
 import { TraceDetailSheet } from "./trace-detail";
-import { History } from "lucide-react";
+import { Activity, History } from "lucide-react";
 import { useChatSidebarStore } from "@/stores/chat-sidebar-store";
 import { LibraryPopover } from "./library-popover";
+import { ModelSettings } from "./model-settings";
 import { ChatInput } from "./chat-input";
 import { FilePreviewPanel } from "./file-preview-panel";
 import { SourcesPanel } from "./sources-panel";
 import { MessageList } from "./message-list";
 import { PendingMessages } from "./pending-messages";
 import { ToolApprovalDialog } from "./tool-approval-dialog";
-import { QuestionPrompt } from "@/components/ui";
+import { QuestionPrompt, Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from "@/components/ui";
 import type { AgentTraceEvent, AnswerFeedback, PendingApproval, AskUserQuestion, AskUserAnswer, Decision } from "@/types";
 import { apiClient } from "@/lib/api-client";
 import { buildAssistantParts } from "@/lib/conversation-to-chat";
@@ -279,17 +280,27 @@ function ChatUI({
   onStop,
 }: ChatUIProps) {
   const tc = useTranslations("common");
+  // Below lg the side column is hidden; the same flow opens in a drawer instead.
+  const [flowOpen, setFlowOpen] = useState(false);
   return (
     <div className="flex h-full w-full">
       <div className="mx-auto flex h-full max-w-5xl min-w-0 flex-1 flex-col">
-        <div className="flex items-center justify-between border-b px-3 py-2 md:hidden">
+        <div className="flex items-center justify-between border-b px-3 py-2 lg:hidden">
           <button
             type="button"
             onClick={() => useChatSidebarStore.getState().open()}
-            className="hover:bg-accent inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium"
+            className="hover:bg-accent inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium md:hidden"
           >
             <History className="h-4 w-4" />
             历史对话
+          </button>
+          <button
+            type="button"
+            onClick={() => setFlowOpen(true)}
+            className="hover:bg-accent inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium lg:hidden"
+          >
+            <Activity className="h-4 w-4" />
+            运作流程
           </button>
         </div>
         <div
@@ -364,6 +375,7 @@ function ChatUI({
                   {isConnected ? tc("live") : tc("offline")}
                 </span>
                 <LibraryPopover />
+                <ModelSettings />
               </div>
             </div>
           </div>
@@ -373,6 +385,17 @@ function ChatUI({
         </div>
       </div>
       <AgentTracePanel trace={trace} title={traceTitle} messageId={traceMessageId} />
+      <Sheet open={flowOpen} onOpenChange={setFlowOpen}>
+        <SheetContent side="right" className="w-full max-w-md p-0 lg:hidden">
+          <SheetHeader className="h-12 px-4">
+            <SheetTitle>运作流程</SheetTitle>
+            <SheetClose onClick={() => setFlowOpen(false)} />
+          </SheetHeader>
+          <div className="h-[calc(100%-48px)]">
+            <AgentTracePanel variant="sheet" trace={trace} title={traceTitle} messageId={traceMessageId} />
+          </div>
+        </SheetContent>
+      </Sheet>
       <TraceDetailSheet />
       <FilePreviewPanel />
       <SourcesPanel />

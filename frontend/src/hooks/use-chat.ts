@@ -163,6 +163,21 @@ export function useChat(options: UseChatOptions = {}) {
           break;
         }
 
+        case "draft_delta": {
+          if (currentMessageIdRef.current) {
+            const content = (wsEvent.data as { content: string }).content;
+            updateMessage(currentMessageIdRef.current, (msg) => ({ ...msg, draft: (msg.draft ?? "") + content }));
+          }
+          break;
+        }
+
+        case "draft_clear": {
+          if (currentMessageIdRef.current) {
+            updateMessage(currentMessageIdRef.current, (msg) => ({ ...msg, draft: undefined }));
+          }
+          break;
+        }
+
         case "thinking_delta": {
           // Reasoning trace from extended-thinking models — its own
           // ordered part so it renders before the tools/text that follow.
@@ -250,6 +265,7 @@ export function useChat(options: UseChatOptions = {}) {
             updateMessage(currentMessageIdRef.current, (msg) => ({
               ...msg,
               isStreaming: false,
+              draft: undefined,
             }));
           }
           setIsProcessing(false);

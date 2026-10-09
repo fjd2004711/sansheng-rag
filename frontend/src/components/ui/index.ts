@@ -82,3 +82,4 @@ export { QuestionPrompt } from "./question-prompt";
 export type { QuestionPromptProps } from "./question-prompt";
 
 export { DataTable, type Column } from "./data-table";
+export { ResizeHandle } from "./resize-handle";

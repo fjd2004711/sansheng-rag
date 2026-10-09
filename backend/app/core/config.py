@@ -133,6 +133,9 @@ class Settings(BaseSettings):
         "gpt-5",
         "gpt-4.1",
     ]
+    # Per-user caps on turns that use the server's model (0 disables). Users with their own model are exempt.
+    SERVER_LLM_TURNS_PER_MINUTE: int = 6
+    SERVER_LLM_TURNS_PER_DAY: int = 300
     AI_FRAMEWORK: str = "langchain"
     LLM_PROVIDER: str = "openai"
     QDRANT_HOST: str = "localhost"
