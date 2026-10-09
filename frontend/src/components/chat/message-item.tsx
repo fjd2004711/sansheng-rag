@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { Mascot, type MascotMood } from "@/components/brand/mascot";
 import type { ChatMessage, ChatMessageFile } from "@/types";
 import { progressText } from "@/lib/agent-trace-labels";
 import { deriveVerdict } from "@/lib/answer-verdict";
@@ -14,7 +15,7 @@ import { MarkdownContent } from "./markdown-content";
 import { CopyButton } from "./copy-button";
 import { useFilePreviewStore } from "@/stores";
 import { useSourcesPanelStore } from "@/stores/sources-panel-store";
-import { Bot, FileText, Globe, Paperclip, Pencil, RefreshCw, User } from "lucide-react";
+import { FileText, Globe, Paperclip, Pencil, RefreshCw, User } from "lucide-react";
 import { useState } from "react";
 import Image from "next/image";
 import { useAuthStore } from "@/stores";
@@ -143,6 +144,15 @@ export function MessageItem({ message, groupPosition, onRegenerate, onEdit, onSh
   const activeConversationId = useConversationStore((state) => state.currentConversationId) ?? message.conversationId;
   const verdict = !isUser ? deriveVerdict(message.agentTrace, message.content) : null;
   const sources = !isUser ? extractSources(message) : [];
+  // 小证 shows what is going on: reading while checking, thinking while searching, sorry when it found nothing.
+  const lastStep = message.agentTrace?.[message.agentTrace.length - 1]?.step;
+  const avatarMood: MascotMood = message.isStreaming
+    ? lastStep && /verify|evaluate|diagnose/.test(lastStep)
+      ? "checking"
+      : "thinking"
+    : verdict?.kind === "abstained" || verdict?.kind === "partial"
+      ? "sorry"
+      : "idle";
   const hasSources = sources.length > 0 && !message.isStreaming;
   const citeTitle = (n: number): string | undefined => {
     const source = sources.find((item) => item.index === n);
@@ -179,8 +189,8 @@ export function MessageItem({ message, groupPosition, onRegenerate, onEdit, onSh
 
       <div
         className={cn(
-          "z-10 flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-full sm:h-9 sm:w-9",
-          isUser ? "bg-foreground text-background" : "bg-muted text-foreground",
+          "z-10 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full sm:h-9 sm:w-9",
+          isUser ? "bg-foreground text-background overflow-hidden" : "text-foreground",
           isGrouped && !isUser && "ring-background ring-2",
         )}
       >
@@ -196,7 +206,7 @@ export function MessageItem({ message, groupPosition, onRegenerate, onEdit, onSh
         ) : isUser ? (
           <User className="h-4 w-4" />
         ) : (
-          <Bot className="h-4 w-4 sm:h-5 sm:w-5" />
+          <Mascot size={34} mood={avatarMood} lookAtPointer={false} />
         )}
       </div>
 

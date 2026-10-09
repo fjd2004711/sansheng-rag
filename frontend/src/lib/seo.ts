@@ -16,7 +16,7 @@ import { defaultLocale, locales } from "@/i18n";
 export const SITE = {
   name: APP_NAME,
   /** Tagline used in title templates + OG defaults. */
-  tagline: "可解释的自纠错知识库问答",
+  tagline: "查过资料再回答",
   /** One-paragraph default description (≤160 chars for SERP truncation). */
   description:
     "Dense + BM25 + RRF + Reranker 混合检索，先诊断失败类型再有界纠错，回答可追溯到 claim → evidence → source。",

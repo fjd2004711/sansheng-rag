@@ -3,11 +3,12 @@ import { test, expect } from "@playwright/test";
 const VERDICT = /已核对|纠错后通过|仅部分有依据|没有找到答案/;
 
 test.describe("对话", () => {
-  test("空状态：示例问题、能做/不能做的说明、资料库入口", async ({ page }) => {
+  test("空状态：问候、小证、按资料生成的建议、回答依据开关", async ({ page }) => {
     await page.goto("/chat");
-    await expect(page.getByRole("button", { name: /返聘教师每周最多/ })).toBeVisible();
-    await expect(page.getByText("不能回答资料以外的内容")).toBeVisible();
-    await expect(page.getByText(/回答依据：\d+ 份资料/)).toBeVisible();
+    await expect(page.getByRole("img", { name: "小证" }).first()).toBeVisible();
+    await expect(page.getByText(/早上好|中午好|下午好|晚上好|夜深了/)).toBeVisible();
+    await expect(page.getByText(/讲了什么|还没有可用的资料/).first()).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByRole("radio", { name: /共享库/ })).toBeVisible();
     await expect(page.getByText("运作流程")).toBeVisible();
   });
 

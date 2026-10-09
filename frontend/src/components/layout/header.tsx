@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { ChartNoAxesCombined, Database, LogOut, MessageSquare, ShieldCheck, Workflow } from "lucide-react";
+import { ChartNoAxesCombined, Database, LogOut, MessageSquare, ShieldCheck } from "lucide-react";
+
+import { Mascot } from "@/components/brand/mascot";
 import { useTranslations } from "next-intl";
 
 import { ThemeToggle } from "@/components/theme";
@@ -28,12 +30,7 @@ export function Header() {
       <div className="flex h-14 items-center justify-between gap-2 px-3 sm:px-6">
         <div className="flex items-center gap-2 sm:gap-4">
           <Link href={ROUTES.HOME} className="flex items-center gap-2 text-sm font-bold sm:text-base">
-            <span
-              aria-hidden
-              className="bg-foreground text-background inline-flex h-6 w-6 items-center justify-center rounded-md"
-            >
-              <Workflow className="h-3.5 w-3.5" />
-            </span>
+            <Mascot size={28} lookAtPointer={false} />
             <span className="hidden sm:inline">{APP_NAME}</span>
           </Link>
 

@@ -1001,3 +1001,58 @@
     background-color: #67060c;
   }
 }
+
+/* ── 小证 (mascot) animation ─────────────────────────────────────────── */
+.mascot .mascot-body {
+  transform-origin: 50px 88px;
+  animation: mascot-bob 3.4s ease-in-out infinite;
+}
+.mascot .mascot-eyes {
+  transition: transform 0.18s ease-out;
+}
+.mascot .mascot-blink {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: mascot-blink 4.6s infinite;
+}
+.mascot-thinking .mascot-body {
+  animation-duration: 1.6s;
+}
+.mascot-happy .mascot-body {
+  animation: mascot-hop 0.9s ease-out 2;
+}
+.mascot .mascot-dots circle {
+  animation: mascot-dot 1.2s ease-in-out infinite;
+}
+.mascot .mascot-dots circle:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.mascot .mascot-dots circle:nth-child(3) {
+  animation-delay: 0.4s;
+}
+.mascot .mascot-lens {
+  animation: mascot-scan 2.2s ease-in-out infinite;
+}
+@keyframes mascot-bob {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  50% { transform: translateY(-2px) scale(1.012, 0.99); }
+}
+@keyframes mascot-hop {
+  0%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-7px) scale(0.98, 1.03); }
+}
+@keyframes mascot-blink {
+  0%, 94%, 100% { transform: scaleY(1); }
+  97% { transform: scaleY(0.1); }
+}
+@keyframes mascot-dot {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 1; }
+}
+@keyframes mascot-scan {
+  0%, 100% { transform: translate(-5px, 1px); }
+  50% { transform: translate(3px, -2px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mascot *, .mascot { animation: none !important; transition: none !important; }
+}

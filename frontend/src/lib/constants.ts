@@ -1,4 +1,4 @@
-export const APP_NAME = "自纠错智能问答";
+export const APP_NAME = "查证";
 export const APP_DESCRIPTION = "可解释、能自我纠错的知识库问答";
 
 export const API_ROUTES = {
