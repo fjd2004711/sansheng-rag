@@ -151,6 +151,7 @@ class Settings(BaseSettings):
     RAG_CHUNK_SIZE: int = 512
     RAG_CHUNK_OVERLAP: int = 50
 
+    PERSONAL_KB_MAX_DOCUMENTS: int = 50
     RAG_DEFAULT_COLLECTION: str = "documents"
     RAG_TOP_K: int = 10
     RAG_CHUNKING_STRATEGY: str = "recursive"  # recursive, markdown, or fixed

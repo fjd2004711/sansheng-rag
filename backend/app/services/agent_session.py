@@ -13,6 +13,7 @@ from app.agents.langchain_assistant import AgentContext, get_agent
 from app.agents.tools.rag_tool import extract_rag_trace, search_knowledge_base
 from app.core.config import settings
 from app.core.exceptions import AuthorizationError, NotFoundError
+from app.core.kb_scope import RetrievalScope, build_scope, personal_collection, use_scope
 from app.core.llm_runtime import current_llm_runtime_or_none, use_llm
 from app.core.rate_limit import TurnRateLimiter
 from app.core.usage_meter import UsageMeter, record_usage, use_meter
@@ -29,6 +30,7 @@ from app.services.agent import (
 from app.services.llm_config import load_runtime
 from app.services.rag.generation.condense import condense_question
 from app.services.rag.generation.followups import suggest_followups
+from app.services.rag_document import RAGDocumentService
 from app.services.usage import UsageService
 
 logger = logging.getLogger(__name__)
@@ -159,8 +161,9 @@ class AgentSession:
                 return
         meter = UsageMeter()
         self._turn_message_id = None
+        scope = await self._retrieval_scope(data)
         try:
-            with use_llm(runtime), use_meter(meter):
+            with use_llm(runtime), use_meter(meter), use_scope(scope):
                 await self._process_message(data)
         finally:
             # Spent tokens are recorded even when the turn failed or was stopped.
@@ -198,6 +201,24 @@ class AgentSession:
                 }
             )
         return question
+
+    async def _retrieval_scope(self, data: dict[str, Any]) -> RetrievalScope:
+        """Shared + the user's own library, narrowed by what the client asked for (never widened)."""
+        try:
+            async with get_db_context() as db:
+                has_personal = (
+                    await RAGDocumentService(db).count_ready(personal_collection(self.user.id)) > 0
+                )
+        except Exception:
+            logger.warning("personal_library_check_failed", exc_info=True)
+            has_personal = False
+        raw = data.get("scope") if isinstance(data.get("scope"), dict) else {}
+        return build_scope(
+            self.user.id,
+            has_personal_docs=has_personal,
+            sources=raw.get("sources"),
+            filenames=raw.get("filenames"),
+        )
 
     async def _record_usage(
         self,

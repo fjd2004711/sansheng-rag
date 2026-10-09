@@ -22,6 +22,7 @@ from app.api.deps import (
 )
 from app.core.config import settings
 from app.core.exceptions import BadRequestError, NotFoundError
+from app.core.kb_scope import authorize_collections, is_personal_collection, personal_collection
 from app.schemas.rag import (
     RAGCollectionInfo,
     RAGCollectionList,
@@ -62,7 +63,8 @@ async def list_collections(
     collection here removes the KB too.
     """
     names = await vector_store.list_collections()
-    return RAGCollectionList(items=names)
+    # Users' private libraries are not an admin's business.
+    return RAGCollectionList(items=[n for n in names if not is_personal_collection(n)])
 
 
 @router.post(
@@ -132,10 +134,11 @@ async def list_documents(
 async def search_documents(
     request: RAGSearchRequest,
     retrieval_service: RetrievalSvc,
-    _: CurrentUser,
+    user: CurrentUser,
     use_reranker: bool = Query(False, description="Whether to use reranking (if configured)"),
 ) -> Any:
     """Search for relevant document chunks. Supports multi-collection search."""
+    authorize_collections(user.id, [*(request.collection_names or []), request.collection_name])
     if request.collection_names and len(request.collection_names) > 1:
         results = await retrieval_service.retrieve_multi(
             query=request.query,
@@ -208,19 +211,74 @@ async def ingest_file(
 @router.get("/library", response_model=RAGLibrary)
 async def get_library(
     rag_doc_svc: RAGDocumentSvc,
-    _: CurrentUser,
+    user: CurrentUser,
 ) -> Any:
-    """List the documents the chat answers from, visible to every signed-in user."""
+    """The documents the chat answers from: the shared library plus the caller's own."""
     collection = settings.rag.collection_name
     tracked = await rag_doc_svc.list_documents(collection)
-    return RAGLibrary(
-        collection=collection,
-        documents=[
+    mine = await rag_doc_svc.list_documents(personal_collection(user.id))
+
+    def ready(items: list[Any]) -> list[RAGLibraryDocument]:
+        return [
             RAGLibraryDocument(filename=d.filename, filetype=d.filetype, chunk_count=d.chunk_count)
-            for d in tracked.items
+            for d in items
             if d.status == "done"
-        ],
+        ]
+
+    return RAGLibrary(
+        collection=collection, documents=ready(tracked.items), personal=ready(mine.items)
     )
+
+
+@router.get("/my/documents", response_model=RAGTrackedDocumentList)
+async def list_my_documents(rag_doc_svc: RAGDocumentSvc, user: CurrentUser) -> Any:
+    """The caller's private documents, including ones still processing or failed."""
+    return await rag_doc_svc.list_documents(personal_collection(user.id))
+
+
+@router.post(
+    "/my/ingest",
+    response_model=RAGIngestResponse,
+    response_model_exclude_none=True,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+async def ingest_my_file(
+    rag_doc_svc: RAGDocumentSvc,
+    vector_store: VectorStoreSvc,
+    user: CurrentUser,
+    file: UploadFile = File(...),
+) -> Any:
+    """Add a file to the caller's private library (only they can search it)."""
+    collection = personal_collection(user.id)
+    existing = await rag_doc_svc.list_documents(collection)
+    if existing.total >= settings.PERSONAL_KB_MAX_DOCUMENTS:
+        raise BadRequestError(
+            message=f"Personal library is full (max {settings.PERSONAL_KB_MAX_DOCUMENTS} documents)"
+        )
+    data = await file.read()
+    return await rag_doc_svc.dispatch_upload(
+        collection_name=collection,
+        file_data=data,
+        filename=file.filename or "unknown",
+        replace=True,
+        vector_store=vector_store,
+    )
+
+
+@router.delete(
+    "/my/documents/{doc_id}", status_code=status.HTTP_204_NO_CONTENT, response_model=None
+)
+async def delete_my_document(
+    doc_id: str,
+    rag_doc_svc: RAGDocumentSvc,
+    ingestion_service: IngestionSvc,
+    user: CurrentUser,
+) -> None:
+    """Delete one of the caller's own documents; anyone else's id is simply 'not found'."""
+    doc = await rag_doc_svc.get_document(doc_id)
+    if doc.collection_name != personal_collection(user.id):
+        raise NotFoundError(message="Document not found", details={"doc_id": doc_id})
+    await rag_doc_svc.delete_document(doc_id, ingestion_service)
 
 
 @router.get("/documents", response_model=RAGTrackedDocumentList)

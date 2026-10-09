@@ -56,6 +56,11 @@ class RAGDocumentService:
             total=len(docs),
         )
 
+    async def count_ready(self, collection_name: str) -> int:
+        """How many documents in the collection are fully ingested."""
+        docs = await rag_document_repo.get_all(self.db, collection_name)
+        return sum(1 for d in docs if d.status == "done")
+
     async def get_document(self, doc_id: str) -> RAGDocument:
         """Get a RAG document by ID.
 
