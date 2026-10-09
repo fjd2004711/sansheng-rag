@@ -811,7 +811,7 @@ class TestConversationServiceLinkFiles:
     @pytest.mark.anyio
     async def test_link_files_empty_list_returns_early(self, service: ConversationService):
         """link_files_to_message returns immediately for empty file list."""
-        await service.link_files_to_message(uuid4(), [])
+        await service.link_files_to_message(uuid4(), [], user_id=uuid4())
 
         # Should not call db.execute for empty list
         service.db.execute.assert_not_called()
@@ -829,7 +829,7 @@ class TestConversationServiceLinkFiles:
             mock_chat_file.id.in_ = MagicMock()
             mock_sa_update.return_value.where.return_value.values.return_value = "stmt"
 
-            await service.link_files_to_message(msg_id, file_ids)
+            await service.link_files_to_message(msg_id, file_ids, user_id=uuid4())
 
             service.db.execute.assert_called_once()
             service.db.flush.assert_called_once()

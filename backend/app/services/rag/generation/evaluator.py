@@ -10,6 +10,7 @@ from openai import AsyncOpenAI
 
 from app.core.clock import today_zh
 from app.core.llm_runtime import current_llm
+from app.core.usage_meter import record_openai_response
 from app.services.rag.correction.evaluator import clean_query
 from app.services.rag.generation.models import (
     AnswerAssessment,
@@ -123,6 +124,7 @@ class AnswerEvaluator:
             temperature=0,
             extra_body=self._extra_body,
         )
+        record_openai_response(response)
         return response.choices[0].message.content or ""
 
 

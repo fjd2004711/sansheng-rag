@@ -9,6 +9,7 @@ from typing import Any
 from openai import AsyncOpenAI
 
 from app.core.llm_runtime import current_llm
+from app.core.usage_meter import record_openai_response
 from app.services.rag.correction.models import (
     CorrectionAction,
     Diagnosis,
@@ -121,6 +122,7 @@ class EvidenceEvaluator:
             temperature=0,
             extra_body=self._extra_body,
         )
+        record_openai_response(response)
         return response.choices[0].message.content or ""
 
 

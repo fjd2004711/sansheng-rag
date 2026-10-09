@@ -13,8 +13,9 @@ from app.agents.langchain_assistant import AgentContext, get_agent
 from app.agents.tools.rag_tool import extract_rag_trace, search_knowledge_base
 from app.core.config import settings
 from app.core.exceptions import AuthorizationError, NotFoundError
-from app.core.llm_runtime import use_llm
+from app.core.llm_runtime import current_llm_runtime_or_none, use_llm
 from app.core.rate_limit import TurnRateLimiter
+from app.core.usage_meter import UsageMeter, record_usage, use_meter
 from app.db.models.user import User
 from app.db.session import get_db_context
 from app.graph.generation_correction import GenerationCorrector
@@ -26,6 +27,7 @@ from app.services.agent import (
 )
 from app.services.llm_config import load_runtime
 from app.services.rag.generation.followups import suggest_followups
+from app.services.usage import UsageService
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +67,7 @@ class AgentSession:
         self._turn_trace: list[dict[str, Any]] = []
         self._turn_evidence = ""
         self._followup_task: asyncio.Task[None] | None = None
+        self._turn_message_id: str | None = None
 
     async def handle_frame(self, data: dict[str, Any]) -> None:
         """Dispatch one incoming WebSocket frame.
@@ -151,8 +154,37 @@ class AgentSession:
                     },
                 )
                 return
-        with use_llm(runtime):
-            await self._process_message(data)
+        meter = UsageMeter()
+        self._turn_message_id = None
+        try:
+            with use_llm(runtime), use_meter(meter):
+                await self._process_message(data)
+        finally:
+            # Spent tokens are recorded even when the turn failed or was stopped.
+            await self._record_usage(
+                meter, runtime, kind="answer", message_id=self._turn_message_id
+            )
+
+    async def _record_usage(
+        self,
+        meter: UsageMeter,
+        runtime: Any,
+        *,
+        kind: str,
+        message_id: str | None,
+    ) -> None:
+        try:
+            async with get_db_context() as db:
+                await UsageService(db).record(
+                    user_id=self.user.id,
+                    meter=meter,
+                    runtime=runtime,
+                    kind=kind,
+                    conversation_id=self.current_conversation_id,
+                    message_id=message_id,
+                )
+        except Exception:
+            logger.warning("token_usage_record_failed", exc_info=True)
 
     async def _process_message(self, data: dict[str, Any]) -> None:
         """Process one user turn: persist input, run the agent, stream events, persist output."""
@@ -219,6 +251,7 @@ class AgentSession:
                     agent_trace=self._turn_trace,
                 )
 
+            self._turn_message_id = assistant_msg_id
             if assistant_msg_id:
                 await send_event(
                     self.websocket,
@@ -284,6 +317,11 @@ class AgentSession:
                     data, seen_tool_call_ids, pending, collected_tool_calls
                 )
 
+        if self._last_usage_metadata:
+            record_usage(
+                self._last_usage_metadata.get("input_tokens", 0),
+                self._last_usage_metadata.get("output_tokens", 0),
+            )
         return final_output
 
     async def _correct_answer_if_enabled(
@@ -309,8 +347,13 @@ class AgentSession:
     def _start_followups(self, question: str, answer: str, message_id: str | None) -> None:
         """Suggest follow-up questions outside the turn so the next question is never blocked."""
 
+        runtime = current_llm_runtime_or_none()
+
         async def run() -> None:
-            suggestions = await suggest_followups(question, answer, self._turn_evidence)
+            meter = UsageMeter()
+            with use_meter(meter):
+                suggestions = await suggest_followups(question, answer, self._turn_evidence)
+            await self._record_usage(meter, runtime, kind="followup", message_id=message_id)
             if suggestions:
                 await send_event(
                     self.websocket, "suggestions", {"message_id": message_id, "items": suggestions}

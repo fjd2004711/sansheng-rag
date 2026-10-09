@@ -12,6 +12,7 @@ from openai import AsyncOpenAI
 
 from app.core.config import settings
 from app.core.llm_runtime import current_llm
+from app.core.usage_meter import record_openai_response
 from app.services.rag.config import RAGSettings, RerankerConfig
 from app.services.rag.models import SearchResult
 
@@ -74,6 +75,7 @@ class LLMJSONReranker(BaseReranker):
             temperature=0,
             extra_body=llm.extra_body if llm.is_custom else settings.llm_extra_body,
         )
+        record_openai_response(response)
         rankings = _parse_rankings(response.choices[0].message.content or "")
         if not rankings:
             logger.warning("Reranker returned no parseable ranking; preserving RRF order")
