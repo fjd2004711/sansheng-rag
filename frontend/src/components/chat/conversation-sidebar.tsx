@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useConversations } from "@/hooks";
-import { Button, Skeleton } from "@/components/ui";
+import { Button, ResizeHandle, Skeleton } from "@/components/ui";
+import { useResizableWidth } from "@/hooks/use-resizable-width";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { useChatSidebarStore } from "@/stores";
@@ -337,6 +338,7 @@ export function ConversationSidebar({ className }: ConversationSidebarProps) {
   const t = useTranslations("chat");
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { isOpen, close } = useChatSidebarStore();
+  const resize = useResizableWidth({ storageKey: "rag.sidebar.width", initial: 256, min: 200, max: 440, edge: "right" });
   const {
     conversations,
     currentConversationId,
@@ -402,8 +404,10 @@ export function ConversationSidebar({ className }: ConversationSidebarProps) {
   return (
     <>
       <aside
-        className={cn("bg-background hidden w-64 shrink-0 flex-col border-r md:flex", className)}
+        style={{ width: resize.width }}
+        className={cn("bg-background relative hidden shrink-0 flex-col border-r md:flex", className)}
       >
+        <ResizeHandle edge="right" label="调整会话列表宽度" dragging={resize.dragging} aria={resize.aria} {...resize.handleProps} />
         <div className="flex h-12 items-center justify-between border-b px-4 py-3">
           <h2 className="text-sm font-semibold">{t("conversations")}</h2>
           <Button

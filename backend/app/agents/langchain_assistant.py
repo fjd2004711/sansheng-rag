@@ -16,6 +16,7 @@ from app.agents.prompts import get_system_prompt_with_rag
 from app.agents.tools.rag_tool import search_knowledge_base
 from app.agents.utils import get_current_datetime
 from app.core.config import settings
+from app.core.llm_runtime import current_llm
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +63,10 @@ class LangChainAssistant:
         system_prompt: str | None = None,
         thinking_effort: str | None = None,
     ):
-        self.model_name = model_name or settings.AI_MODEL
+        self._llm = current_llm()
+        self.model_name = (
+            (self._llm.model if self._llm.is_custom else None) or model_name or self._llm.model
+        )
         self.temperature = temperature or settings.AI_TEMPERATURE
         # Extended-thinking effort for reasoning-capable models. ``None`` keeps
         # the model in plain mode; "low"/"medium"/"high" enables provider-
@@ -90,9 +94,9 @@ class LangChainAssistant:
         model = ChatOpenAI(
             model=self.model_name,
             temperature=self.temperature,
-            api_key=settings.OPENAI_API_KEY,
-            base_url=settings.OPENAI_BASE_URL,
-            extra_body=settings.llm_extra_body,
+            api_key=self._llm.api_key,
+            base_url=self._llm.base_url,
+            extra_body=self._llm.extra_body,
             **openai_kwargs,
         )
 

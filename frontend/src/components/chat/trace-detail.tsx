@@ -19,7 +19,7 @@ import type { AgentTraceEvent } from "@/types";
 
 type Detail = Record<string, unknown>;
 
-interface RetrievedChunk {
+export interface RetrievedChunk {
   source: string;
   page?: number | null;
   chunk?: number | null;
@@ -33,7 +33,7 @@ const list = (value: unknown): string[] =>
   Array.isArray(value) ? value.filter((item): item is string => typeof item === "string" && item.trim() !== "") : [];
 const pct = (value: unknown): number => Math.max(0, Math.min(1, typeof value === "number" ? value : 0));
 
-function chunksOf(detail: Detail): RetrievedChunk[] {
+export function chunksOf(detail: Detail): RetrievedChunk[] {
   return Array.isArray(detail.results) ? (detail.results as RetrievedChunk[]) : [];
 }
 
@@ -135,7 +135,7 @@ const METRICS: Array<[string, string]> = [
   ["citation_coverage", "引用覆盖：说法都标了出处"],
 ];
 
-function StepBody({ event, chunks }: { event: AgentTraceEvent; chunks: RetrievedChunk[] }) {
+export function StepBody({ event, chunks }: { event: AgentTraceEvent; chunks: RetrievedChunk[] }) {
   const d = event.detail;
   switch (event.step) {
     case "retrieve": {

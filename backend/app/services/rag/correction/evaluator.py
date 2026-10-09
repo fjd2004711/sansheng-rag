@@ -8,7 +8,7 @@ from typing import Any
 
 from openai import AsyncOpenAI
 
-from app.core.config import settings
+from app.core.llm_runtime import current_llm
 from app.services.rag.correction.models import (
     CorrectionAction,
     Diagnosis,
@@ -22,11 +22,10 @@ class EvidenceEvaluator:
     """Use an isolated provider call so control JSON never enters Agent streaming."""
 
     def __init__(self) -> None:
-        self._client = AsyncOpenAI(
-            base_url=settings.OPENAI_BASE_URL,
-            api_key=settings.OPENAI_API_KEY,
-        )
-        self._model = settings.AI_MODEL
+        llm = current_llm()
+        self._client = AsyncOpenAI(base_url=llm.base_url, api_key=llm.api_key)
+        self._model = llm.model
+        self._extra_body = llm.extra_body
 
     async def assess(
         self, question: str, query: str, docs: list[SearchResult]
@@ -120,7 +119,7 @@ class EvidenceEvaluator:
             model=self._model,
             messages=[{"role": "user", "content": prompt}],
             temperature=0,
-            extra_body=settings.llm_extra_body,
+            extra_body=self._extra_body,
         )
         return response.choices[0].message.content or ""
 

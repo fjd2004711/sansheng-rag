@@ -9,7 +9,7 @@ from collections.abc import Awaitable, Callable
 
 from openai import AsyncOpenAI
 
-from app.core.config import settings
+from app.core.llm_runtime import current_llm
 from app.services.rag.generation.evaluator import _ABSTAIN_MESSAGE, _has_evidence
 
 logger = logging.getLogger(__name__)
@@ -21,12 +21,13 @@ Complete = Callable[[str], Awaitable[str]]
 
 
 async def _complete(prompt: str) -> str:
-    client = AsyncOpenAI(base_url=settings.OPENAI_BASE_URL, api_key=settings.OPENAI_API_KEY)
+    llm = current_llm()
+    client = AsyncOpenAI(base_url=llm.base_url, api_key=llm.api_key)
     response = await client.chat.completions.create(
-        model=settings.AI_MODEL,
+        model=llm.model,
         messages=[{"role": "user", "content": prompt}],
         temperature=0.3,
-        extra_body=settings.llm_extra_body,
+        extra_body=llm.extra_body,
     )
     return response.choices[0].message.content or ""
 

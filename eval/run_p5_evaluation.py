@@ -60,6 +60,12 @@ def corpus() -> list[tuple[str, str]]:
          f"Operations reference note {index}: archive retention, service status, and internal coordination procedures.")
         for index in range(1, 9)
     )
+    extra = ROOT / "p5-corpus-extra.jsonl"
+    if extra.exists():
+        for line in extra.read_text(encoding="utf-8").splitlines():
+            if line:
+                item = json.loads(line)
+                documents.append((item["name"], item["text"]))
     return documents
 
 

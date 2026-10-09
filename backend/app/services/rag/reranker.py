@@ -11,6 +11,7 @@ from typing import Any
 from openai import AsyncOpenAI
 
 from app.core.config import settings
+from app.core.llm_runtime import current_llm
 from app.services.rag.config import RAGSettings, RerankerConfig
 from app.services.rag.models import SearchResult
 
@@ -38,7 +39,7 @@ class LLMJSONReranker(BaseReranker):
         # Deliberately use the provider client rather than an in-graph Runnable.
         # A nested LangChain invocation inherits the Agent stream callbacks and its
         # JSON control response becomes a user-visible text_delta.
-        self._client = AsyncOpenAI(base_url=config.base_url, api_key=config.api_key)
+        self._default_client = AsyncOpenAI(base_url=config.base_url, api_key=config.api_key)
 
     @property
     def name(self) -> str:
@@ -60,11 +61,18 @@ class LLMJSONReranker(BaseReranker):
             'Each item must contain {"id": integer, "score": number from 0 to 100}.\n'
             f"Query: {query}\nCandidates: {json.dumps(payload, ensure_ascii=False)}"
         )
-        response = await self._client.chat.completions.create(
-            model=self.config.model,
+        llm = current_llm()
+        # A user's own model replaces the server's for the whole turn, reranking included.
+        client = (
+            AsyncOpenAI(base_url=llm.base_url, api_key=llm.api_key)
+            if llm.is_custom
+            else self._default_client
+        )
+        response = await client.chat.completions.create(
+            model=llm.model if llm.is_custom else self.config.model,
             messages=[{"role": "user", "content": prompt}],
             temperature=0,
-            extra_body=settings.llm_extra_body,
+            extra_body=llm.extra_body if llm.is_custom else settings.llm_extra_body,
         )
         rankings = _parse_rankings(response.choices[0].message.content or "")
         if not rankings:

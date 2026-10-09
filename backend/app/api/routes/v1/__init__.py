@@ -2,7 +2,17 @@
 
 from fastapi import APIRouter
 
-from app.api.routes.v1 import agent, auth, conversations, feedback, files, health, rag, users
+from app.api.routes.v1 import (
+    agent,
+    auth,
+    conversations,
+    feedback,
+    files,
+    health,
+    llm_config,
+    rag,
+    users,
+)
 
 v1_router = APIRouter()
 
@@ -14,3 +24,4 @@ v1_router.include_router(feedback.router, tags=["feedback"])
 v1_router.include_router(agent.router, tags=["agent"])
 v1_router.include_router(rag.router, prefix="/rag", tags=["rag"])
 v1_router.include_router(files.router, tags=["files"])
+v1_router.include_router(llm_config.router, tags=["llm-config"])

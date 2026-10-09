@@ -13,7 +13,10 @@ from app.agents.langchain_assistant import AgentContext, get_agent
 from app.agents.tools.rag_tool import extract_rag_trace, search_knowledge_base
 from app.core.config import settings
 from app.core.exceptions import AuthorizationError, NotFoundError
+from app.core.llm_runtime import use_llm
+from app.core.rate_limit import TurnRateLimiter
 from app.db.models.user import User
+from app.db.session import get_db_context
 from app.graph.generation_correction import GenerationCorrector
 from app.services.agent import (
     build_message_history,
@@ -21,9 +24,14 @@ from app.services.agent import (
     persist_user_turn,
     send_event,
 )
+from app.services.llm_config import load_runtime
 from app.services.rag.generation.followups import suggest_followups
 
 logger = logging.getLogger(__name__)
+
+_server_turn_limiter = TurnRateLimiter(
+    settings.SERVER_LLM_TURNS_PER_MINUTE, settings.SERVER_LLM_TURNS_PER_DAY
+)
 
 
 class AgentSession:
@@ -129,6 +137,24 @@ class AgentSession:
         await self._cancel_turn()
 
     async def process_message(self, data: dict[str, Any]) -> None:
+        """Run one turn against the user's own model when they configured one."""
+        async with get_db_context() as db:
+            runtime = await load_runtime(db, self.user.id)
+        if runtime is None:
+            wait = _server_turn_limiter.check(str(self.user.id))
+            if wait is not None:
+                await send_event(
+                    self.websocket,
+                    "error",
+                    {
+                        "message": f"提问太频繁了，请 {int(wait) + 1} 秒后再试（或在“模型设置”里用自己的模型）"
+                    },
+                )
+                return
+        with use_llm(runtime):
+            await self._process_message(data)
+
+    async def _process_message(self, data: dict[str, Any]) -> None:
         """Process one user turn: persist input, run the agent, stream events, persist output."""
         user_message = data.get("message", "")
         file_ids = data.get("file_ids", [])
@@ -322,6 +348,7 @@ class AgentSession:
 
     async def _stream_verified_output(self, output: str) -> None:
         """Stream only post-verification text, preserving the chat rendering contract."""
+        await send_event(self.websocket, "draft_clear", {})
         for start in range(0, len(output), 80):
             await send_event(self.websocket, "text_delta", {"content": output[start : start + 80]})
 
@@ -373,8 +400,11 @@ class AgentSession:
                         text_content += block
                     elif isinstance(block, dict) and block.get("type") == "text":
                         text_content += block.get("text", "")
-            if text_content and not self._buffer_text_for_verification:
-                await send_event(self.websocket, "text_delta", {"content": text_content})
+            if text_content:
+                # With verification on, the live text is only a draft: the client shows it
+                # marked "checking" and replaces it with the verified answer.
+                event = "draft_delta" if self._buffer_text_for_verification else "text_delta"
+                await send_event(self.websocket, event, {"content": text_content})
 
         reasoning_content = self._extract_reasoning(token)
         if reasoning_content:

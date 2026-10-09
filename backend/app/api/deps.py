@@ -27,6 +27,7 @@ from app.db.session import get_db_context
 from app.services.user import UserService
 from app.services.conversation import ConversationService
 from app.services.feedback import FeedbackService
+from app.services.llm_config import LLMConfigService
 
 
 def get_user_service(db: DBSession) -> UserService:
@@ -51,6 +52,14 @@ def get_feedback_service(db: DBSession) -> FeedbackService:
 
 
 FeedbackSvc = Annotated[FeedbackService, Depends(get_feedback_service)]
+
+
+def get_llm_config_service(db: DBSession) -> LLMConfigService:
+    """Create LLMConfigService instance with database session."""
+    return LLMConfigService(db)
+
+
+LLMConfigSvc = Annotated[LLMConfigService, Depends(get_llm_config_service)]
 
 
 from app.services.rag_document import RAGDocumentService

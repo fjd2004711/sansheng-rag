@@ -252,6 +252,7 @@ export function MessageItem({ message, groupPosition, onRegenerate, onShowTrace,
 
           // The answer text is only sent after verification finishes, so say what is happening meanwhile.
           const hasText = Boolean(message.content) || parts.some((part) => part.type === "text" && part.content);
+          const showDraft = !isUser && Boolean(message.isStreaming) && !hasText && Boolean(message.draft);
           const showProgress = !isUser && Boolean(message.isStreaming) && !hasText && !showPlaceholder;
 
           return (
@@ -279,6 +280,13 @@ export function MessageItem({ message, groupPosition, onRegenerate, onShowTrace,
                     <span className="bg-muted-foreground/50 h-1.5 w-1.5 animate-bounce rounded-full [animation-delay:300ms]" />
                   </span>
                   {progressText(message.agentTrace?.[message.agentTrace.length - 1])}
+                </div>
+              )}
+
+              {showDraft && (
+                <div className="border-border text-muted-foreground rounded-2xl rounded-tl-sm border border-dashed px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap">
+                  <p className="mb-1 text-xs font-medium">草稿 · 正在逐条核对，核对后可能会修改</p>
+                  {message.draft}
                 </div>
               )}
 

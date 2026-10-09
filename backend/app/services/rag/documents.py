@@ -101,7 +101,21 @@ class DocxDocumentParser(BaseDocumentParser):
             Document object with the file content.
         """
         file: Any = DOCXDocument(str(filepath))
-        page = DocumentPage(page_num=1, content="\n".join([p.text for p in file.paragraphs]))
+        # Paragraphs and tables in document order: policy tables often hold the key facts.
+        blocks: list[str] = []
+        for child in file.element.body.iterchildren():
+            if child.tag.endswith("}p"):
+                blocks.append(
+                    "".join(node.text or "" for node in child.iter() if node.tag.endswith("}t"))
+                )
+            elif child.tag.endswith("}tbl"):
+                for table in file.tables:
+                    if table._element is child:
+                        blocks.extend(
+                            " | ".join(cell.text.strip() for cell in row.cells)
+                            for row in table.rows
+                        )
+        page = DocumentPage(page_num=1, content="\n".join(blocks))
         return Document(pages=[page], metadata=self.get_document_metadata(filepath))
 
     async def parse(self, filepath: Path) -> Document:
