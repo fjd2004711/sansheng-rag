@@ -9,8 +9,17 @@ from pathlib import Path
 
 from app.db.session import get_db_context
 from app.services.rag.ingestion import IngestionService
+from app.services.rag.models import IngestionResult, IngestionStatus
 
 logger = logging.getLogger(__name__)
+
+NO_TEXT_MESSAGE = "没有从文件中提取到文字：可能是扫描件或纯图片 PDF，请上传带文字层的版本"
+
+
+def _failure_message(result: IngestionResult) -> str:
+    """What the library page shows for a failed file."""
+    error = result.error_message or result.message or "入库失败"
+    return NO_TEXT_MESSAGE if "no chunked pages" in error else error
 
 
 async def ingest_document_in_background(
@@ -31,6 +40,13 @@ async def ingest_document_in_background(
             replace=replace,
             source_path=source_path,
         )
+        if result.status != IngestionStatus.DONE:
+            # ingest_file reports failures as a result instead of raising; never record them as done.
+            async with get_db_context() as db:
+                await RAGDocumentService(db).fail_ingestion(
+                    rag_document_id, error_message=_failure_message(result)
+                )
+            return
         async with get_db_context() as db:
             await RAGDocumentService(db).complete_ingestion(
                 rag_document_id,
