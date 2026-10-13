@@ -156,7 +156,15 @@ class Settings(BaseSettings):
     RAG_TOP_K: int = 10
     RAG_CHUNKING_STRATEGY: str = "recursive"  # recursive, markdown, or fixed
     RAG_HYBRID_SEARCH: bool = False  # Enable independent BM25 + Dense + RRF
-    RAG_ENABLE_OCR: bool = False  # OCR fallback for scanned PDFs (requires tesseract)
+    # OCR for scanned/image-only PDF pages via an OpenAI-compatible vision model (e.g. qwen-vl-max on
+    # DashScope/MaaS, or qwen3-vl:8b-instruct on Ollama). Base URL and key default to OPENAI_*.
+    RAG_ENABLE_OCR: bool = False
+    RAG_OCR_MODEL: str = ""
+    RAG_OCR_BASE_URL: str = ""
+    RAG_OCR_API_KEY: str = ""
+    RAG_OCR_DPI: int = 150
+    RAG_OCR_CONCURRENCY: int = 3
+    RAG_OCR_TIMEOUT_SECONDS: float = 120
     RAG_RERANKER_ENABLED: bool = False
     RAG_RERANKER_MODEL: str = ""
     RAG_RERANKER_CANDIDATE_LIMIT: int = 12
@@ -201,7 +209,15 @@ class Settings(BaseSettings):
             chunk_overlap=self.RAG_CHUNK_OVERLAP,
             chunking_strategy=self.RAG_CHUNKING_STRATEGY,
             enable_hybrid_search=self.RAG_HYBRID_SEARCH,
-            enable_ocr=self.RAG_ENABLE_OCR,
+            ocr_config=OCRConfig(
+                enabled=self.RAG_ENABLE_OCR,
+                model=self.RAG_OCR_MODEL,
+                base_url=self.RAG_OCR_BASE_URL or self.OPENAI_BASE_URL,
+                api_key=self.RAG_OCR_API_KEY or self.OPENAI_API_KEY,
+                dpi=self.RAG_OCR_DPI,
+                concurrency=self.RAG_OCR_CONCURRENCY,
+                timeout_seconds=self.RAG_OCR_TIMEOUT_SECONDS,
+            ),
             reranker_config=RerankerConfig(
                 enabled=self.RAG_RERANKER_ENABLED,
                 model=self.RAG_RERANKER_MODEL or self.AI_MODEL,
@@ -232,6 +248,7 @@ from app.services.rag.config import (
     DocumentParser,
     EmbeddingsConfig,
     GenerationCorrectionConfig,
+    OCRConfig,
     PdfParser,
     RAGSettings,
     RerankerConfig,

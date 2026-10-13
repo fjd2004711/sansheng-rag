@@ -35,7 +35,11 @@ export function extractSources(message: ChatMessage): SourceItem[] {
           type: "rag",
           title: item.source,
           subtitle:
-            [item.page && `第 ${item.page} 页`, item.chunk && `第 ${Number(item.chunk) + 1} 段`]
+            [
+              item.page && `第 ${item.page} 页`,
+              item.chunk && `第 ${Number(item.chunk) + 1} 段`,
+              item.ocr && "扫描件识别文字",
+            ]
               .filter(Boolean)
               .join(" · ") || undefined,
           content: item.content,

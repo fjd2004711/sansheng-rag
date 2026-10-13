@@ -127,6 +127,19 @@ class RerankerConfig(BaseModel):
     candidate_limit: int = 12
 
 
+class OCRConfig(BaseModel):
+    """Vision-model OCR for scanned PDF pages (pages without a usable text layer)."""
+
+    enabled: bool = False
+    model: str = ""
+    base_url: str = ""
+    api_key: str = ""
+    dpi: int = Field(default=150, ge=72, le=400)
+    concurrency: int = Field(default=3, ge=1)
+    timeout_seconds: float = Field(default=120, gt=0)
+    max_tokens: int = Field(default=4096, ge=256)
+
+
 class CorrectionConfig(BaseModel):
     """P2 bounded retrieval self-correction configuration."""
 
@@ -154,7 +167,7 @@ class RAGSettings(BaseModel):
     chunk_overlap: int = 50
     chunking_strategy: str = "recursive"
     enable_hybrid_search: bool = False
-    enable_ocr: bool = False
+    ocr_config: OCRConfig = Field(default_factory=OCRConfig)
     reranker_config: RerankerConfig = Field(default_factory=RerankerConfig)
     correction_config: CorrectionConfig = Field(default_factory=CorrectionConfig)
     generation_correction_config: GenerationCorrectionConfig = Field(

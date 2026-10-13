@@ -126,7 +126,13 @@ AI_AVAILABLE_MODELS=["gpt-5.5","gpt-5.4","claude-opus-4-7"]
 | `RAG_DEFAULT_COLLECTION` | `documents` | Default collection for search (used by agent tool) |
 | `RAG_TOP_K` | `10` | Default number of results to return |
 | `RAG_HYBRID_SEARCH` | `false` | Enable BM25 + vector hybrid search |
-| `RAG_ENABLE_OCR` | `false` | OCR fallback for scanned PDFs (requires `tesseract-ocr`) |
+| `RAG_ENABLE_OCR` | `false` | OCR for scanned / image-only PDF pages via a vision model |
+| `RAG_OCR_MODEL` | — | OpenAI-compatible vision model, e.g. `qwen-vl-ocr` (DashScope/MaaS) or `qwen3-vl:8b-instruct` (Ollama); OCR stays off while empty |
+| `RAG_OCR_BASE_URL` | `OPENAI_BASE_URL` | Endpoint of the vision model |
+| `RAG_OCR_API_KEY` | `OPENAI_API_KEY` | Key for the vision model (Ollama: leave empty) |
+| `RAG_OCR_DPI` | `150` | Page render resolution sent to the model |
+| `RAG_OCR_CONCURRENCY` | `3` | Pages transcribed in parallel |
+| `RAG_OCR_TIMEOUT_SECONDS` | `120` | Per-page request timeout |
 
 ### Document Parsing
 

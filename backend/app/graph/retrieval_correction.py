@@ -33,6 +33,7 @@ def summarize_results(docs: list[SearchResult], limit: int = 10) -> list[dict[st
                 "source": str(meta.get("filename") or "未知来源"),
                 "page": meta.get("page_num"),
                 "chunk": meta.get("chunk_num"),
+                "ocr": meta.get("extraction") == "ocr",
                 "snippet": " ".join(doc.content.split())[:160],
                 "scores": scores,
             }

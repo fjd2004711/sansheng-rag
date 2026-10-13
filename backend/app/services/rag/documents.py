@@ -11,6 +11,12 @@ from langchain_text_splitters import MarkdownHeaderTextSplitter, RecursiveCharac
 
 from app.services.rag.config import DocumentExtensions, RAGSettings
 from app.services.rag.models import Document, DocumentMetadata, DocumentPage, DocumentPageChunk
+from app.services.rag.ocr import (
+    ImageDescriber,
+    build_image_describer,
+    describe_ocr_error,
+    has_words,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -139,6 +145,10 @@ class DocxDocumentParser(BaseDocumentParser):
             raise ValueError(f"Unsupported file extension. Allowed extensions: {self.allowed}")
 
 
+class OCRFailedError(ValueError):
+    """A scanned page could not be transcribed; the message is shown to the uploader."""
+
+
 class PyMuPDFParser(BaseDocumentParser):
     """Smart PDF parser using PyMuPDF.
 
@@ -146,16 +156,26 @@ class PyMuPDFParser(BaseDocumentParser):
     - Text extraction with layout preservation (blocks)
     - Table detection → markdown tables
     - Header/footer detection and removal
-    - OCR fallback for scanned pages (optional, requires tesseract)
-    - Image extraction for LLM-based description
+    - OCR fallback for scanned pages via a vision-model ``image_describer`` (optional)
     - Document metadata (author, title, TOC)
     """
 
     MIN_TEXT_LENGTH = 50  # below this → likely a scan, try OCR
 
-    def __init__(self, enable_ocr: bool = False, image_describer: Any = None):
-        self.enable_ocr = enable_ocr
+    def __init__(
+        self,
+        image_describer: ImageDescriber | None = None,
+        *,
+        ocr_dpi: int = 150,
+        ocr_concurrency: int = 3,
+    ):
         self._image_describer = image_describer
+        self._ocr_dpi = ocr_dpi
+        self._ocr_concurrency = ocr_concurrency
+
+    @property
+    def enable_ocr(self) -> bool:
+        return self._image_describer is not None
 
     def _detect_repeated_content(self, doc: Any) -> set[str]:
         """Detect headers/footers — text appearing on >70% of pages."""
@@ -200,55 +220,29 @@ class PyMuPDFParser(BaseDocumentParser):
         except Exception:
             return ""
 
-    def _ocr_page(self, page: Any, image_describer: Any = None) -> str:
-        """OCR a scanned page by rendering it as image and sending to LLM vision."""
-        if not image_describer:
-            return ""
-        try:
-            pix = page.get_pixmap(dpi=200)
-            image_bytes = pix.tobytes("png")
-            loop = asyncio.new_event_loop()
-            try:
-                return str(
-                    loop.run_until_complete(image_describer.describe(image_bytes, "image/png"))
-                )
-            finally:
-                loop.close()
-        except Exception as e:
-            logger.warning("LLM OCR failed for page %d: %s", page.number + 1, e)
-            return ""
-
-    def _parse_pdf_file(self, filepath: Path) -> Document:
-        """Parse PDF with smart extraction pipeline."""
+    def _extract_pdf(self, filepath: Path) -> tuple[Document, dict[int, bytes]]:
+        """Blocking PyMuPDF pass: text layer per page, plus rendered PNGs of pages that need OCR."""
         doc: Any = pymupdf.open(filepath)  # type: ignore[no-untyped-call]
+        try:
+            meta = doc.metadata or {}
+            toc = doc.get_toc()
+            repeated = self._detect_repeated_content(doc)
 
-        meta = doc.metadata or {}
-        toc = doc.get_toc()
+            pages: list[DocumentPage] = []
+            scans: dict[int, bytes] = {}  # index in `pages` -> page image
+            for page in doc:
+                text = self._extract_text(page, repeated)
 
-        repeated = self._detect_repeated_content(doc)
+                tables_md = self._extract_tables(page)
+                if tables_md:
+                    text = text + "\n\n" + tables_md if text.strip() else tables_md
 
-        pages = []
-        for page in doc:
-            text = self._extract_text(page, repeated)
+                if self.enable_ocr and len(text.strip()) < self.MIN_TEXT_LENGTH:
+                    scans[len(pages)] = page.get_pixmap(dpi=self._ocr_dpi).tobytes("png")
 
-            tables_md = self._extract_tables(page)
-            if tables_md:
-                text = text + "\n\n" + tables_md if text.strip() else tables_md
-
-            if self.enable_ocr and len(text.strip()) < self.MIN_TEXT_LENGTH:
-                ocr_text = self._ocr_page(page, self._image_describer)
-                if len(ocr_text.strip()) > len(text.strip()):
-                    text = ocr_text
-                    logger.info("OCR fallback used for page %d", page.number + 1)
-
-            pages.append(
-                DocumentPage(
-                    page_num=page.number + 1,
-                    content=text,
-                )
-            )
-
-        doc.close()
+                pages.append(DocumentPage(page_num=page.number + 1, content=text))
+        finally:
+            doc.close()
 
         additional: dict[str, Any] = {}
         if meta.get("title"):
@@ -262,13 +256,49 @@ class PyMuPDFParser(BaseDocumentParser):
         if additional:
             doc_meta.additional_info = {**(doc_meta.additional_info or {}), **additional}
 
-        return Document(pages=pages, metadata=doc_meta)
+        return Document(pages=pages, metadata=doc_meta), scans
+
+    async def _ocr_pages(self, pages: list[DocumentPage], scans: dict[int, bytes]) -> None:
+        """Transcribe scanned pages in place; any failed page fails the whole file."""
+        assert self._image_describer is not None
+        describer = self._image_describer
+        semaphore = asyncio.Semaphore(self._ocr_concurrency)
+
+        async def transcribe(image: bytes) -> str:
+            async with semaphore:
+                return await describer.describe(image, "image/png")
+
+        indexes = list(scans)
+        results = await asyncio.gather(
+            *(transcribe(scans[i]) for i in indexes), return_exceptions=True
+        )
+        for index, result in zip(indexes, results, strict=True):
+            page = pages[index]
+            if isinstance(result, BaseException):
+                logger.warning("OCR failed for page %d: %r", page.page_num, result)
+                reason = describe_ocr_error(result)
+                raise OCRFailedError(
+                    f"扫描页文字识别失败（第 {page.page_num} 页）：{reason}"
+                ) from result
+            # Logo or blank pages come back as stray markup such as "#"; keep them empty.
+            if has_words(result) and len(result.strip()) > len(page.content.strip()):
+                page.content = result
+                page.extraction = "ocr"
+                logger.info("OCR used for page %d", page.page_num)
+
+    async def _parse_pdf_file(self, filepath: Path) -> Document:
+        """Parse PDF with smart extraction pipeline."""
+        # PyMuPDF is blocking; keep it off the event loop (ingestion runs inside the API process).
+        document, scans = await asyncio.to_thread(self._extract_pdf, filepath)
+        if scans:
+            await self._ocr_pages(document.pages, scans)
+        return document
 
     async def parse(self, filepath: Path) -> Document:
         if not self.is_extension_allowed(filepath):
             raise ValueError(f"Extension {filepath.suffix} not supported by PyMuPDFParser")
         if filepath.suffix == ".pdf":
-            return self._parse_pdf_file(filepath)
+            return await self._parse_pdf_file(filepath)
         raise ValueError(f"Unsupported: {filepath.suffix}")
 
 
@@ -297,7 +327,11 @@ class DocumentProcessor:
         # Always use Python native parser for plain text
         self.text_parser = TextDocumentParser()
         self.docx_parser = DocxDocumentParser()
-        self.pdf_parser = PyMuPDFParser(enable_ocr=False)
+        self.pdf_parser = PyMuPDFParser(
+            build_image_describer(settings.ocr_config),
+            ocr_dpi=settings.ocr_config.dpi,
+            ocr_concurrency=settings.ocr_config.concurrency,
+        )
 
     @staticmethod
     def _create_splitter(settings: RAGSettings) -> Any:
