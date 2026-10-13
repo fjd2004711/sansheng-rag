@@ -53,6 +53,8 @@ def _format_results(results: list[Any]) -> str:
         col = result.metadata.get("collection", "")
         page_info = f", page {page}" if page is not None else ""
         chunk_info = f", chunk {chunk}" if chunk is not None else ""
+        # Text transcribed from a scanned page by the vision model; the UI labels it as recognised text.
+        ocr_info = ", ocr" if result.metadata.get("extraction") == "ocr" else ""
         col_info = f" [{col}]" if col else ""
         component_scores = [
             f"{key}={float(result.metadata[key]):.4f}"
@@ -61,7 +63,7 @@ def _format_results(results: list[Any]) -> str:
         ]
         score_line = f"Scores: {', '.join(component_scores)}\n" if component_scores else ""
         formatted.append(
-            f"[{i}] Source: {source}{page_info}{chunk_info}{col_info} (score: {result.score:.3f})\n"
+            f"[{i}] Source: {source}{page_info}{chunk_info}{ocr_info}{col_info} (score: {result.score:.3f})\n"
             f"{score_line}{mark_if_suspicious(result.content)[0]}"
         )
     return (

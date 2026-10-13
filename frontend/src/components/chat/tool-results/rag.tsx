@@ -8,6 +8,8 @@ interface RAGResultItem {
   source: string;
   page?: string;
   chunk?: string;
+  /** Content was transcribed from a scanned page by OCR. */
+  ocr?: boolean;
   collection?: string;
   score: string;
   componentScores?: Record<string, number>;
@@ -16,12 +18,12 @@ interface RAGResultItem {
 
 export function parseRAGResults(result: string): RAGResultItem[] {
   const items: RAGResultItem[] = [];
-  // Match: [1] Source: filename, page X, chunk Y [collection] (score: 0.xxx)\ncontent
+  // Match: [1] Source: filename, page X, chunk Y, ocr [collection] (score: 0.xxx)\ncontent
   const pattern =
-    /\[(\d+)\]\s*Source:\s*([^,\n]+?)(?:,\s*page\s*(\d+))?(?:,\s*chunk\s*(\d+))?(?:\s*\[([^\]]+)\])?\s*\(score:\s*([\d.]+)\)\n([\s\S]*?)(?=\n\[\d+\]|$)/g;
+    /\[(\d+)\]\s*Source:\s*([^,\n]+?)(?:,\s*page\s*(\d+))?(?:,\s*chunk\s*(\d+))?(,\s*ocr)?(?:\s*\[([^\]]+)\])?\s*\(score:\s*([\d.]+)\)\n([\s\S]*?)(?=\n\[\d+\]|$)/g;
   let match;
   while ((match = pattern.exec(result)) !== null) {
-    const rawContent = (match[7] ?? "").trim();
+    const rawContent = (match[8] ?? "").trim();
     const scoreMatch = rawContent.match(/^Scores:\s*([^\n]+)\n?/);
     const componentScores = scoreMatch
       ? Object.fromEntries(
@@ -37,8 +39,9 @@ export function parseRAGResults(result: string): RAGResultItem[] {
       source: (match[2] ?? "").trim(),
       page: match[3],
       chunk: match[4],
-      collection: match[5],
-      score: match[6] ?? "",
+      ocr: !!match[5],
+      collection: match[6],
+      score: match[7] ?? "",
       componentScores,
       content: rawContent.replace(/^Scores:\s*[^\n]+\n?/, "").trim(),
     });
@@ -156,13 +159,19 @@ function RAGSourceGroup({
                   >
                     {chunk.content}
                   </p>
-                  {(chunk.page || chunk.chunk) && (
+                  {(chunk.page || chunk.chunk || chunk.ocr) && (
                     <div className="text-foreground/45 mt-1 flex items-center gap-1.5 font-mono text-[10px] tracking-wider uppercase">
                       {chunk.page && <span>第 {chunk.page} 页</span>}
                       {chunk.chunk && (
                         <>
                           {chunk.page && <span>·</span>}
                           <span>第 {Number(chunk.chunk) + 1} 段</span>
+                        </>
+                      )}
+                      {chunk.ocr && (
+                        <>
+                          {(chunk.page || chunk.chunk) && <span>·</span>}
+                          <span title="此内容由扫描件识别得到，可能有识别误差">识别文字</span>
                         </>
                       )}
                     </div>

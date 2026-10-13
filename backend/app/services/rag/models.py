@@ -4,7 +4,7 @@ Structures used to interface with the RAG feature."""
 
 import uuid
 from enum import StrEnum
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field, computed_field, model_validator
 
@@ -16,6 +16,8 @@ class DocumentPage(BaseModel):
     page_num: int
     content: str
     parent_doc_id: str | None = None
+    # "ocr" when the content was transcribed from a page image by the vision model.
+    extraction: Literal["text", "ocr"] = "text"
 
 
 class DocumentPageChunk(DocumentPage):

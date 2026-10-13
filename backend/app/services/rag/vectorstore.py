@@ -90,6 +90,7 @@ class BaseVectorStore(ABC):
         meta = {
             "page_num": chunk.page_num,
             "chunk_num": chunk.chunk_num,
+            "extraction": chunk.extraction,
             **document.metadata.model_dump(),
         }
         return meta
