@@ -17,6 +17,7 @@ export const ROUTES = {
   REGISTER: "/register",
   CHAT: "/chat",
   RAG: "/rag",
+  REPORTS: "/reports",
   EVALUATION: "/evaluation",
   ADMIN: "/admin",
 } as const;

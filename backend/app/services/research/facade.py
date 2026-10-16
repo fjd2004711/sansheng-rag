@@ -38,7 +38,7 @@ from app.services.research.credibility import TIER_RANK, source_tier
 from app.services.research.exceptions import WebSearchError
 from app.services.research.fetcher import PageFetcher
 from app.services.research.models import ResearchResult, WebHit, WebPage, WebSource
-from app.services.research.search_client import WebSearchClient, build_search_client
+from app.services.research.search_client import WebSearchClient, build_search_chain
 from app.services.research.writer import WEB_ABSTAIN_MESSAGE, plan_queries, write_answer
 
 logger = logging.getLogger(__name__)
@@ -81,10 +81,13 @@ class ResearchService:
 
     @classmethod
     def from_settings(cls) -> ResearchService:
-        search_client = build_search_client(
-            settings.RESEARCH_SEARCH_PROVIDER,
-            settings.RESEARCH_SEARCH_API_KEY,
-            settings.RESEARCH_SEARXNG_URL,
+        search_client = build_search_chain(
+            provider=settings.RESEARCH_SEARCH_PROVIDER,
+            api_key=settings.RESEARCH_SEARCH_API_KEY,
+            searxng_url=settings.RESEARCH_SEARXNG_URL,
+            fallback_provider=settings.RESEARCH_FALLBACK_PROVIDER,
+            fallback_api_key=settings.RESEARCH_FALLBACK_API_KEY,
+            concurrency=settings.RESEARCH_SEARCH_CONCURRENCY,
         )
         rag = settings.rag
         retrieval = RetrievalService(
@@ -96,6 +99,14 @@ class ResearchService:
         )
         return cls(search_client=search_client, fetcher=fetcher, retrieval=retrieval)
 
+    def new_corpus(self) -> WebCorpus:
+        """A fresh per-run collection; the caller must ``close()`` it."""
+        return WebCorpus(
+            self._retrieval,
+            chunk_size=settings.rag.chunk_size,
+            chunk_overlap=settings.rag.chunk_overlap,
+        )
+
     async def run(self, question: str, events: ResearchEvents) -> ResearchResult:
         queries = await plan_queries(question, max_queries=settings.RESEARCH_MAX_QUERIES)
         await events.trace(
@@ -106,13 +117,9 @@ class ResearchService:
                 "detail": {"queries": queries},
             }
         )
-        corpus = WebCorpus(
-            self._retrieval,
-            chunk_size=settings.rag.chunk_size,
-            chunk_overlap=settings.rag.chunk_overlap,
-        )
+        corpus = self.new_corpus()
         try:
-            await self._gather(queries, corpus, events, round_=0)
+            await self.gather(queries, corpus, events, round_=0)
             await corpus.retrieve(question, limit=settings.RESEARCH_EVIDENCE_TOP_K)
             for query in queries:
                 if query != question:
@@ -139,7 +146,7 @@ class ResearchService:
 
             async def supplemental_search(query: str) -> str:
                 queries.append(query)
-                await self._gather([query], corpus, events, round_=1)
+                await self.gather([query], corpus, events, round_=1)
                 await corpus.retrieve(query, limit=_QUERY_EVIDENCE + 2)
                 await self._report_evidence(corpus.sources, events, queries, round_=1)
                 return format_evidence(corpus.sources)
@@ -155,7 +162,7 @@ class ResearchService:
             )
             answer = WEB_ABSTAIN_MESSAGE if abstained else checked.answer
             if not abstained:
-                audit = await self._cross_check(question, answer, corpus, events, queries)
+                audit = await self.cross_check(question, answer, corpus, events, queries)
                 summary = summary_markdown(audit)
                 if summary:
                     answer = f"{answer}\n\n{summary}"
@@ -176,7 +183,7 @@ class ResearchService:
                     exc_info=True,
                 )
 
-    async def _cross_check(
+    async def cross_check(
         self,
         question: str,
         answer: str,
@@ -185,7 +192,7 @@ class ResearchService:
         queries: list[str],
     ) -> ClaimAudit:
         """Grade every claim; look once more for independent sources on the weak ones; grade again."""
-        audit = await self._audit(question, answer, corpus, events, round_=0)
+        audit = await self.audit(question, answer, corpus, events, round_=0)
         for round_ in range(1, settings.RESEARCH_MAX_CORROBORATION_ROUNDS + 1):
             targets = audit.needs_corroboration()[: settings.RESEARCH_MAX_CORROBORATED_CLAIMS]
             if not targets:
@@ -194,7 +201,7 @@ class ResearchService:
             queries.extend(searches)
             before = len(corpus.sources)
             try:
-                await self._gather(searches, corpus, events, round_=round_ + 1)
+                await self.gather(searches, corpus, events, round_=round_ + 1)
             except WebSearchError:
                 logger.warning("research_corroboration_search_failed", exc_info=True)
             for claim in targets:
@@ -215,10 +222,10 @@ class ResearchService:
             if not found:
                 break
             await self._report_evidence(corpus.sources, events, queries, round_=round_ + 1)
-            audit = await self._audit(question, answer, corpus, events, round_=round_)
+            audit = await self.audit(question, answer, corpus, events, round_=round_)
         return audit
 
-    async def _audit(
+    async def audit(
         self, question: str, answer: str, corpus: WebCorpus, events: ResearchEvents, *, round_: int
     ) -> ClaimAudit:
         try:
@@ -235,10 +242,16 @@ class ResearchService:
         await events.trace(audit_event(audit, round_=round_))
         return audit
 
-    async def _gather(
-        self, queries: list[str], corpus: WebCorpus, events: ResearchEvents, *, round_: int
+    async def gather(
+        self,
+        queries: list[str],
+        corpus: WebCorpus,
+        events: ResearchEvents,
+        *,
+        round_: int,
+        max_pages: int | None = None,
     ) -> None:
-        """Search every query, fetch the new pages, and index them."""
+        """Search every query, fetch the new pages (most credible first), and index them."""
         outcomes = await asyncio.gather(
             *(self._search.search(q, limit=settings.RESEARCH_RESULTS_PER_QUERY) for q in queries),
             return_exceptions=True,
@@ -267,7 +280,7 @@ class ResearchService:
 
         # Read the most credible pages first; within a tier keep the search engine's order.
         fresh = sorted(_unique_new(hits, corpus), key=lambda hit: TIER_RANK[source_tier(hit.url)])[
-            : settings.RESEARCH_MAX_PAGES
+            : max_pages or settings.RESEARCH_MAX_PAGES
         ]
         await events.trace(
             {

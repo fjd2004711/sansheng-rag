@@ -15,6 +15,7 @@ from app.api.routes.v1 import (
     quality,
     rag,
     rag_settings,
+    reports,
     usage,
     users,
 )
@@ -35,3 +36,4 @@ v1_router.include_router(insights.router, tags=["insights"])
 v1_router.include_router(eval_candidates.router, tags=["eval"])
 v1_router.include_router(rag_settings.router, tags=["settings"])
 v1_router.include_router(quality.router, tags=["quality"])
+v1_router.include_router(reports.router, prefix="/reports", tags=["reports"])

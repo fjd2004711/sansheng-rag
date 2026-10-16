@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+import asyncio
+import logging
 from typing import Any, Protocol
 
 import httpx
 
 from app.services.research.exceptions import ResearchNotConfiguredError, WebSearchError
 from app.services.research.models import WebHit
+
+logger = logging.getLogger(__name__)
 
 
 class WebSearchClient(Protocol):
@@ -85,6 +89,13 @@ class SearxngSearchClient:
                 message="网页搜索失败", details={"provider": "searxng", "error": str(exc)}
             ) from exc
         results = data.get("results") if isinstance(data, dict) else None
+        blocked = data.get("unresponsive_engines") if isinstance(data, dict) else None
+        if not results and blocked:
+            # Every engine refused (CAPTCHA / suspended): say so instead of "nothing found".
+            raise WebSearchError(
+                message="搜索引擎暂时限制了访问（验证码），请稍后再试",
+                details={"provider": "searxng", "engines": [str(e[0]) for e in blocked if e]},
+            )
         return [
             WebHit(
                 title=str(item.get("title") or ""),
@@ -116,6 +127,54 @@ async def _post_json(
     if not isinstance(data, dict):
         raise WebSearchError(message="网页搜索返回格式不正确", details={"url": url})
     return data
+
+
+class ThrottledSearchClient:
+    """Limit concurrent searches: free metasearch engines answer bursts with CAPTCHAs."""
+
+    def __init__(self, inner: WebSearchClient, concurrency: int) -> None:
+        self._inner = inner
+        self._semaphore = asyncio.Semaphore(max(1, concurrency))
+
+    async def search(self, query: str, *, limit: int) -> list[WebHit]:
+        async with self._semaphore:
+            return await self._inner.search(query, limit=limit)
+
+
+class FallbackSearchClient:
+    """Use the primary provider; switch to the fallback when it fails or finds nothing."""
+
+    def __init__(self, primary: WebSearchClient, fallback: WebSearchClient) -> None:
+        self._primary = primary
+        self._fallback = fallback
+
+    async def search(self, query: str, *, limit: int) -> list[WebHit]:
+        try:
+            hits = await self._primary.search(query, limit=limit)
+        except WebSearchError as exc:
+            logger.info("research_search_fallback query=%s reason=%s", query, exc.message)
+            return await self._fallback.search(query, limit=limit)
+        return hits or await self._fallback.search(query, limit=limit)
+
+
+def build_search_chain(
+    *,
+    provider: str,
+    api_key: str,
+    searxng_url: str,
+    fallback_provider: str = "",
+    fallback_api_key: str = "",
+    concurrency: int = 2,
+) -> WebSearchClient:
+    """The configured provider, throttled, with an optional fallback provider behind it."""
+    client: WebSearchClient = ThrottledSearchClient(
+        build_search_client(provider, api_key, searxng_url), concurrency
+    )
+    if fallback_provider:
+        client = FallbackSearchClient(
+            client, build_search_client(fallback_provider, fallback_api_key, searxng_url)
+        )
+    return client
 
 
 def build_search_client(provider: str, api_key: str, searxng_url: str = "") -> WebSearchClient:

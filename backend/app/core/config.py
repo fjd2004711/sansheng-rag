@@ -179,6 +179,11 @@ class Settings(BaseSettings):
     RESEARCH_SEARCH_PROVIDER: str = "searxng"
     RESEARCH_SEARCH_API_KEY: str = ""
     RESEARCH_SEARXNG_URL: str = ""
+    # Used when the main provider fails or finds nothing (e.g. SearXNG engines answering with CAPTCHAs).
+    RESEARCH_FALLBACK_PROVIDER: str = ""  # "" | tavily | bocha
+    RESEARCH_FALLBACK_API_KEY: str = ""
+    # Concurrent searches; free metasearch engines block bursts.
+    RESEARCH_SEARCH_CONCURRENCY: int = 2
     RESEARCH_MAX_QUERIES: int = 3
     RESEARCH_RESULTS_PER_QUERY: int = 8
     RESEARCH_MAX_PAGES: int = 8
@@ -191,6 +196,18 @@ class Settings(BaseSettings):
     RESEARCH_MAX_CORROBORATED_CLAIMS: int = 3
     # A time-sensitive claim whose newest source is older than this is flagged as possibly outdated.
     RESEARCH_STALE_DAYS: int = 365
+    # Research reports (Word / PDF): a longer pipeline run as a background job.
+    REPORT_MAX_SECTIONS: int = 6
+    REPORT_MAX_QUERIES: int = 14
+    REPORT_PAGES_PER_BATCH: int = 10
+    REPORT_SECTION_EVIDENCE: int = 10
+    REPORT_MAX_PER_DAY: int = 20  # per user
+    REPORT_MAX_CORROBORATED_CLAIMS: int = 6
+    REPORT_STALE_AFTER_MINUTES: int = (
+        30  # a "running" report not updated for this long is marked failed
+    )
+    # CJK TrueType font for PDF and charts; empty = auto-detect (WenQuanYi in the Docker image, system fonts locally).
+    REPORT_FONT_PATH: str = ""
 
     CORS_ORIGINS: list[str] = [
         "http://localhost:3000",
