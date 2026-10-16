@@ -21,6 +21,7 @@ from app.services.rag.models import (
     SearchResult,
 )
 from app.services.rag.sparse import invalidate_bm25_index
+from app.services.research.credibility import TIER_LABELS, source_tier
 from app.services.research.models import WebPage, WebSource
 
 _SCORE_KEYS = ("dense_score", "bm25_score", "rrf_score", "reranker_score")
@@ -90,6 +91,7 @@ class WebCorpus:
             fetched_at=str(info.get("fetched_at") or ""),
             published_at=info.get("published_at"),
             from_snippet=bool(info.get("from_snippet")),
+            tier=source_tier(str(meta.get("source_path") or "")),
             score=float(result.score),
             component_scores={
                 k: float(meta[k]) for k in _SCORE_KEYS if isinstance(meta.get(k), int | float)
@@ -141,10 +143,10 @@ def format_evidence(sources: list[WebSource]) -> str:
         return ""
     blocks = []
     for source in sources:
-        dated = f"，发布于 {source.published_at}" if source.published_at else ""
+        dated = f" · 发布于 {source.published_at}" if source.published_at else ""
         snippet = "（仅搜索摘要，未能读取全文）" if source.from_snippet else ""
         content = mark_if_suspicious(source.content)[0]
         blocks.append(
-            f"[{source.index}] Source: {source.title} — {source.url}{dated}{snippet}\n{content}"
+            f"[{source.index}] Source: {source.title} — {source.url}（{TIER_LABELS[source.tier]}{dated}）{snippet}\n{content}"
         )
     return "Web search results (cite inline using [1], [2], etc.):\n\n" + "\n\n".join(blocks)

@@ -1,8 +1,9 @@
 import { describeFailure } from "@/lib/agent-trace-labels";
-import { searchQueriesOf } from "@/lib/research-trace";
+import { auditCountsOf, searchQueriesOf } from "@/lib/research-trace";
 import type { AgentTraceEvent } from "@/types";
 
-export type VerdictKind = "verified" | "corrected" | "partial" | "abstained" | "unchecked";
+/** "cross_checked": research mode graded every claim against independent web sources. */
+export type VerdictKind = "verified" | "corrected" | "partial" | "abstained" | "cross_checked" | "unchecked";
 
 export interface AnswerVerdict {
   kind: VerdictKind;
@@ -18,6 +19,8 @@ export interface AnswerVerdict {
   queries: string[];
   /** Plain-language reason behind a refusal or a partial answer, when there is one. */
   reason?: string;
+  /** Research mode: claims per confidence level from the last cross-check. */
+  audit?: Record<string, number>;
 }
 
 const REASON_STEPS = ["answer_reverify", "answer_verify", "answer_diagnose", "failure_diagnose", "evidence_evaluate"];
@@ -57,8 +60,13 @@ export function deriveVerdict(
   const groundedness =
     typeof lastVerify?.detail.groundedness === "number" ? lastVerify.detail.groundedness : undefined;
 
+  const lastAudit = [...trace].reverse().find((e) => e.step === "claim_audit");
+  const audit = lastAudit ? auditCountsOf(lastAudit.detail) : undefined;
+
   let kind: VerdictKind = "unchecked";
-  if (trace.some((e) => e.step === "partial_answer")) kind = "partial";
+  // Research mode never cross-checks an answer it declined to give, so the audit can take precedence.
+  if (audit && Object.values(audit).some((n) => n > 0)) kind = "cross_checked";
+  else if (trace.some((e) => e.step === "partial_answer")) kind = "partial";
   else if (trace.some((e) => e.step === "abstain")) kind = "abstained";
   else if (lastVerify?.status === "PASS") kind = trace.some((e) => CORRECTION_STEPS.has(e.step)) ? "corrected" : "verified";
 
@@ -73,5 +81,6 @@ export function deriveVerdict(
     rewrites: trace.filter((e) => e.step === "query_rewrite").length,
     queries,
     reason: kind === "abstained" || kind === "partial" ? lastReason(trace) : undefined,
+    audit,
   };
 }

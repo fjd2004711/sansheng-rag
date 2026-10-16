@@ -44,6 +44,25 @@ function headline(verdict: AnswerVerdict): { tone: keyof typeof TONES; icon: typ
         title: "仅部分有依据",
         detail: "资料只覆盖了问题的一部分，有依据的内容已给出，没有规定的部分已在回答里说明",
       };
+    case "cross_checked": {
+      const a = verdict.audit ?? {};
+      const total = Object.values(a).reduce((x, y) => x + y, 0);
+      const doubtful = (a.single_source ?? 0) + (a.disputed ?? 0) + (a.unverified ?? 0);
+      const parts = [
+        a.verified && `${a.verified} 条已核实`,
+        a.single_source && `${a.single_source} 条单一来源`,
+        a.disputed && `${a.disputed} 条有争议`,
+        a.unverified && `${a.unverified} 条未能核实`,
+      ].filter(Boolean);
+      return doubtful === 0
+        ? { tone: "good", icon: CircleCheck, title: "已交叉核实", detail: `${total} 条说法都有权威来源或多个独立网站印证` }
+        : {
+            tone: "warn",
+            icon: CircleDashed,
+            title: "部分说法待确认",
+            detail: `${parts.join("，")}；详见回答末尾的“核实情况”`,
+          };
+    }
     case "abstained":
       return { tone: "warn", icon: SearchX, title: "没有找到答案", detail: "资料里没有足够依据，所以不作回答，也没有编造" };
     default:

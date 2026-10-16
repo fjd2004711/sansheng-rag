@@ -2,6 +2,7 @@
 
 import json
 import socket
+from datetime import date
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -16,7 +17,14 @@ from app.services.rag.generation.models import (
 )
 from app.services.rag.models import Document, SearchResult
 from app.services.research import facade, search_client
+from app.services.research.audit import (
+    ExtractedClaim,
+    audit_claims,
+    corroboration_query,
+    summary_markdown,
+)
 from app.services.research.corpus import WebCorpus, format_evidence
+from app.services.research.credibility import registrable_domain, source_tier
 from app.services.research.exceptions import (
     ResearchNotConfiguredError,
     UnsafeURLError,
@@ -251,7 +259,7 @@ def test_format_evidence_marks_snippet_only_and_injection() -> None:
     )
     text = format_evidence([source])
     assert text.startswith("Web search results")
-    assert "[1] Source: T — https://x.cn（仅搜索摘要，未能读取全文）" in text
+    assert "[1] Source: T — https://x.cn（一般网站）（仅搜索摘要，未能读取全文）" in text
     assert "疑似指令" in text
 
 
@@ -285,7 +293,9 @@ class FakeSearch:
             raise WebSearchError(message="down")
         n = len(self.queries)
         return [
-            WebHit(title=f"r{n}", url=f"https://example.com/{n}", snippet=f"{query} 风速资料 {n}")
+            WebHit(
+                title=f"r{n}", url=f"https://news{n}.cn/article", snippet=f"{query} 风速资料 {n}"
+            )
         ]
 
 
@@ -314,12 +324,19 @@ class SupplementingCorrector:
         )
 
 
-def _service(search: FakeSearch, retrieval: FakeRetrieval) -> facade.ResearchService:
+async def _no_claims(question: str, answer: str, evidence: str) -> list[ExtractedClaim]:
+    return []
+
+
+def _service(
+    search: FakeSearch, retrieval: FakeRetrieval, extractor=_no_claims
+) -> facade.ResearchService:
     return facade.ResearchService(
         search_client=search,
         fetcher=SnippetFetcher(),
         retrieval=retrieval,
         corrector_factory=SupplementingCorrector,
+        claim_extractor=extractor,
     )
 
 
@@ -385,3 +402,201 @@ def test_web_payload_is_the_frontend_web_search_shape() -> None:
     assert payload["kind"] == "web_search"
     assert payload["query"] == "a；b"
     assert payload["results"][0]["index"] == 3
+
+
+# ---- Step 2: credibility and cross-checking -----------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("url", "tier"),
+    [
+        ("https://www.gov.cn/zhengce/x.htm", "authoritative"),
+        ("https://www.stats.gov.cn/sj/", "authoritative"),
+        ("https://tcdata.typhoon.org.cn/zy_wind.html", "authoritative"),
+        ("https://www.who.int/news", "authoritative"),
+        ("https://zh.wikipedia.org/wiki/x", "reference"),
+        ("https://baike.baidu.com/item/x", "reference"),
+        ("https://www.news.cn/2025/x.htm", "reference"),
+        ("https://wenku.baidu.com/view/x", "low"),
+        ("https://www.sohu.com/a/883094116_121123732", "low"),
+        ("https://www.163.com/dy/article/x.html", "low"),
+        ("http://mp.weixin.qq.com/s?src=11", "low"),
+        ("https://www.zhihu.com/question/1", "low"),
+        ("https://ai.so.com/s?q=12", "low"),
+        ("https://www.tianqi.com/toutiao/read/1.html", "general"),
+    ],
+)
+def test_source_tier_classifies_by_address(url: str, tier: str) -> None:
+    assert source_tier(url) == tier
+
+
+def test_registrable_domain_groups_subdomains_of_one_site() -> None:
+    assert registrable_domain("https://news.example.co.uk/a") == registrable_domain(
+        "https://www.example.co.uk/b"
+    )
+
+
+def _src(
+    index: int, url: str, *, snippet: bool = False, published: str | None = "2026-09-01"
+) -> WebSource:
+    return WebSource(
+        index=index,
+        title=f"s{index}",
+        url=url,
+        domain=url,
+        content="c",
+        fetched_at="",
+        published_at=published,
+        from_snippet=snippet,
+        tier=source_tier(url),
+    )
+
+
+SOURCES = [
+    _src(1, "https://www.gov.cn/a"),
+    _src(2, "https://zh.wikipedia.org/wiki/b"),
+    _src(3, "https://www.tianqi.com/c"),
+    _src(4, "https://www.zhihu.com/d"),
+    _src(5, "https://www.sohu.com/a/e"),
+    _src(6, "https://www.gov.cn/f", snippet=True),
+    _src(7, "https://news.example.com/g", published="2019-01-01"),
+]
+TODAY = date(2026, 10, 16)
+
+
+def _grade(**claim: Any):
+    return audit_claims(
+        [ExtractedClaim(claim="说法", **claim)], SOURCES, today=TODAY, stale_days=365
+    ).claims[0]
+
+
+def test_grade_authoritative_full_text_is_verified() -> None:
+    assert _grade(supporting=[1]).level == "verified"
+
+
+def test_grade_two_independent_sites_is_verified() -> None:
+    graded = _grade(supporting=[2, 3])
+    assert graded.level == "verified"
+    assert graded.domains == ["wikipedia.org", "tianqi.com"]
+
+
+def test_grade_one_site_is_single_source() -> None:
+    assert _grade(supporting=[3]).level == "single_source"
+
+
+def test_grade_authoritative_snippet_only_is_single_source() -> None:
+    graded = _grade(supporting=[6])
+    assert graded.level == "single_source"
+    assert "搜索摘要" in graded.reason
+
+
+def test_grade_only_low_credibility_sites_is_single_source() -> None:
+    graded = _grade(supporting=[4, 5])
+    assert graded.level == "single_source"
+    assert "低可信" in graded.reason
+
+
+def test_grade_credible_contradiction_is_disputed() -> None:
+    graded = _grade(supporting=[1], contradicting=[2])
+    assert graded.level == "disputed"
+    assert graded.contradicting == [2]
+    assert not graded.supported
+
+
+def test_grade_low_credibility_contradiction_does_not_dispute() -> None:
+    assert _grade(supporting=[1], contradicting=[4]).level == "verified"
+
+
+def test_grade_without_support_is_unverified() -> None:
+    assert _grade().level == "unverified"
+
+
+def test_grade_ignores_citation_numbers_that_do_not_exist() -> None:
+    assert _grade(supporting=[99]).level == "unverified"
+
+
+def test_grade_time_sensitive_claim_with_old_source_is_stale() -> None:
+    graded = _grade(supporting=[7], time_sensitive=True)
+    assert graded.stale
+    assert not _grade(supporting=[1], time_sensitive=True).stale
+
+
+def test_summary_lists_every_claim_that_is_not_verified() -> None:
+    audit = audit_claims(
+        [
+            ExtractedClaim(claim="甲", supporting=[1]),
+            ExtractedClaim(claim="乙", supporting=[1], contradicting=[2]),
+        ],
+        SOURCES,
+        today=TODAY,
+        stale_days=365,
+    )
+    summary = summary_markdown(audit)
+    assert summary.startswith("**核实情况**：共 2 条说法，已核实 1 条、有争议 1 条。")
+    assert "⚠️ 有争议：乙" in summary
+    assert "甲（" not in summary
+
+
+def test_corroboration_query_strips_citations_and_asks_for_official_source() -> None:
+    claim = _grade(supporting=[3])
+    claim.claim = "12级风的风速为32.7米/秒以上[3]。"
+    assert corroboration_query(claim) == "12级风的风速为32.7米/秒以上 官方"
+
+
+@pytest.mark.anyio
+async def test_run_corroborates_weak_claims_once_and_appends_summary() -> None:
+    calls: list[str] = []
+
+    async def extractor(question: str, answer: str, evidence: str) -> list[ExtractedClaim]:
+        calls.append(evidence)
+        # First pass: only one site; after the corroborating search a second site backs it.
+        supporting = [1] if len(calls) == 1 else [1, 3]
+        return [ExtractedClaim(claim="12级风风速32.7米/秒以上", supporting=supporting)]
+
+    async def fake_write(question: str, evidence: str, on_delta) -> str:
+        return "12 级风风速 32.7 米/秒以上 [1]"
+
+    events = RecordingEvents()
+    with (
+        patch.object(facade, "plan_queries", AsyncMock(return_value=["风力等级 风速"])),
+        patch.object(facade, "write_answer", fake_write),
+    ):
+        result = await _service(FakeSearch(), FakeRetrieval(), extractor).run(
+            "12 级风风速多少", events
+        )
+
+    assert len(calls) == 2
+    assert events.steps.count("claim_audit") == 2
+    assert "corroborate" in events.steps
+    assert result.queries[-1] == "12级风风速32.7米/秒以上 官方"
+    assert result.answer.endswith("**核实情况**：共 1 条说法，已核实 1 条。")
+
+
+def test_summary_counts_many_single_source_claims_instead_of_listing() -> None:
+    claims = [ExtractedClaim(claim=f"说法{i}", supporting=[3]) for i in range(5)]
+    summary = summary_markdown(audit_claims(claims, SOURCES, today=TODAY, stale_days=365))
+    assert "另有 5 条说法只找到一个来源" in summary
+    assert "说法0" not in summary
+
+
+def test_strip_citations_hides_writer_markers() -> None:
+    from app.services.research.audit import _strip_citations
+
+    assert _strip_citations("风速 32.7 米/秒 [1][2]，1805 年 [4]。") == "风速 32.7 米/秒，1805 年。"
+
+
+def test_claim_in_answer_rejects_claims_lifted_from_sources() -> None:
+    from app.services.research.audit import claim_in_answer
+
+    answer = "2025年国内生产总值为1401879亿元，比上年增长5.0% [1]。"
+    assert claim_in_answer("2025年国内生产总值为1401879亿元", answer)
+    assert claim_in_answer("2025年国内生产总值比上年增长5.0%", answer)
+    assert not claim_in_answer("2025年第一产业增加值为93347亿元", answer)
+    assert not claim_in_answer("全员劳动生产率比上年提高明显", answer)
+
+
+def test_usable_title_drops_script_text() -> None:
+    from app.services.research.fetcher import _usable_title
+
+    assert _usable_title("var title1 = '统计公报'") is None
+    assert _usable_title("中华人民共和国2025年统计公报") == "中华人民共和国2025年统计公报"

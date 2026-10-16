@@ -9,6 +9,7 @@ from __future__ import annotations
 import asyncio
 import ipaddress
 import logging
+import re
 import socket
 from datetime import UTC, datetime
 from urllib.parse import urljoin, urlsplit
@@ -89,7 +90,7 @@ class PageFetcher:
             )
         return WebPage(
             url=hit.url,
-            title=title or hit.title or domain_of(hit.url),
+            title=_usable_title(title) or hit.title or domain_of(hit.url),
             domain=domain_of(hit.url),
             text=text,
             fetched_at=fetched_at,
@@ -126,6 +127,13 @@ class PageFetcher:
                 await client.aclose()
 
 
+def _usable_title(title: str | None) -> str | None:
+    """Page metadata sometimes yields script text (``var title1 = '…'``); fall back to the search title then."""
+    if not title or re.search(r"\bvar\s|[={};]|function\s*\(", title):
+        return None
+    return title.strip() or None
+
+
 def _is_soft_404(source: str, target: str) -> bool:
     """A removed article often redirects to the site's home page; that page is not the cited source."""
     return urlsplit(source).path.strip("/") != "" and urlsplit(target).path.strip("/") == ""
@@ -134,9 +142,15 @@ def _is_soft_404(source: str, target: str) -> bool:
 def _extract(body: bytes, content_type: str, url: str) -> tuple[str, str | None, str | None]:
     if content_type == "text/plain":
         return body.decode("utf-8", errors="replace").strip(), None, None
+    # Markdown keeps table rows intact, so a value stays on the row (e.g. wind force level) it belongs to.
     text = (
         trafilatura.extract(
-            body, url=url, include_tables=True, include_comments=False, favor_precision=True
+            body,
+            url=url,
+            include_tables=True,
+            include_comments=False,
+            favor_precision=True,
+            output_format="markdown",
         )
         or ""
     )

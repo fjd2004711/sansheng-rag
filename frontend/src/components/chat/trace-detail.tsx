@@ -370,6 +370,7 @@ function Summary({ trace }: { trace: AgentTraceEvent[] }) {
     corrected: "第一次的结果不理想，系统自行纠正后，回答通过了核对。",
     partial: "资料只覆盖了问题的一部分，只给出了有依据的内容。",
     abstained: "资料里没有足够的依据，所以没有作答。",
+    cross_checked: "每条说法都按来源等级和独立来源数量评了级，存疑的说法补搜过一轮，结果列在回答末尾。",
     unchecked: "这条回答没有完成完整核对。",
   }[verdict.kind];
   return (

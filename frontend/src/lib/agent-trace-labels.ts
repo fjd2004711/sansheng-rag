@@ -20,6 +20,8 @@ export const TRACE_STEP_LABELS: Record<string, string> = {
   web_search: "网页搜索",
   web_fetch: "读取网页",
   web_evidence: "挑选证据",
+  claim_audit: "逐条交叉核验",
+  corroborate: "为存疑说法补找来源",
 };
 
 export const TRACE_STATUS_LABELS: Record<string, string> = {
@@ -58,6 +60,10 @@ export function progressText(last: AgentTraceEvent | undefined): string {
       return "正在从网页中挑选证据…";
     case "web_evidence":
       return "正在依据网页资料撰写并核对回答…";
+    case "claim_audit":
+      return last.status === "PASS" ? "每条说法都已核实，正在输出…" : "正在为存疑的说法补找来源…";
+    case "corroborate":
+      return "正在重新核验…";
     case "retrieve":
       return "正在判断找到的资料够不够用…";
     case "evidence_evaluate":
