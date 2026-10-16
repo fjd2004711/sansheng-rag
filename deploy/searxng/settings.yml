@@ -1,0 +1,25 @@
+# SearXNG for research mode (联网调研): free, keyless metasearch reachable only from the backend network.
+# Engines that work from mainland China first; Baidu often answers with a CAPTCHA and is then skipped.
+use_default_settings:
+  engines:
+    keep_only: [sogou, 360search, bing, duckduckgo, wikipedia, baidu]
+general:
+  instance_name: "chazheng-search"
+search:
+  formats: [html, json]
+  safe_search: 0
+  default_lang: "zh-CN"
+server:
+  # Overridden by the SEARXNG_SECRET environment variable.
+  secret_key: "set-SEARXNG_SECRET"
+  limiter: false
+  image_proxy: false
+engines:
+  - name: sogou
+    disabled: false
+  - name: 360search
+    disabled: false
+  - name: bing
+    disabled: false
+  - name: baidu
+    disabled: false

@@ -1,5 +1,6 @@
 import { parseRAGResults } from "@/components/chat/tool-results/rag";
 import { parseWebSearch } from "@/components/chat/tool-results/web-search";
+import { SOURCE_TIER_LABELS } from "@/lib/research-trace";
 import type { ChatMessage, ToolCall } from "@/types";
 
 export interface SourceItem {
@@ -57,6 +58,7 @@ export function extractSources(message: ChatMessage): SourceItem[] {
             title: hit.title || domainOf(hit.url),
             subtitle: [
               domainOf(hit.url),
+              hit.tier && SOURCE_TIER_LABELS[hit.tier],
               hit.published_at && `发布于 ${hit.published_at}`,
               hit.snippet_only && "仅搜索摘要",
             ]

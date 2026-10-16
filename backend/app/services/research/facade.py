@@ -1,7 +1,10 @@
 """ResearchService: answer a question from the web, with every claim cited and checked.
 
-Steps: plan search queries → search → fetch and extract pages → index them for this run → hybrid retrieval
-→ write a cited answer → P3 claim-by-claim verification, which may run a bounded supplemental web search.
+Steps: plan search queries → search → fetch and extract pages (most credible first) → index them for this run
+→ hybrid retrieval → write a cited answer → P3 verification (may run one supplemental web search) → cross-check
+every claim against the sources and grade it (verified / single source / disputed / unverified) → for disputed
+and single-source claims, one bounded round of targeted searches for an independent source, then grade again →
+append the verification summary to the answer.
 """
 
 from __future__ import annotations
@@ -9,7 +12,9 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections.abc import Awaitable, Callable
+from datetime import datetime
 from typing import Any, Protocol
+from zoneinfo import ZoneInfo
 
 from app.core.config import settings
 from app.graph.generation_correction import GenerationCorrector
@@ -19,7 +24,17 @@ from app.services.rag.guard import scan_text
 from app.services.rag.reranker import RerankService
 from app.services.rag.retrieval import RetrievalService
 from app.services.rag.vectorstore import QdrantVectorStore
+from app.services.research.audit import (
+    ClaimAudit,
+    ExtractedClaim,
+    audit_claims,
+    audit_event,
+    corroboration_query,
+    extract_claims,
+    summary_markdown,
+)
 from app.services.research.corpus import WebCorpus, format_evidence
+from app.services.research.credibility import TIER_RANK, source_tier
 from app.services.research.exceptions import WebSearchError
 from app.services.research.fetcher import PageFetcher
 from app.services.research.models import ResearchResult, WebHit, WebPage, WebSource
@@ -48,7 +63,9 @@ class ResearchService:
         fetcher: PageFetcher,
         retrieval: Any,
         corrector_factory: Callable[[Callable[[str], Awaitable[str]]], Any] | None = None,
+        claim_extractor: Callable[[str, str, str], Awaitable[list[ExtractedClaim]]] | None = None,
     ) -> None:
+        self._extract_claims = claim_extractor or extract_claims
         self._search = search_client
         self._fetcher = fetcher
         self._retrieval = retrieval
@@ -65,7 +82,9 @@ class ResearchService:
     @classmethod
     def from_settings(cls) -> ResearchService:
         search_client = build_search_client(
-            settings.RESEARCH_SEARCH_PROVIDER, settings.RESEARCH_SEARCH_API_KEY
+            settings.RESEARCH_SEARCH_PROVIDER,
+            settings.RESEARCH_SEARCH_API_KEY,
+            settings.RESEARCH_SEARXNG_URL,
         )
         rag = settings.rag
         retrieval = RetrievalService(
@@ -134,8 +153,14 @@ class ResearchService:
                 _ABSTAIN_MESSAGE,
                 WEB_ABSTAIN_MESSAGE,
             )
+            answer = WEB_ABSTAIN_MESSAGE if abstained else checked.answer
+            if not abstained:
+                audit = await self._cross_check(question, answer, corpus, events, queries)
+                summary = summary_markdown(audit)
+                if summary:
+                    answer = f"{answer}\n\n{summary}"
             return ResearchResult(
-                answer=WEB_ABSTAIN_MESSAGE if abstained else checked.answer,
+                answer=answer,
                 queries=queries,
                 sources=corpus.sources,
                 evidence=format_evidence(corpus.sources),
@@ -150,6 +175,65 @@ class ResearchService:
                     corpus.collection,
                     exc_info=True,
                 )
+
+    async def _cross_check(
+        self,
+        question: str,
+        answer: str,
+        corpus: WebCorpus,
+        events: ResearchEvents,
+        queries: list[str],
+    ) -> ClaimAudit:
+        """Grade every claim; look once more for independent sources on the weak ones; grade again."""
+        audit = await self._audit(question, answer, corpus, events, round_=0)
+        for round_ in range(1, settings.RESEARCH_MAX_CORROBORATION_ROUNDS + 1):
+            targets = audit.needs_corroboration()[: settings.RESEARCH_MAX_CORROBORATED_CLAIMS]
+            if not targets:
+                break
+            searches = list(dict.fromkeys(corroboration_query(claim) for claim in targets))
+            queries.extend(searches)
+            before = len(corpus.sources)
+            try:
+                await self._gather(searches, corpus, events, round_=round_ + 1)
+            except WebSearchError:
+                logger.warning("research_corroboration_search_failed", exc_info=True)
+            for claim in targets:
+                await corpus.retrieve(claim.claim, limit=_QUERY_EVIDENCE)
+            found = len(corpus.sources) - before
+            await events.trace(
+                {
+                    "step": "corroborate",
+                    "round": round_,
+                    "status": "COMPLETE" if found else "EMPTY",
+                    "detail": {
+                        "claims": [{"claim": c.claim, "level": c.level} for c in targets],
+                        "queries": searches,
+                        "new_sources": found,
+                    },
+                }
+            )
+            if not found:
+                break
+            await self._report_evidence(corpus.sources, events, queries, round_=round_ + 1)
+            audit = await self._audit(question, answer, corpus, events, round_=round_)
+        return audit
+
+    async def _audit(
+        self, question: str, answer: str, corpus: WebCorpus, events: ResearchEvents, *, round_: int
+    ) -> ClaimAudit:
+        try:
+            extracted = await self._extract_claims(
+                question, answer, format_evidence(corpus.sources)
+            )
+        except Exception:
+            logger.warning("research_claim_extraction_failed", exc_info=True)
+            extracted = []
+        today = datetime.now(ZoneInfo(settings.TIMEZONE)).date()
+        audit = audit_claims(
+            extracted, corpus.sources, today=today, stale_days=settings.RESEARCH_STALE_DAYS
+        )
+        await events.trace(audit_event(audit, round_=round_))
+        return audit
 
     async def _gather(
         self, queries: list[str], corpus: WebCorpus, events: ResearchEvents, *, round_: int
@@ -181,7 +265,10 @@ class ResearchService:
                 message="网页搜索暂时不可用，请稍后再试", details={"queries": queries}
             )
 
-        fresh = _unique_new(hits, corpus)[: settings.RESEARCH_MAX_PAGES]
+        # Read the most credible pages first; within a tier keep the search engine's order.
+        fresh = sorted(_unique_new(hits, corpus), key=lambda hit: TIER_RANK[source_tier(hit.url)])[
+            : settings.RESEARCH_MAX_PAGES
+        ]
         await events.trace(
             {
                 "step": "web_search",

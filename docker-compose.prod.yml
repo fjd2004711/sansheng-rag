@@ -28,6 +28,7 @@ services:
     command: uvicorn app.main:app --host 0.0.0.0 --port 8010 --workers 4
     networks:
       - backend-internal
+      - egress
     ports:
       - "8010:8010"
     depends_on:
@@ -131,10 +132,28 @@ services:
           cpus: '0.5'
           memory: 256M
 
+
+  # Free metasearch for research mode; the backend reaches it at http://searxng:8080 (RESEARCH_SEARXNG_URL).
+  searxng:
+    image: searxng/searxng:2026.9.25-12f8b6515
+    container_name: self_correcting_rag_searxng
+    environment:
+      - SEARXNG_SECRET=${SEARXNG_SECRET:-change-me-searxng-secret}
+    volumes:
+      - ./deploy/searxng/settings.yml:/etc/searxng/settings.yml:ro
+    networks:
+      - backend-internal
+      - egress
+    restart: unless-stopped
+
 networks:
   backend-internal:
     driver: bridge
     internal: true
+  # Outbound internet for the services that need it: the backend (model API, research-mode page fetches)
+  # and SearXNG (search engines). Databases stay on the internal network only.
+  egress:
+    driver: bridge
 
 volumes:
   media_data:

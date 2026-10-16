@@ -66,6 +66,39 @@ class TavilySearchClient:
         ][:limit]
 
 
+class SearxngSearchClient:
+    """Self-hosted SearXNG metasearch (free, no key). Needs ``json`` in ``search.formats``."""
+
+    def __init__(self, base_url: str, timeout: float = 20) -> None:
+        self._url = base_url.rstrip("/") + "/search"
+        self._timeout = timeout
+
+    async def search(self, query: str, *, limit: int) -> list[WebHit]:
+        params = {"q": query, "format": "json", "language": "zh-CN", "safesearch": 0}
+        try:
+            async with httpx.AsyncClient(timeout=self._timeout) as client:
+                response = await client.get(self._url, params=params)
+                response.raise_for_status()
+                data = response.json()
+        except (httpx.HTTPError, ValueError) as exc:
+            raise WebSearchError(
+                message="网页搜索失败", details={"provider": "searxng", "error": str(exc)}
+            ) from exc
+        results = data.get("results") if isinstance(data, dict) else None
+        return [
+            WebHit(
+                title=str(item.get("title") or ""),
+                url=str(item["url"]),
+                snippet=str(item.get("content") or ""),
+                site_name=str(item.get("engine") or ""),
+                published_at=item.get("publishedDate") or None,
+            )
+            for item in results or []
+            if isinstance(item, dict)
+            and str(item.get("url", "")).startswith(("http://", "https://"))
+        ][:limit]
+
+
 async def _post_json(
     url: str, payload: dict[str, Any], api_key: str, timeout: float
 ) -> dict[str, Any]:
@@ -85,7 +118,14 @@ async def _post_json(
     return data
 
 
-def build_search_client(provider: str, api_key: str) -> WebSearchClient:
+def build_search_client(provider: str, api_key: str, searxng_url: str = "") -> WebSearchClient:
+    if provider == "searxng":
+        if not searxng_url:
+            raise ResearchNotConfiguredError(
+                message="联网调研还没有配置搜索服务，请联系管理员设置 RESEARCH_SEARXNG_URL",
+                details={"provider": provider},
+            )
+        return SearxngSearchClient(searxng_url)
     if not api_key:
         raise ResearchNotConfiguredError(
             message="联网调研还没有配置搜索服务，请联系管理员设置 RESEARCH_SEARCH_API_KEY",

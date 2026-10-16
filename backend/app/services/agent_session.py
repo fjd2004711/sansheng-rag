@@ -653,6 +653,7 @@ def _web_payload(queries: list[str], sources: list[WebSource]) -> str:
                     "published_at": s.published_at,
                     "fetched_at": s.fetched_at,
                     "snippet_only": s.from_snippet,
+                    "tier": s.tier,
                 }
                 for s in sources
             ],

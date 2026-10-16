@@ -38,6 +38,7 @@ class WebSource(BaseModel):
     fetched_at: str
     published_at: str | None = None
     from_snippet: bool = False
+    tier: str = "general"  # credibility.Tier
     score: float = 0.0
     component_scores: dict[str, float] = Field(default_factory=dict)
 

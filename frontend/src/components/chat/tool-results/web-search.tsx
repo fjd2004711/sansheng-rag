@@ -11,6 +11,7 @@ interface WebHit {
   index?: number;
   published_at?: string | null;
   snippet_only?: boolean;
+  tier?: string;
 }
 
 export interface WebSearchPayload {

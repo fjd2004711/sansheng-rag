@@ -174,15 +174,23 @@ class Settings(BaseSettings):
     RAG_MAX_GENERATION_CORRECTIONS: int = 1
 
     # Research mode: answer from the web instead of the knowledge base. Disabled until a search key is set.
-    RESEARCH_SEARCH_PROVIDER: str = "bocha"  # bocha | tavily
+    # searxng: self-hosted metasearch, free and keyless (Sogou / 360 / Bing / DuckDuckGo …);
+    # bocha (mainland China) and tavily (1000 free searches/month) need RESEARCH_SEARCH_API_KEY.
+    RESEARCH_SEARCH_PROVIDER: str = "searxng"
     RESEARCH_SEARCH_API_KEY: str = ""
+    RESEARCH_SEARXNG_URL: str = ""
     RESEARCH_MAX_QUERIES: int = 3
-    RESEARCH_RESULTS_PER_QUERY: int = 6
+    RESEARCH_RESULTS_PER_QUERY: int = 8
     RESEARCH_MAX_PAGES: int = 8
     RESEARCH_EVIDENCE_TOP_K: int = 10
     RESEARCH_FETCH_TIMEOUT_SECONDS: float = 10
     RESEARCH_FETCH_MAX_BYTES: int = 3_000_000
     RESEARCH_MAX_SUPPLEMENTAL_SEARCHES: int = 1
+    # Cross-check: one more targeted search for disputed / single-source claims, then grade again.
+    RESEARCH_MAX_CORROBORATION_ROUNDS: int = 1
+    RESEARCH_MAX_CORROBORATED_CLAIMS: int = 3
+    # A time-sensitive claim whose newest source is older than this is flagged as possibly outdated.
+    RESEARCH_STALE_DAYS: int = 365
 
     CORS_ORIGINS: list[str] = [
         "http://localhost:3000",

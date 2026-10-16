@@ -2,6 +2,7 @@
 
 import { ExternalLink } from "lucide-react";
 
+import { CLAIM_LEVEL_LABELS, type Claim } from "@/lib/claims";
 import { pagesOf, searchQueriesOf } from "@/lib/research-trace";
 import type { AgentTraceEvent } from "@/types";
 
@@ -53,6 +54,29 @@ export function ResearchStepBody({ event }: { event: AgentTraceEvent }) {
           共 {typeof d.count === "number" ? d.count : 0} 段证据，来源网站：
           <span className="text-muted-foreground">{domains.join("、") || "无"}</span>
         </p>
+      );
+    }
+    case "claim_audit":
+    case "corroborate": {
+      const claims = (Array.isArray(d.claims) ? d.claims : []) as Claim[];
+      const queries = event.step === "corroborate" && Array.isArray(d.queries) ? d.queries.map(String) : [];
+      return (
+        <div className="space-y-2 text-sm">
+          <ul className="space-y-1.5">
+            {claims.map((claim, i) => (
+              <li key={i}>
+                <span className="text-muted-foreground mr-1.5 text-xs">
+                  [{claim.level ? CLAIM_LEVEL_LABELS[claim.level] : "?"}]
+                </span>
+                {claim.claim}
+                {claim.reason && <span className="text-muted-foreground block text-xs">{claim.reason}</span>}
+              </li>
+            ))}
+          </ul>
+          {queries.length > 0 && (
+            <p className="text-muted-foreground text-xs">补搜：{queries.map((q) => `「${q}」`).join("、")}</p>
+          )}
+        </div>
       );
     }
     default:
