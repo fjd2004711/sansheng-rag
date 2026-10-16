@@ -600,3 +600,83 @@ def test_usable_title_drops_script_text() -> None:
 
     assert _usable_title("var title1 = '统计公报'") is None
     assert _usable_title("中华人民共和国2025年统计公报") == "中华人民共和国2025年统计公报"
+
+
+# ---- search robustness ---------------------------------------------------------------------------
+
+
+@pytest.mark.anyio
+async def test_searxng_with_every_engine_blocked_raises_clear_error() -> None:
+    blocked = httpx.Response(
+        200,
+        json={
+            "results": [],
+            "unresponsive_engines": [["sogou", "CAPTCHA"], ["baidu", "Suspended: CAPTCHA"]],
+        },
+        request=httpx.Request("GET", "http://searxng/search"),
+    )
+    with (
+        patch.object(httpx.AsyncClient, "get", AsyncMock(return_value=blocked)),
+        pytest.raises(WebSearchError) as err,
+    ):
+        await search_client.SearxngSearchClient("http://searxng:8080").search("q", limit=5)
+    assert "验证码" in err.value.message
+
+
+class _Static:
+    def __init__(self, hits: list[WebHit] | None = None, error: bool = False) -> None:
+        self.hits = hits or []
+        self.error = error
+        self.calls = 0
+
+    async def search(self, query: str, *, limit: int) -> list[WebHit]:
+        self.calls += 1
+        if self.error:
+            raise WebSearchError(message="blocked")
+        return self.hits
+
+
+@pytest.mark.anyio
+async def test_fallback_client_switches_when_primary_fails_or_is_empty() -> None:
+    hit = WebHit(title="t", url="https://a.cn")
+    backup = _Static([hit])
+    assert await search_client.FallbackSearchClient(_Static(error=True), backup).search(
+        "q", limit=3
+    ) == [hit]
+    assert await search_client.FallbackSearchClient(_Static([]), backup).search("q", limit=3) == [
+        hit
+    ]
+    primary = _Static([hit])
+    await search_client.FallbackSearchClient(primary, backup).search("q", limit=3)
+    assert backup.calls == 2  # not used when the primary answered
+
+
+@pytest.mark.anyio
+async def test_throttled_client_limits_concurrent_searches() -> None:
+    import asyncio
+
+    running = peak = 0
+
+    class Slow:
+        async def search(self, query: str, *, limit: int) -> list[WebHit]:
+            nonlocal running, peak
+            running += 1
+            peak = max(peak, running)
+            await asyncio.sleep(0.01)
+            running -= 1
+            return []
+
+    client = search_client.ThrottledSearchClient(Slow(), concurrency=2)
+    await asyncio.gather(*(client.search(str(i), limit=1) for i in range(6)))
+    assert peak == 2
+
+
+def test_build_search_chain_without_fallback_key_raises_not_configured() -> None:
+    with pytest.raises(ResearchNotConfiguredError):
+        search_client.build_search_chain(
+            provider="searxng",
+            api_key="",
+            searxng_url="http://s",
+            fallback_provider="tavily",
+            fallback_api_key="",
+        )

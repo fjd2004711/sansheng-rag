@@ -33,12 +33,13 @@ async def plan_queries(question: str, *, max_queries: int) -> list[str]:
         f"今天：{today_zh()}\n问题：{question}"
     )
     try:
-        response = await client.chat.completions.create(
-            model=model,
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0,
-            extra_body=extra_body,
-        )
+        async with client:
+            response = await client.chat.completions.create(
+                model=model,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0,
+                extra_body=extra_body,
+            )
         record_openai_response(response)
         queries = _queries_from(response.choices[0].message.content or "")
     except Exception:
@@ -76,25 +77,28 @@ async def write_answer(question: str, evidence: str, on_delta: DeltaSink) -> str
         "用问题的语言作答，结构清晰，先给结论再给依据。\n"
         f"今天：{today_zh()}\n问题：{question}\n资料：\n{evidence[:12000]}"
     )
-    stream = await client.chat.completions.create(
-        model=model,
-        messages=[
-            {"role": "system", "content": UNTRUSTED_NOTE},
-            {"role": "user", "content": prompt},
-        ],
-        temperature=0.2,
-        stream=True,
-        stream_options={"include_usage": True},
-        extra_body=extra_body,
-    )
     parts: list[str] = []
-    async for chunk in stream:
-        usage = getattr(chunk, "usage", None)
-        if usage is not None:
-            record_usage(getattr(usage, "prompt_tokens", 0), getattr(usage, "completion_tokens", 0))
-        for choice in chunk.choices or []:
-            delta = choice.delta.content if choice.delta else None
-            if delta:
-                parts.append(delta)
-                await on_delta(delta)
+    async with client:
+        stream = await client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": UNTRUSTED_NOTE},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.2,
+            stream=True,
+            stream_options={"include_usage": True},
+            extra_body=extra_body,
+        )
+        async for chunk in stream:
+            usage = getattr(chunk, "usage", None)
+            if usage is not None:
+                record_usage(
+                    getattr(usage, "prompt_tokens", 0), getattr(usage, "completion_tokens", 0)
+                )
+            for choice in chunk.choices or []:
+                delta = choice.delta.content if choice.delta else None
+                if delta:
+                    parts.append(delta)
+                    await on_delta(delta)
     return "".join(parts).strip()

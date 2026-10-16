@@ -29,6 +29,7 @@ from app.services.conversation import ConversationService
 from app.services.feedback import FeedbackService
 from app.services.app_settings import AppSettingsService
 from app.services.eval_candidate import EvalCandidateService
+from app.services.research_report import ResearchReportService
 from app.services.insights import InsightsService
 from app.services.llm_config import LLMConfigService
 from app.services.quality import QualityService
@@ -89,6 +90,14 @@ def get_eval_candidate_service(db: DBSession) -> EvalCandidateService:
 
 
 EvalCandidateSvc = Annotated[EvalCandidateService, Depends(get_eval_candidate_service)]
+
+
+def get_research_report_service(db: DBSession) -> ResearchReportService:
+    """Create ResearchReportService instance with database session."""
+    return ResearchReportService(db)
+
+
+ResearchReportSvc = Annotated[ResearchReportService, Depends(get_research_report_service)]
 
 
 def get_app_settings_service(db: DBSession) -> AppSettingsService:

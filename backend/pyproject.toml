@@ -49,6 +49,8 @@ dependencies = [
     "tqdm>=4.66.0",
     "cryptography>=44.0.0",
     "trafilatura>=2.0.0",
+    "reportlab>=4.2",
+    "matplotlib>=3.9",
 ]
 
 # PEP 735 dependency group — installed by `uv sync` / `uv sync --dev` and

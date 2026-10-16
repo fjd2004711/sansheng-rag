@@ -32,6 +32,9 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 WORKDIR /app
 
+# CJK TrueType font for research-report PDFs and charts (Noto CJK uses PostScript outlines, which reportlab cannot embed)
+RUN apt-get update && apt-get install -y --no-install-recommends fonts-wqy-microhei && rm -rf /var/lib/apt/lists/*
+
 # Copy virtual environment from builder
 COPY --from=builder --chown=1000:1000 /app /app
 

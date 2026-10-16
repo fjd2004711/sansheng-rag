@@ -79,12 +79,12 @@ class ClaimAudit(BaseModel):
 
 async def extract_claims(question: str, answer: str, evidence: str) -> list[ExtractedClaim]:
     llm = current_llm()
-    client = AsyncOpenAI(base_url=llm.base_url, api_key=llm.api_key)
     prompt = (
         f"把下面“回答”里的内容拆成最多 {_MAX_CLAIMS} 条独立的事实性说法（数字、日期、定义、因果、归属等；不要拆出纯过渡语或建议）。"
         "只能拆回答里写了的内容，资料里有而回答没写的一律不要列出。"
         "只拆关于事实本身的说法；“某资料写了…”“资料之间不一致”“引用时需注意”这类描述资料或提醒读者的话不要列出，"
         "但要把其中的事实内容（如“某数值为…”）作为说法列出。"
+        "“公开资料中未找到…”“没有公开数据”这类说明缺少资料的话不是事实说法，不要列出。"
         "对每条说法，必须逐份检查全部编号资料（回答里的引用编号已去掉，不能只看某一份）："
         "supporting 列出所有明确陈述了这条说法的资料编号（意思相同即可，不要求字面一致，一份都不要漏）；"
         "contradicting 列出给出不同数字、日期或相反结论的资料编号；两者都只能用资料里真实存在的编号。"
@@ -94,18 +94,33 @@ async def extract_claims(question: str, answer: str, evidence: str) -> list[Extr
         '"time_sensitive": false, "note": "..."}]}。\n'
         f"今天：{today_zh()}\n问题：{question}\n回答：{_strip_citations(answer)}\n资料：\n{evidence[:14000]}"
     )
-    response = await client.chat.completions.create(
-        model=llm.model,
-        messages=[
-            {"role": "system", "content": UNTRUSTED_NOTE},
-            {"role": "user", "content": prompt},
-        ],
-        temperature=0,
-        extra_body=llm.extra_body,
-    )
+    async with AsyncOpenAI(base_url=llm.base_url, api_key=llm.api_key) as client:
+        response = await client.chat.completions.create(
+            model=llm.model,
+            messages=[
+                {"role": "system", "content": UNTRUSTED_NOTE},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0,
+            extra_body=llm.extra_body,
+        )
     record_openai_response(response)
     claims = _parse_claims(response.choices[0].message.content or "")
-    return [claim for claim in claims if claim_in_answer(claim.claim, answer)]
+    return [
+        claim
+        for claim in claims
+        if claim_in_answer(claim.claim, answer) and not is_absence_statement(claim.claim)
+    ]
+
+
+_ABSENCE = re.compile(
+    r"(未|没有|无法|尚未|暂未|未能)(找到|查到|公开|公布|发布|获取|检索到|见到)|未见"
+)
+
+
+def is_absence_statement(claim: str) -> bool:
+    """ "公开资料中未找到…" reports a gap in the sources; it is not a fact to grade."""
+    return bool(_ABSENCE.search(claim))
 
 
 def _strip_citations(answer: str) -> str:
