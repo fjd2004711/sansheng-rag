@@ -7,6 +7,10 @@ interface WebHit {
   url: string;
   content: string;
   score?: number | null;
+  /** Citation number in research mode; the answer cites it as [index]. */
+  index?: number;
+  published_at?: string | null;
+  snippet_only?: boolean;
 }
 
 export interface WebSearchPayload {

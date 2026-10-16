@@ -1,4 +1,5 @@
 import { describeFailure } from "@/lib/agent-trace-labels";
+import { searchQueriesOf } from "@/lib/research-trace";
 import type { AgentTraceEvent } from "@/types";
 
 export type VerdictKind = "verified" | "corrected" | "partial" | "abstained" | "unchecked";
@@ -48,6 +49,8 @@ export function deriveVerdict(
   for (const event of trace) {
     const query = event.step === "retrieve" || event.step === "retrieve_missing" ? event.detail.query : undefined;
     if (typeof query === "string" && query && !queries.includes(query)) queries.push(query);
+    if (event.step === "web_search")
+      for (const web of searchQueriesOf(event.detail)) if (!queries.includes(web.query)) queries.push(web.query);
   }
   const verifications = trace.filter((e) => e.step === "answer_verify" || e.step === "answer_reverify");
   const lastVerify = verifications[verifications.length - 1];
@@ -63,7 +66,10 @@ export function deriveVerdict(
     kind,
     groundedness,
     citations: new Set(content.match(/\[(\d{1,3})\]/g) ?? []).size,
-    searches: trace.filter((e) => e.step === "retrieve" || e.step === "retrieve_missing").length,
+    // In research mode every search (including P3's supplemental one) is a web_search step.
+    searches: trace.some((e) => e.step === "web_search")
+      ? trace.filter((e) => e.step === "web_search").length
+      : trace.filter((e) => e.step === "retrieve" || e.step === "retrieve_missing").length,
     rewrites: trace.filter((e) => e.step === "query_rewrite").length,
     queries,
     reason: kind === "abstained" || kind === "partial" ? lastReason(trace) : undefined,

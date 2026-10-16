@@ -22,6 +22,7 @@ import { ResizeHandle } from "@/components/ui";
 import { useResizableWidth } from "@/hooks/use-resizable-width";
 import { StepBody, chunksOf, type RetrievedChunk } from "./trace-detail";
 import { useTraceDetailStore } from "@/stores/trace-detail-store";
+import { describeResearchStep } from "@/lib/research-trace";
 import { TRACE_FAILURE_LABELS, TRACE_STATUS_LABELS, TRACE_STEP_LABELS } from "@/lib/agent-trace-labels";
 
 const LABELS = TRACE_STEP_LABELS;
@@ -36,7 +37,7 @@ const HOW_IT_WORKS = [
 ];
 
 function iconFor(step: string) {
-  if (step.includes("retriev")) return Search;
+  if (step.includes("retriev") || step.startsWith("web_") || step === "research_plan") return Search;
   if (step.includes("rewrite") || step.includes("regenerat")) return WandSparkles;
   if (step.includes("verify") || step.includes("evaluate")) return ShieldCheck;
   return Activity;
@@ -80,7 +81,7 @@ function describe(event: AgentTraceEvent): string | undefined {
     case "max_rounds_reached":
       return `最多检索 ${typeof d.max_rounds === "number" ? d.max_rounds : ""} 轮，已到上限`;
     default:
-      return str(d.failure_reason) ?? str(d.query);
+      return describeResearchStep(event) ?? str(d.failure_reason) ?? str(d.query);
   }
 }
 

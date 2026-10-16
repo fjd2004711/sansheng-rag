@@ -17,6 +17,8 @@ import { formatSeconds, stepSeconds, totalSeconds } from "@/lib/step-timing";
 import { useTraceDetailStore } from "@/stores/trace-detail-store";
 import { useChatStore } from "@/stores/chat-store";
 import type { AgentTraceEvent } from "@/types";
+import { RESEARCH_STEPS } from "@/lib/research-trace";
+import { ResearchStepBody } from "./research-step-body";
 
 type Detail = Record<string, unknown>;
 
@@ -319,6 +321,7 @@ export function StepBody({ event, chunks }: { event: AgentTraceEvent; chunks: Re
         </Reason>
       );
     default:
+      if (RESEARCH_STEPS.has(event.step)) return <ResearchStepBody event={event} />;
       return str(d.failure_reason) ? <p className="text-sm">{str(d.failure_reason)}</p> : null;
   }
 }
