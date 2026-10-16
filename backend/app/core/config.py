@@ -173,6 +173,17 @@ class Settings(BaseSettings):
     RAG_GENERATION_CORRECTION_ENABLED: bool = False
     RAG_MAX_GENERATION_CORRECTIONS: int = 1
 
+    # Research mode: answer from the web instead of the knowledge base. Disabled until a search key is set.
+    RESEARCH_SEARCH_PROVIDER: str = "bocha"  # bocha | tavily
+    RESEARCH_SEARCH_API_KEY: str = ""
+    RESEARCH_MAX_QUERIES: int = 3
+    RESEARCH_RESULTS_PER_QUERY: int = 6
+    RESEARCH_MAX_PAGES: int = 8
+    RESEARCH_EVIDENCE_TOP_K: int = 10
+    RESEARCH_FETCH_TIMEOUT_SECONDS: float = 10
+    RESEARCH_FETCH_MAX_BYTES: int = 3_000_000
+    RESEARCH_MAX_SUPPLEMENTAL_SEARCHES: int = 1
+
     CORS_ORIGINS: list[str] = [
         "http://localhost:3000",
         "http://localhost:8080",

@@ -455,9 +455,14 @@ export function useChat(options: UseChatOptions = {}) {
         payload.resync = true;
         resyncRef.current = false;
       }
-      if (useRetrievalScopeStore.getState().fast) payload.fast = true;
-      const scope = currentScopePayload();
-      if (scope) payload.scope = scope;
+      const { fast, mode } = useRetrievalScopeStore.getState();
+      if (mode === "research") {
+        payload.mode = "research";
+      } else {
+        if (fast) payload.fast = true;
+        const scope = currentScopePayload();
+        if (scope) payload.scope = scope;
+      }
       if (modelRef.current) payload.model = modelRef.current;
       if (temperatureRef.current !== null) payload.temperature = temperatureRef.current;
       if (thinkingEffortRef.current !== null) payload.thinking_effort = thinkingEffortRef.current;

@@ -31,7 +31,12 @@ _DATE_RULE = (
 class AnswerEvaluator:
     """Use isolated provider calls so evaluation control data never reaches the answer stream."""
 
-    def __init__(self) -> None:
+    def __init__(
+        self, *, corpus: str = "the knowledge base", abstain_message: str = _ABSTAIN_MESSAGE
+    ) -> None:
+        # ``corpus`` names where the evidence came from in prompts, e.g. "the web search results".
+        self._corpus = corpus
+        self._abstain_message = abstain_message
         llm = current_llm()
         self._client = AsyncOpenAI(base_url=llm.base_url, api_key=llm.api_key)
         self._model = llm.model
@@ -56,11 +61,11 @@ class AnswerEvaluator:
             "(array of {claim, supported, citation_indices, reason}). "
             "Write failure_reason and every missing_information item in Chinese, as plain sentences a non-technical reader understands (say what is missing or wrong, not internal terms). Write each claim and its reason in Chinese too. A claim without support or "
             "a matching inline [n] citation is not fully grounded. Use out_of_scope only when "
-            "the knowledge base is unlikely to contain the needed answer. A claim that only applies "
+            f"{self._corpus} is unlikely to contain the needed answer. A claim that only applies "
             "the evidence to the question (arithmetic, comparing dates, deciding whether a stated "
             "rule is met) is supported when the reasoning is correct given today's date. An answer "
             "that is faithful to the evidence but openly says some part is not covered by the "
-            "knowledge base is grounded; mark it incomplete, not hallucination. Independently recompute "
+            f"{self._corpus} is grounded; mark it incomplete, not hallucination. Independently recompute "
             "any date or deadline conclusion from today's date; if the answer's conclusion contradicts "
             "your own computation, mark it hallucination.\n"
             f"Today's date: {today_zh()}\nQuestion: {question}\nAnswer: {answer}\nEvidence:\n{evidence[:9000]}"
@@ -109,14 +114,14 @@ class AnswerEvaluator:
             "Answer the question using only the numbered RAG evidence below. Every factual claim "
             "needs an inline citation like [1]. Do not invent facts, sources, or citation numbers. "
             "Answer every part the evidence supports; for a part it does not cover, say plainly "
-            "that the knowledge base has no information about that part, instead of guessing. "
-            f"Only if the evidence contains nothing relevant, reply exactly: {_ABSTAIN_MESSAGE}\n"
+            f"that {self._corpus} has no information about that part, instead of guessing. "
+            f"Only if the evidence contains nothing relevant, reply exactly: {self._abstain_message}\n"
             "Reply in the language of the question. Use today's date for relative times. "
             f"{_DATE_RULE}\n"
             f"Today's date: {today_zh()}\nQuestion: {question}\nEvidence:\n{evidence[:9000]}"
         )
         answer = (await self._complete(prompt)).strip()
-        return answer or _ABSTAIN_MESSAGE
+        return answer or self._abstain_message
 
     async def _complete(self, prompt: str) -> str:
         response = await self._client.chat.completions.create(

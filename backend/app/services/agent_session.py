@@ -2,8 +2,10 @@
 
 import asyncio
 import contextlib
+import json
 import logging
 import time
+import uuid
 from typing import Any, ClassVar
 
 from fastapi import WebSocket, WebSocketDisconnect
@@ -15,7 +17,7 @@ from app.agents.tools.rag_tool import extract_rag_trace, search_knowledge_base
 from app.core.config import settings
 from app.core.exceptions import AuthorizationError, NotFoundError
 from app.core.kb_scope import RetrievalScope, build_scope, personal_collection, use_scope
-from app.core.llm_runtime import current_llm_runtime_or_none, use_llm
+from app.core.llm_runtime import current_llm, current_llm_runtime_or_none, use_llm
 from app.core.rate_limit import TurnRateLimiter
 from app.core.usage_meter import UsageMeter, record_usage, use_meter
 from app.db.models.user import User
@@ -32,6 +34,7 @@ from app.services.llm_config import load_runtime
 from app.services.rag.generation.condense import condense_question
 from app.services.rag.generation.followups import suggest_followups
 from app.services.rag_document import RAGDocumentService
+from app.services.research import ResearchService, WebSource
 from app.services.usage import UsageService
 
 logger = logging.getLogger(__name__)
@@ -292,19 +295,24 @@ class AgentSession:
                 self._history_conversation_id = None
             await self._sync_history(user_message, newly_created)
             question = await self._standalone_question(user_message)
-            assistant = get_agent(
-                model_name=data.get("model"),
-                thinking_effort=data.get("thinking_effort"),
-            )
-            model_history = build_message_history(self.conversation_history)
-            model_history.append(HumanMessage(content=question))
             collected_tool_calls: list[dict[str, Any]] = []
-            final_output = await self._stream_agent_response(
-                assistant, model_history, collected_tool_calls
-            )
-            final_output = await self._correct_answer_if_enabled(
-                question, final_output, collected_tool_calls
-            )
+            if data.get("mode") == "research":
+                final_output = await self._run_research(question, collected_tool_calls)
+                model_name: str | None = current_llm().model
+            else:
+                assistant = get_agent(
+                    model_name=data.get("model"),
+                    thinking_effort=data.get("thinking_effort"),
+                )
+                model_name = getattr(assistant, "model_name", None)
+                model_history = build_message_history(self.conversation_history)
+                model_history.append(HumanMessage(content=question))
+                final_output = await self._stream_agent_response(
+                    assistant, model_history, collected_tool_calls
+                )
+                final_output = await self._correct_answer_if_enabled(
+                    question, final_output, collected_tool_calls
+                )
             if self._buffer_text_for_verification and final_output:
                 await self._stream_verified_output(final_output)
             await send_event(self.websocket, "final_result", {"output": final_output})
@@ -318,7 +326,7 @@ class AgentSession:
                 assistant_msg_id = await persist_assistant_turn(
                     self.current_conversation_id,
                     final_output,
-                    getattr(assistant, "model_name", None),
+                    model_name,
                     collected_tool_calls,
                     agent_trace=self._turn_trace,
                 )
@@ -416,6 +424,45 @@ class AgentSession:
         ).run(question, answer, evidence)
         for event in result.trace:
             await self._send_trace(event.model_dump(mode="json"))
+        return result.answer
+
+    async def _run_research(self, question: str, collected_tool_calls: list[dict[str, Any]]) -> str:
+        """Research mode: answer from the web; sources travel as one ``search_web`` tool call."""
+        self._buffer_text_for_verification = True
+        call = {
+            "tool_call_id": f"research-{uuid.uuid4().hex[:12]}",
+            "tool_name": "search_web",
+            "args": {},
+        }
+        collected_tool_calls.append(call)
+        await send_event(self.websocket, "model_request_start", {})
+        session = self
+
+        class _Events:
+            async def trace(self, event: dict[str, Any]) -> None:
+                await session._send_trace(event)
+
+            async def sources(self, queries: list[str], sources: list[WebSource]) -> None:
+                first = "result" not in call
+                call["args"] = {"queries": queries}
+                call["result"] = _web_payload(queries, sources)
+                if first:
+                    await send_event(
+                        session.websocket,
+                        "tool_call",
+                        {k: call[k] for k in ("tool_call_id", "tool_name", "args")},
+                    )
+                await send_event(
+                    session.websocket,
+                    "tool_result",
+                    {"tool_call_id": call["tool_call_id"], "content": call["result"]},
+                )
+
+            async def draft(self, text: str) -> None:
+                await send_event(session.websocket, "draft_delta", {"content": text})
+
+        result = await ResearchService.from_settings().run(question, _Events())
+        self._turn_evidence = result.evidence
         return result.answer
 
     def _start_followups(self, question: str, answer: str, message_id: str | None) -> None:
@@ -587,3 +634,28 @@ class AgentSession:
                         if tc_id not in seen_tool_call_ids:
                             seen_tool_call_ids.add(tc_id)
                             await send_event(self.websocket, "tool_call", tc)
+
+
+def _web_payload(queries: list[str], sources: list[WebSource]) -> str:
+    """The structured ``web_search`` tool result the chat UI renders as numbered web sources."""
+    return json.dumps(
+        {
+            "kind": "web_search",
+            "query": "；".join(queries),
+            "results": [
+                {
+                    "index": s.index,
+                    "title": s.title,
+                    "url": s.url,
+                    "content": s.content,
+                    "score": round(s.score, 4),
+                    "domain": s.domain,
+                    "published_at": s.published_at,
+                    "fetched_at": s.fetched_at,
+                    "snippet_only": s.from_snippet,
+                }
+                for s in sources
+            ],
+        },
+        ensure_ascii=False,
+    )

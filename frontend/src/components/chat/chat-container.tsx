@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { useRetrievalScopeStore } from "@/stores/retrieval-scope-store";
 import { conversationToMarkdown, downloadText } from "@/lib/export-markdown";
 import { useChatSidebarStore } from "@/stores/chat-sidebar-store";
+import { ChatModeToggle } from "./chat-mode-toggle";
 import { LibraryPopover } from "./library-popover";
 import { ModelSettings } from "./model-settings";
 import { UsagePopover } from "./usage-popover";
@@ -311,6 +312,7 @@ function ChatUI({
   const tc = useTranslations("common");
   const fast = useRetrievalScopeStore((state) => state.fast);
   const setFast = useRetrievalScopeStore((state) => state.setFast);
+  const mode = useRetrievalScopeStore((state) => state.mode);
   const exportTitle = (messages.find((m) => m.role === "user")?.content ?? "").slice(0, 40);
   // Below lg the side column is hidden; the same flow opens in a drawer instead.
   const [flowOpen, setFlowOpen] = useState(false);
@@ -407,9 +409,11 @@ function ChatUI({
                   />
                   {isConnected ? tc("live") : tc("offline")}
                 </span>
-                <LibraryPopover />
+                <ChatModeToggle />
+                {mode === "qa" && <LibraryPopover />}
                 <ModelSettings />
                 <UsagePopover />
+                {mode === "qa" && (
                 <button
                   type="button"
                   aria-pressed={fast}
@@ -423,6 +427,7 @@ function ChatUI({
                   <Zap className="h-3.5 w-3.5" />
                   快速模式
                 </button>
+                )}
                 {messages.length > 0 && (
                   <button
                     type="button"

@@ -52,10 +52,16 @@ export function extractSources(message: ChatMessage): SourceItem[] {
       if (payload?.results) {
         payload.results.forEach((hit, i) => {
           sources.push({
-            index: i + 1,
+            index: hit.index ?? i + 1,
             type: "web",
             title: hit.title || domainOf(hit.url),
-            subtitle: domainOf(hit.url),
+            subtitle: [
+              domainOf(hit.url),
+              hit.published_at && `发布于 ${hit.published_at}`,
+              hit.snippet_only && "仅搜索摘要",
+            ]
+              .filter(Boolean)
+              .join(" · "),
             url: hit.url,
             content: hit.content,
           });

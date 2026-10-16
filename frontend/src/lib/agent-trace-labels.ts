@@ -16,6 +16,10 @@ export const TRACE_STEP_LABELS: Record<string, string> = {
   partial_answer: "先给出能确认的部分",
   abstain: "如实告知查不到",
   max_rounds_reached: "已达纠错次数上限",
+  research_plan: "规划搜索词",
+  web_search: "网页搜索",
+  web_fetch: "读取网页",
+  web_evidence: "挑选证据",
 };
 
 export const TRACE_STATUS_LABELS: Record<string, string> = {
@@ -28,6 +32,7 @@ export const TRACE_STATUS_LABELS: Record<string, string> = {
   ABSTAIN: "拒答",
   STOP: "已停止",
   EMPTY: "无结果",
+  FAILED: "失败",
 };
 
 export const TRACE_FAILURE_LABELS: Record<string, string> = {
@@ -45,6 +50,14 @@ export function progressText(last: AgentTraceEvent | undefined): string {
   switch (last.step) {
     case "question_condense":
       return "正在检索资料…";
+    case "research_plan":
+      return "正在网上搜索…";
+    case "web_search":
+      return "正在读取网页…";
+    case "web_fetch":
+      return "正在从网页中挑选证据…";
+    case "web_evidence":
+      return "正在依据网页资料撰写并核对回答…";
     case "retrieve":
       return "正在判断找到的资料够不够用…";
     case "evidence_evaluate":
