@@ -9,7 +9,8 @@ reviewer can reproduce every verdict from the source list:
 - disputed: an authoritative or reference source, or a general site read in full, contradicts it;
 - single_source: backed, but only by one site, or only by low-credibility sites;
 - unverified: no source backs it.
-A time-sensitive claim whose newest backing source is undated or older than ``stale_days`` is flagged stale.
+A time-sensitive claim (about the present, with no stated period) whose newest dated backing source is older than
+``stale_days`` is flagged stale.
 """
 
 from __future__ import annotations
@@ -88,7 +89,8 @@ async def extract_claims(question: str, answer: str, evidence: str) -> list[Extr
         "对每条说法，必须逐份检查全部编号资料（回答里的引用编号已去掉，不能只看某一份）："
         "supporting 列出所有明确陈述了这条说法的资料编号（意思相同即可，不要求字面一致，一份都不要漏）；"
         "contradicting 列出给出不同数字、日期或相反结论的资料编号；两者都只能用资料里真实存在的编号。"
-        "time_sensitive 表示这条说法会随时间变化（如最新数据、现行政策、价格、排名、在任人员）。"
+        "time_sensitive 只用于没有写明时间、说的是“目前/最新/现行”状况的说法（如现行政策、当前价格、排名、在任人员）；"
+        "写明了年份、届别或日期的数据是对那个时间的陈述，time_sensitive 为 false。"
         "note 用一句中文说明判断依据，有矛盾时写清各方说法。"
         '只返回 JSON：{"claims": [{"claim": "...", "supporting": [1], "contradicting": [], '
         '"time_sensitive": false, "note": "..."}]}。\n'
@@ -219,7 +221,7 @@ def grade_claim(
         reason += f"；{_cite(weak_against)} 说法不同，但只是低可信来源或搜索摘要，不足以构成争议"
     stale = claim.time_sensitive and _is_stale(backing, today=today, stale_days=stale_days)
     if stale:
-        reason += "；这是会随时间变化的信息，支持它的资料没有日期或已超过一年，可能过时"
+        reason += f"；这是会随时间变化的信息，支持它的资料发布已超过 {stale_days} 天，可能过时"
     return AuditedClaim(
         claim=claim.claim.strip(),
         level=level,
@@ -237,8 +239,9 @@ def _cite(sources: list[WebSource]) -> str:
 
 
 def _is_stale(backing: list[WebSource], *, today: date, stale_days: int) -> bool:
+    """Only with positive evidence: every dated backing source is old. Undated pages say nothing about age."""
     dates = [d for d in (_parse_date(s.published_at) for s in backing) if d is not None]
-    return not dates or (today - max(dates)).days > stale_days
+    return bool(dates) and (today - max(dates)).days > stale_days
 
 
 def _parse_date(value: str | None) -> date | None:

@@ -105,6 +105,7 @@ class ReportBuilder:
             await progress("撰写核心结论", 88)
             summary, summary_claims = await self._summary(outline.title, sections, corpus)
             await progress("整理核实情况", 96)
+            consistent_claims(sections, summary_claims)
             sources = corpus.sources
             return ResearchReport(
                 title=outline.title,
@@ -262,6 +263,45 @@ class ReportBuilder:
         return audit_claims(
             extracted, sources, today=today, stale_days=settings.RESEARCH_STALE_DAYS
         ).claims
+
+
+_LEVEL_STRENGTH = {"verified": 0, "single_source": 1, "disputed": 2, "unverified": 3}
+_NUMBERS = re.compile(r"\d+(?:\.\d+)?")
+_TOKENS = re.compile(r"[\u4e00-\u9fff]|[a-z]+")
+
+
+def _same_claim(a: str, b: str) -> bool:
+    """Same numbers and mostly the same wording: the same statement made in two sections."""
+    if set(_NUMBERS.findall(a)) != set(_NUMBERS.findall(b)):
+        return False
+    ta, tb = set(_TOKENS.findall(a.lower())), set(_TOKENS.findall(b.lower()))
+    return bool(ta and tb) and len(ta & tb) / min(len(ta), len(tb)) >= 0.8
+
+
+def consistent_claims(sections: list[ReportSection], summary_claims: list[AuditedClaim]) -> None:
+    """Give a statement made in several places its best-supported grading everywhere."""
+    groups: list[list[AuditedClaim]] = []
+    for claim in [*summary_claims, *(c for s in sections for c in s.claims)]:
+        for group in groups:
+            if _same_claim(group[0].claim, claim.claim):
+                group.append(claim)
+                break
+        else:
+            groups.append([claim])
+    for group in groups:
+        best = min(group, key=lambda c: _LEVEL_STRENGTH[c.level])
+        for claim in group:
+            if _LEVEL_STRENGTH[claim.level] > _LEVEL_STRENGTH[best.level]:
+                for field in (
+                    "level",
+                    "supported",
+                    "citation_indices",
+                    "contradicting",
+                    "domains",
+                    "stale",
+                ):
+                    setattr(claim, field, getattr(best, field))
+                claim.reason = f"{best.reason}（与报告其他部分的同一说法一致）"
 
 
 def _now() -> str:

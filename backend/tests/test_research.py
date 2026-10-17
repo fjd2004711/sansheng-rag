@@ -521,6 +521,17 @@ def test_grade_time_sensitive_claim_with_old_source_is_stale() -> None:
     assert not _grade(supporting=[1], time_sensitive=True).stale
 
 
+def test_grade_time_sensitive_claim_with_undated_sources_is_not_stale() -> None:
+    undated = _src(9, "https://news.example.org/x", published=None)
+    graded = audit_claims(
+        [ExtractedClaim(claim="说法", supporting=[9], time_sensitive=True)],
+        [undated],
+        today=TODAY,
+        stale_days=365,
+    ).claims[0]
+    assert not graded.stale
+
+
 def test_summary_lists_every_claim_that_is_not_verified() -> None:
     audit = audit_claims(
         [
