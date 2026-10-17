@@ -6,7 +6,7 @@ reviewer can reproduce every verdict from the source list:
 
 - verified: backed by an authoritative source read in full, or by ≥2 independent sites of which at
   least one is not low-credibility;
-- disputed: a source that is not low-credibility contradicts it;
+- disputed: an authoritative or reference source, or a general site read in full, contradicts it;
 - single_source: backed, but only by one site, or only by low-credibility sites;
 - unverified: no source backs it.
 A time-sensitive claim whose newest backing source is undated or older than ``stale_days`` is flagged stale.
@@ -179,7 +179,14 @@ def grade_claim(
     sites = list(dict.fromkeys(registrable_domain(s.url) for s in backing))
     credible_sites = {registrable_domain(s.url) for s in backing if s.tier != "low"}
     authoritative_full = [s for s in backing if s.tier == "authoritative" and not s.from_snippet]
-    credible_against = [s for s in against if s.tier != "low"]
+    # A general site known only from its search snippet (often an estimate or a garbled excerpt) is too weak to
+    # dispute what other sources state; it is still mentioned in the reason.
+    credible_against = [
+        s
+        for s in against
+        if s.tier in ("authoritative", "reference") or (s.tier == "general" and not s.from_snippet)
+    ]
+    weak_against = [s for s in against if s not in credible_against]
 
     if credible_against and backing:
         level: Level = "disputed"
@@ -208,6 +215,8 @@ def grade_claim(
         if backing[0].from_snippet:
             reason += "，且只读到搜索摘要"
 
+    if weak_against and level != "disputed":
+        reason += f"；{_cite(weak_against)} 说法不同，但只是低可信来源或搜索摘要，不足以构成争议"
     stale = claim.time_sensitive and _is_stale(backing, today=today, stale_days=stale_days)
     if stale:
         reason += "；这是会随时间变化的信息，支持它的资料没有日期或已超过一年，可能过时"
