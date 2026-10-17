@@ -427,3 +427,38 @@ async def test_build_report_corroborates_weak_claims_and_regrades() -> None:
     assert research.gathered[1] == ["青年失业率为17.8% 官方"]
     assert report.sections[0].claims[0].level == "verified"
     assert "青年失业率为17.8% 官方" in report.method.queries
+
+
+def _claim(text: str, level: str, cites: list[int]) -> AuditedClaim:
+    return AuditedClaim(
+        claim=text,
+        level=level,
+        supported=level in ("verified", "single_source"),
+        citation_indices=cites,
+        contradicting=[],
+        domains=[],
+        reason=f"{level} reason",
+    )
+
+
+def test_consistent_claims_give_the_same_statement_its_best_grading() -> None:
+    first = ReportSection(
+        heading="a",
+        body="",
+        claims=[_claim("2025届全国高校毕业生规模预计为1222万人", "verified", [1, 2])],
+    )
+    later = ReportSection(
+        heading="b",
+        body="",
+        claims=[_claim("2025届全国普通高校毕业生规模为1222万人", "single_source", [7])],
+    )
+    other = ReportSection(
+        heading="c",
+        body="",
+        claims=[_claim("2026届全国高校毕业生规模预计为1270万人", "single_source", [8])],
+    )
+    report_builder.consistent_claims([first, later, other], [])
+    assert later.claims[0].level == "verified"
+    assert later.claims[0].citation_indices == [1, 2]
+    assert "一致" in later.claims[0].reason
+    assert other.claims[0].level == "single_source"  # different numbers: a different statement
