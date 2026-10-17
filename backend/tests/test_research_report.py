@@ -462,3 +462,13 @@ def test_consistent_claims_give_the_same_statement_its_best_grading() -> None:
     assert later.claims[0].citation_indices == [1, 2]
     assert "一致" in later.claims[0].reason
     assert other.claims[0].level == "single_source"  # different numbers: a different statement
+
+
+def test_caveats_summarise_single_source_claims() -> None:
+    weak = _claim("某城市吸纳毕业生比例为17.8%", "single_source", [3])
+    weak.reason = "只有 sohu.com（低可信来源）一个网站提到"
+    section = ReportSection(heading="分布", body="", claims=[weak])
+    notes = report_builder._caveats([section], [], [SOURCE])
+    assert notes == [
+        "全文有 1 条说法只找到一个来源（其中 1 条只见于自媒体、论坛等低可信来源），使用前建议对照附录一逐条核实表查看原文"
+    ]

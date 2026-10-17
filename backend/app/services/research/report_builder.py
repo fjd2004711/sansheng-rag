@@ -361,4 +361,12 @@ def _caveats(
             notes.append(
                 f"【核心结论】{LEVEL_LABELS[claim.level]}：{claim.claim}（{claim.reason}）"
             )
+    single = [c for s in sections for c in s.claims if c.level == "single_source"]
+    if single:
+        low_only = sum("低可信" in c.reason for c in single)
+        notes.append(
+            f"全文有 {len(single)} 条说法只找到一个来源"
+            + (f"（其中 {low_only} 条只见于自媒体、论坛等低可信来源）" if low_only else "")
+            + "，使用前建议对照附录一逐条核实表查看原文"
+        )
     return notes
