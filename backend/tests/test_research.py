@@ -680,3 +680,15 @@ def test_build_search_chain_without_fallback_key_raises_not_configured() -> None
             fallback_provider="tavily",
             fallback_api_key="",
         )
+
+
+def test_grade_snippet_only_general_contradiction_does_not_dispute() -> None:
+    weak = _src(8, "https://www.php.cn/estimate", snippet=True)
+    graded = audit_claims(
+        [ExtractedClaim(claim="说法", supporting=[2, 3], contradicting=[8])],
+        [*SOURCES, weak],
+        today=TODAY,
+        stale_days=365,
+    ).claims[0]
+    assert graded.level == "verified"
+    assert "不足以构成争议" in graded.reason

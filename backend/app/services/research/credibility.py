@@ -81,6 +81,7 @@ _REFERENCE_DOMAINS = {
     "cctv.cn",
     "chinadaily.com.cn",
     "chinanews.com.cn",
+    "chinanews.com",
     "gmw.cn",
     "ce.cn",
     "cnr.cn",
