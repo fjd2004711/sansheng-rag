@@ -24,7 +24,7 @@ from typing import Any
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
-from verification_scoring import aggregate, load_cases, score_case
+from verification_scoring import aggregate, load_cases, oracle_claim_text, score_case
 
 from app.services.research.audit import ExtractedClaim, audit_claims, extract_claims
 from app.services.research.corpus import format_evidence
@@ -55,7 +55,7 @@ def to_sources(case: dict[str, Any]) -> list[WebSource]:
 def oracle_claims(case: dict[str, Any]) -> list[ExtractedClaim]:
     return [
         ExtractedClaim(
-            claim="".join(g["match"]),
+            claim=oracle_claim_text(case, g),
             supporting=g["supporting"],
             contradicting=g["contradicting"],
             time_sensitive=g["time_sensitive"],

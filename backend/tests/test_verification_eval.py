@@ -7,7 +7,7 @@ from pathlib import Path
 EVAL = Path(__file__).resolve().parents[2] / "eval"
 sys.path.insert(0, str(EVAL))
 
-from verification_scoring import aggregate, load_cases, match_claim, score_case
+from verification_scoring import aggregate, load_cases, match_claim, oracle_claim_text, score_case
 
 from app.services.research.audit import ExtractedClaim, audit_claims
 from app.services.research.credibility import registrable_domain, source_tier
@@ -46,7 +46,7 @@ def test_rules_pass_the_gold_set_when_extraction_is_perfect() -> None:
     for case in CASES:
         sources = [_source(s["index"], s["url"], s["content"], published_at=s["published_at"], from_snippet=s["from_snippet"]) for s in case["sources"]]
         extracted = [
-            ExtractedClaim(claim="".join(g["match"]), supporting=g["supporting"], contradicting=g["contradicting"], time_sensitive=g["time_sensitive"])
+            ExtractedClaim(claim=oracle_claim_text(case, g), supporting=g["supporting"], contradicting=g["contradicting"], time_sensitive=g["time_sensitive"])
             for g in case["gold_claims"]
         ]
         graded = [c.model_dump() for c in audit_claims(extracted, sources, today=TODAY, stale_days=365).claims]
@@ -78,3 +78,16 @@ def test_independent_reports_stay_separate() -> None:
         _source(3, "https://www.reuters.com/x", "据路透社报道，登月任务在1969年7月完成。"),
     ]
     assert len(independent_groups(sources)) == 3
+
+
+def test_numbers_match_handles_units_rounding_and_percent_points() -> None:
+    from app.services.research.audit import numbers_match
+
+    assert not numbers_match("全国人口约为1.41亿人", "全国人口共141178万人。")
+    assert numbers_match("全国人口约14.1亿人", "全国人口共141178万人。")
+    assert numbers_match("地区生产总值为5.8万亿元", "地区生产总值58000亿元。")
+    assert numbers_match("12级风速32.7至36.9米/秒", "12级 32.7～36.9 m/s")
+    assert not numbers_match("增长5.1%", "增长5.0%")
+    assert numbers_match("周长40075千米", "about 40,075 km")
+    assert not numbers_match("上升了2%", "比上月上升2个百分点")
+    assert numbers_match("1969年7月登月", "landed on July 20, 1969")  # years and small numbers are not checked

@@ -490,8 +490,14 @@ class AgentSession:
 
         try:
             document = await ReportBuilder(ResearchService.from_settings()).build(topic, progress)
-        except Exception as exc:
-            message = exc.message if isinstance(exc, AppException) else f"生成失败：{type(exc).__name__}"
+        except (Exception, asyncio.CancelledError) as exc:
+            # A closed tab cancels the turn: free the user's one report slot now, not after the stale timeout.
+            if isinstance(exc, AppException):
+                message = exc.message
+            elif isinstance(exc, asyncio.CancelledError | WebSocketDisconnect):
+                message = "对话连接已断开，报告生成已中止，请重新生成"
+            else:
+                message = f"生成失败：{type(exc).__name__}"
             logger.warning("chat_report_failed report=%s error=%s", report_id, message)
             async with get_db_context() as db:
                 await ResearchReportService(db).fail(report_id, message)

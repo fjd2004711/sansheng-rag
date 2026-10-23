@@ -29,13 +29,14 @@ _SIMILARITY = 0.7
 
 
 def origin_of(source: WebSource) -> str | None:
-    """Named origin of the text: an attribution near its start, or the wire's own site."""
+    """Named origin of the text: a credit to a wire service anywhere, an unnamed rumour near the start, or the wire's own site."""
     head = source.content[:80]
-    for match in _ATTRIBUTION.finditer(head):
+    # A credit line often closes the piece ("以上内容综合自新华社报道"), so named origins are looked for everywhere.
+    for match in _ATTRIBUTION.finditer(source.content):
         named = next((n for n in _ORIGIN_NAMES if n in match.group(1)), None)
         if named:
             return "中新社" if named == "中新网" else ("路透社" if named == "路透" else named)
-        if _UNNAMED.search(match.group(1)):
+        if match.start() < len(head) and _UNNAMED.search(match.group(1)):
             return "网络消息"
     if _UNNAMED.search(head):
         return "网络消息"
