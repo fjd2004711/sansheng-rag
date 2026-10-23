@@ -198,6 +198,13 @@ def test_render_pdf_embeds_chinese_text() -> None:
 # ---- build pipeline (fakes) ---------------------------------------------------------------------
 
 
+_INDEPENDENT_TAILS = (
+    "本站记者走访多所高校，采访了就业指导中心负责人，梳理了各地促进就业的新举措。",
+    "专家认为，扩大基层岗位供给和完善技能培训，将有助于缓解结构性矛盾并稳定预期。",
+    "调查显示，新兴行业吸纳的毕业生比例持续上升，传统制造业招聘需求总体保持平稳。",
+)
+
+
 class FakeResearch:
     """Stands in for ResearchService: gather() indexes one page per query into the run corpus."""
 
@@ -218,7 +225,8 @@ class FakeResearch:
                 url=f"https://{self.host.format(n=i + 10 * len(self.gathered))}/{round_}",
                 title=f"教育部 {q}",
                 domain=f"moe{i}.gov.cn",
-                text="2025届全国普通高校毕业生规模预计达1222万人，同比增加43万人。",
+                # Distinct wording per page: word-for-word copies count as a single independent source.
+                text=f"2025届全国普通高校毕业生规模预计达1222万人，同比增加43万人。{_INDEPENDENT_TAILS[(len(self.gathered) + i) % len(_INDEPENDENT_TAILS)]}",
                 fetched_at="2026-10-16T00:00:00",
             )
             for i, q in enumerate(queries)

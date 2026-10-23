@@ -28,6 +28,7 @@ from app.core.llm_runtime import current_llm
 from app.core.usage_meter import record_openai_response
 from app.services.rag.guard import UNTRUSTED_NOTE
 from app.services.research.credibility import TIER_LABELS, registrable_domain
+from app.services.research.independence import independent_groups, origin_of
 from app.services.research.models import WebSource
 
 Level = Literal["verified", "single_source", "disputed", "unverified"]
@@ -179,7 +180,8 @@ def grade_claim(
         if i in sources and i not in claim.supporting
     ]
     sites = list(dict.fromkeys(registrable_domain(s.url) for s in backing))
-    credible_sites = {registrable_domain(s.url) for s in backing if s.tier != "low"}
+    groups = independent_groups(backing)
+    credible_groups = [g for g in groups if any(s.tier != "low" for s in g)]
     authoritative_full = [s for s in backing if s.tier == "authoritative" and not s.from_snippet]
     # A general site known only from its search snippet (often an estimate or a garbled excerpt) is too weak to
     # dispute what other sources state; it is still mentioned in the reason.
@@ -202,18 +204,20 @@ def grade_claim(
     elif authoritative_full:
         level = "verified"
         reason = f"权威来源 {_cite(authoritative_full)} 原文支持" + (
-            f"，另有 {len(sites) - 1} 个网站印证" if len(sites) > 1 else ""
+            f"，另有 {len(groups) - 1} 个独立来源印证" if len(groups) > 1 else ""
         )
-    elif len(sites) >= 2 and credible_sites:
-        level, reason = "verified", f"{len(sites)} 个独立网站一致：{'、'.join(sites)}"
-    elif len(sites) >= 2:
+    elif len(groups) >= 2 and credible_groups:
+        level, reason = "verified", f"{len(groups)} 个独立来源一致：{'、'.join(_group_label(g) for g in groups)}"
+    elif len(groups) >= 2:
         level, reason = (
             "single_source",
             f"只有低可信来源提到（{'、'.join(sites)}），缺少权威或参考来源印证",
         )
     else:
         tier = TIER_LABELS[backing[0].tier]
-        level, reason = "single_source", f"只有 {sites[0]}（{tier}）一个网站提到"
+        level, reason = "single_source", f"只有 {_group_label(groups[0])}（{tier}）一个独立来源提到"
+        if len(sites) > 1:
+            reason += f"（{len(sites)} 个网站是同一内容的转载或同站页面）"
         if backing[0].from_snippet:
             reason += "，且只读到搜索摘要"
 
@@ -232,6 +236,12 @@ def grade_claim(
         stale=stale,
         reason=reason,
     )
+
+
+def _group_label(group: list[WebSource]) -> str:
+    """Name a group of sources by their shared origin, else by their site."""
+    origin = next((o for o in (origin_of(s) for s in group) if o), None)
+    return origin or registrable_domain(group[0].url)
 
 
 def _cite(sources: list[WebSource]) -> str:
