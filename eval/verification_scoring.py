@@ -8,6 +8,7 @@ graded "verified") and *verified precision* (how often a "verified" verdict is r
 from __future__ import annotations
 
 import json
+import re
 from collections import defaultdict
 from collections.abc import Sequence
 from pathlib import Path
@@ -22,6 +23,16 @@ def load_cases(path: Path) -> list[dict[str, Any]]:
 
 def _norm(text: str) -> str:
     return "".join(text.replace(",", "").replace("，", "").split())
+
+
+def oracle_claim_text(case: dict[str, Any], gold: dict[str, Any]) -> str:
+    """The answer clause a perfect extractor would have produced for this gold claim (citations removed)."""
+    answer = re.sub(r"\s*\[\d+\]", "", case["answer"])
+    phrases = [_norm(p) for p in gold["match"]]
+    for clause in re.split(r"(?<=[。；！？，;!?,])|(?<=\.)(?=\s)", answer):
+        if all(p in _norm(clause) for p in phrases):
+            return clause.strip()
+    return "".join(gold["match"])
 
 
 def match_claim(gold: dict[str, Any], graded: Sequence[dict[str, Any]]) -> dict[str, Any] | None:

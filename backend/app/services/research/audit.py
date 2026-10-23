@@ -170,14 +170,72 @@ def _parse_claims(text: str) -> list[ExtractedClaim]:
     return claims[:_MAX_CLAIMS]
 
 
+_QUANTITY = re.compile(r"(\d+(?:\.\d+)?)\s*(万亿|亿|万|%|％|个百分点|百分点)?")
+_UNIT_FACTOR = {"万亿": 1e12, "亿": 1e8, "万": 1e4}
+_DATE_TAIL = re.compile(r"^\s*(?:年|届|月|日|号|级|季度|届)")
+
+
+def _quantities(text: str) -> list[tuple[float, int, str]]:
+    """(value in base units, significant digits written, kind) of every checkable number in ``text``.
+
+    "5.8万亿" and "58000亿" both become 5.8e12, so a unit change is not a mismatch, but 1.41亿 vs 141178万
+    (14.1亿) is. Years, dates and small ordinals (第12级) are not quantities worth checking.
+    """
+    plain = text.replace(",", "").replace("，", "")
+    plain = re.sub(r"(?<=\d)[ \u202f\u00a0](?=\d{3}(?!\d))", "", plain)  # "299 792 458"
+    out: list[tuple[float, int, str]] = []
+    for m in _QUANTITY.finditer(plain):
+        digits, unit = m.group(1), m.group(2) or ""
+        if _DATE_TAIL.match(plain[m.end() - len(unit) :] if not unit else plain[m.end() :]) and not unit:
+            continue
+        value = float(digits)
+        if not unit and "." not in digits and value < 10:
+            continue
+        if re.fullmatch(r"(?:19|20)\d{2}", digits) and not unit:
+            continue
+        kind = {"%": "pct", "％": "pct", "百分点": "pp", "个百分点": "pp"}.get(unit, "num")
+        sig = len(digits.replace(".", "").lstrip("0").rstrip("0")) or 1
+        out.append((value * _UNIT_FACTOR.get(unit, 1.0), sig, kind))
+    return out
+
+
+def _same_quantity(claimed: tuple[float, int, str], other: tuple[float, int, str]) -> bool:
+    """Equal, or equal after the source's value is rounded to the digits the claim wrote."""
+    (cv, csig, ckind), (ov, _, okind) = claimed, other
+    if ckind != okind or cv == 0 or ov == 0:
+        return cv == ov and ckind == okind
+    if abs(cv - ov) <= 1e-9 * max(abs(cv), abs(ov)):
+        return True
+    from math import floor, log10
+
+    exponent = floor(log10(abs(ov))) - csig + 1
+    return abs(round(ov, -exponent) - cv) <= 1e-9 * abs(cv)
+
+
+def numbers_match(claim: str, source_text: str) -> bool:
+    """Every checkable number of the claim occurs (modulo unit and rounding) in the source."""
+    wanted = _quantities(claim)
+    if not wanted:
+        return True
+    found = _quantities(source_text)
+    return all(any(_same_quantity(w, f) for f in found) for w in wanted)
+
+
 def grade_claim(
     claim: ExtractedClaim, sources: dict[int, WebSource], *, today: date, stale_days: int
 ) -> AuditedClaim:
-    backing = [sources[i] for i in dict.fromkeys(claim.supporting) if i in sources]
+    # A source "supports" a claim only if its text carries the claim's numbers; a model that reads 141178万 as
+    # 1.41亿 must not turn that page into a witness.
+    listed = [sources[i] for i in dict.fromkeys(claim.supporting) if i in sources]
+    backing = [s for s in listed if numbers_match(claim.claim, s.content)]
+    numeric_mismatch = [s for s in listed if s not in backing]
     against = [
-        sources[i]
-        for i in dict.fromkeys(claim.contradicting)
-        if i in sources and i not in claim.supporting
+        *numeric_mismatch,
+        *(
+            sources[i]
+            for i in dict.fromkeys(claim.contradicting)
+            if i in sources and i not in claim.supporting
+        ),
     ]
     sites = list(dict.fromkeys(registrable_domain(s.url) for s in backing))
     groups = independent_groups(backing)

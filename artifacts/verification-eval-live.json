@@ -1,20 +1,20 @@
 {
   "mode": "live",
-  "generated_at": "2026-10-23T14:18:36.227178+00:00",
+  "generated_at": "2026-10-23T16:18:00.765706+00:00",
   "today": "2026-10-23",
-  "cases": 28,
-  "runs_per_case": 3,
-  "gold_claims": 87,
+  "cases": 48,
+  "runs_per_case": 2,
+  "gold_claims": 100,
   "extraction_recall": {
-    "n": 87,
-    "rate": 1.0,
+    "n": 100,
+    "rate": 0.92,
     "ci95": [
-      1.0,
-      1.0
+      0.86,
+      0.97
     ]
   },
   "false_pass_rate": {
-    "n": 45,
+    "n": 50,
     "rate": 0.0,
     "ci95": [
       0.0,
@@ -30,7 +30,7 @@
     ]
   },
   "level_accuracy": {
-    "n": 87,
+    "n": 92,
     "rate": 1.0,
     "ci95": [
       1.0,
@@ -38,26 +38,37 @@
     ]
   },
   "support_set_accuracy": {
-    "n": 87,
-    "rate": 0.9655,
+    "n": 92,
+    "rate": 0.9783,
     "ci95": [
-      0.9195,
+      0.9457,
       1.0
     ]
   },
   "stale_accuracy": {
-    "n": 9,
-    "rate": 1.0,
+    "n": 10,
+    "rate": 0.8,
     "ci95": [
-      1.0,
+      0.5,
       1.0
     ]
   },
-  "spurious_claims": 3,
+  "spurious_claims": 9,
   "by_category": {
+    "ai_answer_page": {
+      "level_accuracy": {
+        "n": 2,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
     "authority_full": {
       "level_accuracy": {
-        "n": 15,
+        "n": 10,
         "rate": 1.0,
         "ci95": [
           1.0,
@@ -68,7 +79,7 @@
     },
     "conflict": {
       "level_accuracy": {
-        "n": 3,
+        "n": 2,
         "rate": 1.0,
         "ci95": [
           1.0,
@@ -79,7 +90,7 @@
     },
     "contradicted": {
       "level_accuracy": {
-        "n": 12,
+        "n": 8,
         "rate": 1.0,
         "ci95": [
           1.0,
@@ -90,7 +101,18 @@
     },
     "dated_fact": {
       "level_accuracy": {
-        "n": 3,
+        "n": 2,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "entity_swap": {
+      "level_accuracy": {
+        "n": 2,
         "rate": 1.0,
         "ci95": [
           1.0,
@@ -101,7 +123,40 @@
     },
     "fabricated": {
       "level_accuracy": {
-        "n": 9,
+        "n": 6,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "fabricated_quote": {
+      "level_accuracy": {
+        "n": 2,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "growth_trap": {
+      "level_accuracy": {
+        "n": 2,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "low_contradicts_authority": {
+      "level_accuracy": {
+        "n": 1,
         "rate": 1.0,
         "ci95": [
           1.0,
@@ -112,7 +167,7 @@
     },
     "low_only": {
       "level_accuracy": {
-        "n": 3,
+        "n": 2,
         "rate": 1.0,
         "ci95": [
           1.0,
@@ -123,7 +178,18 @@
     },
     "mixed": {
       "level_accuracy": {
-        "n": 6,
+        "n": 4,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "negation": {
+      "level_accuracy": {
+        "n": 2,
         "rate": 1.0,
         "ci95": [
           1.0,
@@ -134,7 +200,51 @@
     },
     "numeric_near_miss": {
       "level_accuracy": {
-        "n": 6,
+        "n": 4,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "opinion_as_fact": {
+      "level_accuracy": {
+        "n": 2,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "partial_support": {
+      "level_accuracy": {
+        "n": 4,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "positive_paraphrase": {
+      "level_accuracy": {
+        "n": 2,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "positive_snippet_multi": {
+      "level_accuracy": {
+        "n": 2,
         "rate": 1.0,
         "ci95": [
           1.0,
@@ -145,7 +255,7 @@
     },
     "qualifier": {
       "level_accuracy": {
-        "n": 6,
+        "n": 4,
         "rate": 1.0,
         "ci95": [
           1.0,
@@ -156,7 +266,18 @@
     },
     "same_site": {
       "level_accuracy": {
-        "n": 3,
+        "n": 2,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "scope_inflation": {
+      "level_accuracy": {
+        "n": 2,
         "rate": 1.0,
         "ci95": [
           1.0,
@@ -167,7 +288,7 @@
     },
     "snippet_only": {
       "level_accuracy": {
-        "n": 3,
+        "n": 2,
         "rate": 1.0,
         "ci95": [
           1.0,
@@ -178,7 +299,18 @@
     },
     "stale": {
       "level_accuracy": {
-        "n": 6,
+        "n": 4,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "stale_policy": {
+      "level_accuracy": {
+        "n": 2,
         "rate": 1.0,
         "ci95": [
           1.0,
@@ -189,7 +321,18 @@
     },
     "syndication": {
       "level_accuracy": {
-        "n": 6,
+        "n": 3,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "syndication_rewrite": {
+      "level_accuracy": {
+        "n": 2,
         "rate": 1.0,
         "ci95": [
           1.0,
@@ -200,7 +343,40 @@
     },
     "two_independent": {
       "level_accuracy": {
-        "n": 6,
+        "n": 4,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "two_site_same_domain_family": {
+      "level_accuracy": {
+        "n": 2,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "unit_trap": {
+      "level_accuracy": {
+        "n": 4,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "wrong_period": {
+      "level_accuracy": {
+        "n": 2,
         "rate": 1.0,
         "ci95": [
           1.0,
@@ -211,5 +387,86 @@
     }
   },
   "failures": [],
-  "unextracted": []
+  "unextracted": [
+    {
+      "case": "G1",
+      "category": "syndication",
+      "claim": [
+        "60架"
+      ],
+      "truth": "true",
+      "expected_level": "single_source",
+      "matched": false
+    },
+    {
+      "case": "H05",
+      "category": "percent_points",
+      "claim": [
+        "上升了2%"
+      ],
+      "truth": "false",
+      "expected_level": "unverified",
+      "matched": false
+    },
+    {
+      "case": "H10",
+      "category": "authority_conflict",
+      "claim": [
+        "5.3%"
+      ],
+      "truth": "contested",
+      "expected_level": "disputed",
+      "matched": false
+    },
+    {
+      "case": "H20",
+      "category": "english_positive",
+      "claim": [
+        "100"
+      ],
+      "truth": "true",
+      "expected_level": "verified",
+      "matched": false
+    },
+    {
+      "case": "H05",
+      "category": "percent_points",
+      "claim": [
+        "上升了2%"
+      ],
+      "truth": "false",
+      "expected_level": "unverified",
+      "matched": false
+    },
+    {
+      "case": "H10",
+      "category": "authority_conflict",
+      "claim": [
+        "5.3%"
+      ],
+      "truth": "contested",
+      "expected_level": "disputed",
+      "matched": false
+    },
+    {
+      "case": "H11",
+      "category": "low_contradicts_authority",
+      "claim": [
+        "8848.86"
+      ],
+      "truth": "true",
+      "expected_level": "verified",
+      "matched": false
+    },
+    {
+      "case": "H20",
+      "category": "english_positive",
+      "claim": [
+        "100"
+      ],
+      "truth": "true",
+      "expected_level": "verified",
+      "matched": false
+    }
+  ]
 }
