@@ -24,6 +24,7 @@ from app.services.research.audit import (
     corroboration_query,
     extract_claims,
 )
+from app.services.research.authorities import with_official_variants
 from app.services.research.corpus import WebCorpus, format_evidence
 from app.services.research.exceptions import WebSearchError
 from app.services.research.facade import ResearchService
@@ -31,6 +32,7 @@ from app.services.research.models import WebSource
 from app.services.research.report_data import (
     data_table,
     display_value,
+    scrub_unsupported_sentences,
     trend_chart,
     unsupported_numbers,
     verify_data_points,
@@ -79,9 +81,10 @@ class ReportBuilder:
         started = _now()
         await progress("规划报告提纲", 3)
         outline = await plan_outline(topic, max_sections=settings.REPORT_MAX_SECTIONS)
-        queries = list(
+        planned_queries = list(
             dict.fromkeys(q.strip() for s in outline.sections for q in s.queries if q.strip())
-        )[: settings.REPORT_MAX_QUERIES] or [topic]
+        )
+        queries = with_official_variants(planned_queries, limit=settings.REPORT_MAX_QUERIES) or [topic]
         log = _TraceLog()
         corpus = self._research.new_corpus()
         try:
@@ -222,6 +225,8 @@ class ReportBuilder:
             raw = []
         data, rejected = verify_data_points(raw, by_index)
         body, analysis = await write_section(title, planned, evidence, data)
+        body = scrub_unsupported_sentences(body, evidence)[0]
+        analysis = scrub_unsupported_sentences(analysis, evidence)[0]
         cited = _cited_sources(body, by_index) or relevant
         claims = await self._grade(planned.goal, body, cited)
         return (

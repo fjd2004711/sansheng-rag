@@ -208,9 +208,15 @@ _INDEPENDENT_TAILS = (
 class FakeResearch:
     """Stands in for ResearchService: gather() indexes one page per query into the run corpus."""
 
-    def __init__(self, retrieval: FakeRetrieval, host: str = "www.moe{n}.gov.cn") -> None:
+    def __init__(
+        self,
+        retrieval: FakeRetrieval,
+        host: str = "www.moe{n}.gov.cn",
+        lead: str = "2025届全国普通高校毕业生规模预计达1222万人，同比增加43万人。",
+    ) -> None:
         self.retrieval = retrieval
         self.host = host
+        self.lead = lead
         self.gathered: list[list[str]] = []
 
     def new_corpus(self):
@@ -226,7 +232,7 @@ class FakeResearch:
                 title=f"教育部 {q}",
                 domain=f"moe{i}.gov.cn",
                 # Distinct wording per page: word-for-word copies count as a single independent source.
-                text=f"2025届全国普通高校毕业生规模预计达1222万人，同比增加43万人。{_INDEPENDENT_TAILS[(len(self.gathered) + i) % len(_INDEPENDENT_TAILS)]}",
+                text=f"{self.lead}{_INDEPENDENT_TAILS[(len(self.gathered) + i) % len(_INDEPENDENT_TAILS)]}",
                 fetched_at="2026-10-16T00:00:00",
             )
             for i, q in enumerate(queries)
@@ -286,8 +292,11 @@ async def test_build_report_keeps_only_verbatim_data_and_lists_caveats() -> None
     assert [p.value for p in section.data_points] == ["1222"]
     assert report.method.data_points_rejected == 1
     assert section.claims[0].level == "verified"
-    assert any("97.1" in note for note in report.caveats)  # number absent from every source
-    assert report.method.pages_read == 1
+    # A number absent from every source is cut from the text, not just flagged.
+    assert "97.1" not in section.body and "1222万人" in section.body
+    # The planned query plus its official-site variant (searched first).
+    assert report.method.pages_read == 2
+    assert report.method.queries[0].startswith("site:moe.gov.cn")
     assert progress[0][0] == "规划报告提纲"
     assert len(research.retrieval.store.deleted) == 1  # run collection cleaned up
 
@@ -419,7 +428,7 @@ async def test_build_report_corroborates_weak_claims_and_regrades() -> None:
             ExtractedClaim(claim="青年失业率为17.8%", supporting=[1] if len(calls) == 1 else [1, 2])
         ]
 
-    research = FakeResearch(FakeRetrieval(), host="site{n}.cn")
+    research = FakeResearch(FakeRetrieval(), host="site{n}.cn", lead="青年失业率为17.8%，处于近年来的较高水平。")
     with (
         patch.object(report_builder, "plan_outline", AsyncMock(return_value=outline)),
         patch.object(report_builder, "extract_data_points", AsyncMock(return_value=[])),
@@ -507,3 +516,39 @@ def test_chat_markdown_flags_non_verified_claims_and_escapes_table_pipes() -> No
     assert "⚠️ 有争议" in text and "[2] 说法不同" in text
     assert "a\\|b" in text and "x\\|y" in text
     assert "下载 Word" not in text
+
+
+def test_official_site_variants_come_first_and_respect_the_limit() -> None:
+    from app.services.research.authorities import official_site_query, with_official_variants
+
+    assert official_site_query("教育部 2025届全国普通高校毕业生规模") == "site:moe.gov.cn 2025届全国普通高校毕业生规模"
+    assert official_site_query("国家统计局 2025年 青年失业率").startswith("site:stats.gov.cn ")
+    assert official_site_query("智联招聘 薪资报告") is None
+    queries = ["智联招聘 薪资", "教育部 毕业生规模", "人社部 就业通报"]
+    merged = with_official_variants(queries, limit=4)
+    assert merged[:2] == ["site:moe.gov.cn 毕业生规模", "site:mohrss.gov.cn 就业通报"]
+    assert len(merged) == 4 and len(set(merged)) == 4
+
+
+def test_scrub_drops_unsourced_numbers_and_leaked_writing_rules_but_keeps_sourced_text() -> None:
+    from app.services.research.report_data import scrub_unsupported_sentences
+
+    evidence = "2025届高校毕业生规模预计达1222万人，同比增加43万人。"
+    text = (
+        "毕业生规模达1222万人 [1]。可推算同比增长约3.6%（基于2024届1179万人的常规认知）。"
+        "此处严格遵循“不得自行计算”原则，故仅陈述增量。同比增加43万人 [1]。"
+    )
+    clean, dropped = scrub_unsupported_sentences(text, evidence)
+    assert dropped == 2
+    assert "1222万人" in clean and "43万人" in clean
+    assert "3.6" not in clean and "原则" not in clean
+
+
+def test_data_point_whose_name_says_one_year_but_period_another_is_rejected() -> None:
+    bad = _point("88.6", "2024届高职毕业生去向落实率为88.6%", period="2024届")
+    bad = bad.model_copy(update={"indicator": "2025届初次毕业去向落实率"})
+    source = SOURCE.model_copy(update={"content": "2024届高职毕业生去向落实率为88.6%。"})
+    kept, rejected = verify_data_points([bad], {1: source})
+    assert kept == [] and rejected == 1
+    ok = bad.model_copy(update={"indicator": "初次毕业去向落实率"})
+    assert verify_data_points([ok], {1: source})[0] == [ok]

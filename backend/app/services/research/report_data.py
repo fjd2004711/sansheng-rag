@@ -44,6 +44,9 @@ def verify_data_points(
         ):
             rejected += 1
             continue
+        if _years_conflict(point.indicator, point.period):
+            rejected += 1
+            continue
         key = (point.indicator, point.period, point.value, point.source)
         if key not in seen:
             seen.add(key)
@@ -103,6 +106,38 @@ def trend_chart(points: list[DataPoint]) -> ChartSeries | None:
         values=[_as_float(p.value) or 0.0 for _, p in ordered],
         sources=sorted({p.source for _, p in ordered}),
     )
+
+
+_YEAR_TOKEN = re.compile(r"(?:19|20)\d{2}")
+# Sentences that leak the writer's own instructions or knowledge from outside the sources.
+_META = re.compile(r"严格遵循|不得自行|原则[，,）)]|常规认知|按照要求|根据要求|提示词|此处不|本模型|作为(?:一个)?AI")
+
+
+def _years_conflict(indicator: str, period: str) -> bool:
+    """An indicator named for one year but dated another ("2025届…落实率", period "2024届") is mislabelled."""
+    in_name, in_period = set(_YEAR_TOKEN.findall(indicator)), set(_YEAR_TOKEN.findall(period))
+    return bool(in_name and in_period and not in_name <= in_period)
+
+
+def scrub_unsupported_sentences(text: str, evidence: str) -> tuple[str, int]:
+    """Drop sentences that carry a number found in no source, or that leak the writer's instructions.
+
+    A reader should never see a figure the pages do not contain, nor "按原则不自行计算" in the report body.
+    """
+    kept: list[str] = []
+    dropped = 0
+    for paragraph in text.split("\n"):
+        parts = re.split(r"(?<=[。；！？，])", paragraph)
+        good = []
+        for sentence in parts:
+            if sentence.strip() and (_META.search(sentence) or unsupported_numbers(sentence, evidence)):
+                dropped += 1
+            else:
+                good.append(sentence)
+        joined = "".join(good)
+        # A dropped clause can leave "…[1]，" dangling; close it with the sentence end it replaced.
+        kept.append(re.sub(r"[，、]+$", "。", joined) if joined != paragraph else joined)
+    return re.sub(r"\n{3,}", "\n\n", "\n".join(kept)).strip(), dropped
 
 
 def _period_key(period: str) -> tuple[int, str]:
