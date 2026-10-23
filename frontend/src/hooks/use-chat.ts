@@ -456,8 +456,8 @@ export function useChat(options: UseChatOptions = {}) {
         resyncRef.current = false;
       }
       const { fast, mode } = useRetrievalScopeStore.getState();
-      if (mode === "research") {
-        payload.mode = "research";
+      if (mode === "research" || mode === "report") {
+        payload.mode = mode;
       } else {
         if (fast) payload.fast = true;
         const scope = currentScopePayload();

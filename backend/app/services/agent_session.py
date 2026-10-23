@@ -15,7 +15,7 @@ from langchain_core.messages.ai import add_usage
 from app.agents.langchain_assistant import AgentContext, get_agent
 from app.agents.tools.rag_tool import extract_rag_trace, search_knowledge_base
 from app.core.config import settings
-from app.core.exceptions import AuthorizationError, NotFoundError
+from app.core.exceptions import AppException, AuthorizationError, NotFoundError
 from app.core.kb_scope import RetrievalScope, build_scope, personal_collection, use_scope
 from app.core.llm_runtime import current_llm, current_llm_runtime_or_none, use_llm
 from app.core.rate_limit import TurnRateLimiter
@@ -23,6 +23,7 @@ from app.core.usage_meter import UsageMeter, record_usage, use_meter
 from app.db.models.user import User
 from app.db.session import get_db_context
 from app.graph.generation_correction import GenerationCorrector
+from app.schemas.research_report import ResearchReportCreate
 from app.services.agent import (
     build_message_history,
     load_conversation_history,
@@ -34,7 +35,8 @@ from app.services.llm_config import load_runtime
 from app.services.rag.generation.condense import condense_question
 from app.services.rag.generation.followups import suggest_followups
 from app.services.rag_document import RAGDocumentService
-from app.services.research import ResearchService, WebSource
+from app.services.research import ReportBuilder, ResearchService, WebSource, render_chat_markdown
+from app.services.research_report import ResearchReportService
 from app.services.usage import UsageService
 
 logger = logging.getLogger(__name__)
@@ -296,9 +298,12 @@ class AgentSession:
             await self._sync_history(user_message, newly_created)
             question = await self._standalone_question(user_message)
             collected_tool_calls: list[dict[str, Any]] = []
-            if data.get("mode") == "research":
-                final_output = await self._run_research(question, collected_tool_calls)
+            if data.get("mode") == "report":
+                final_output = await self._run_report(question, collected_tool_calls)
                 model_name: str | None = current_llm().model
+            elif data.get("mode") == "research":
+                final_output = await self._run_research(question, collected_tool_calls)
+                model_name = current_llm().model
             else:
                 assistant = get_agent(
                     model_name=data.get("model"),
@@ -464,6 +469,56 @@ class AgentSession:
         result = await ResearchService.from_settings().run(question, _Events())
         self._turn_evidence = result.evidence
         return result.answer
+
+    async def _run_report(self, question: str, collected_tool_calls: list[dict[str, Any]]) -> str:
+        """Report mode: the question becomes a topic, authoritative data is searched and checked, the analysis
+        report comes back as the answer (and stays downloadable as Word / PDF on the reports page)."""
+        topic = question.strip()[:200]
+        async with get_db_context() as db:
+            report_row = await ResearchReportService(db).create(
+                self.user.id, ResearchReportCreate(topic=topic)
+            )
+            report_id = report_row.id
+        await send_event(self.websocket, "model_request_start", {})
+
+        async def progress(stage: str, percent: int) -> None:
+            await self._send_trace(
+                {"step": "report_progress", "status": "RUNNING", "detail": {"stage": stage, "percent": percent}}
+            )
+            async with get_db_context() as db:
+                await ResearchReportService(db).mark_progress(report_id, stage, percent)
+
+        try:
+            document = await ReportBuilder(ResearchService.from_settings()).build(topic, progress)
+        except Exception as exc:
+            message = exc.message if isinstance(exc, AppException) else f"生成失败：{type(exc).__name__}"
+            logger.warning("chat_report_failed report=%s error=%s", report_id, message)
+            async with get_db_context() as db:
+                await ResearchReportService(db).fail(report_id, message)
+            raise
+        async with get_db_context() as db:
+            await ResearchReportService(db).complete(report_id, document)
+        await self._send_trace(
+            {"step": "report_progress", "status": "PASS", "detail": {"stage": "报告已生成", "percent": 100}}
+        )
+        # The report's [n] numbering is the source panel's numbering.
+        call = {
+            "tool_call_id": f"report-{uuid.uuid4().hex[:12]}",
+            "tool_name": "search_web",
+            "args": {"queries": document.method.queries},
+            "result": _web_payload(document.method.queries, document.sources),
+        }
+        collected_tool_calls.append(call)
+        await send_event(
+            self.websocket, "tool_call", {k: call[k] for k in ("tool_call_id", "tool_name", "args")}
+        )
+        await send_event(
+            self.websocket,
+            "tool_result",
+            {"tool_call_id": call["tool_call_id"], "content": call["result"]},
+        )
+        self._buffer_text_for_verification = True
+        return render_chat_markdown(document, report_id=str(report_id))
 
     def _start_followups(self, question: str, answer: str, message_id: str | None) -> None:
         """Suggest follow-up questions outside the turn so the next question is never blocked."""

@@ -22,7 +22,7 @@ export function ReportsWorkspace() {
   const params = useSearchParams();
   const [topic, setTopic] = useState(params.get("topic") ?? "");
   const [busy, setBusy] = useState(false);
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string | null>(params.get("id"));
   const { items, loading, create, remove } = useReports();
   const current = items.find((item) => item.id === selected) ?? items[0] ?? null;
 
