@@ -1,0 +1,215 @@
+{
+  "mode": "oracle",
+  "generated_at": "2026-10-23T14:13:38.752278+00:00",
+  "today": "2026-10-23",
+  "cases": 28,
+  "runs_per_case": 1,
+  "gold_claims": 29,
+  "extraction_recall": {
+    "n": 29,
+    "rate": 1.0,
+    "ci95": [
+      1.0,
+      1.0
+    ]
+  },
+  "false_pass_rate": {
+    "n": 15,
+    "rate": 0.0,
+    "ci95": [
+      0.0,
+      0.0
+    ]
+  },
+  "verified_precision": {
+    "n": 11,
+    "rate": 1.0,
+    "ci95": [
+      1.0,
+      1.0
+    ]
+  },
+  "level_accuracy": {
+    "n": 29,
+    "rate": 1.0,
+    "ci95": [
+      1.0,
+      1.0
+    ]
+  },
+  "support_set_accuracy": {
+    "n": 29,
+    "rate": 1.0,
+    "ci95": [
+      1.0,
+      1.0
+    ]
+  },
+  "stale_accuracy": {
+    "n": 3,
+    "rate": 1.0,
+    "ci95": [
+      1.0,
+      1.0
+    ]
+  },
+  "spurious_claims": 0,
+  "by_category": {
+    "authority_full": {
+      "level_accuracy": {
+        "n": 5,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "conflict": {
+      "level_accuracy": {
+        "n": 1,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "contradicted": {
+      "level_accuracy": {
+        "n": 4,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "dated_fact": {
+      "level_accuracy": {
+        "n": 1,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "fabricated": {
+      "level_accuracy": {
+        "n": 3,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "low_only": {
+      "level_accuracy": {
+        "n": 1,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "mixed": {
+      "level_accuracy": {
+        "n": 2,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "numeric_near_miss": {
+      "level_accuracy": {
+        "n": 2,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "qualifier": {
+      "level_accuracy": {
+        "n": 2,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "same_site": {
+      "level_accuracy": {
+        "n": 1,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "snippet_only": {
+      "level_accuracy": {
+        "n": 1,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "stale": {
+      "level_accuracy": {
+        "n": 2,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "syndication": {
+      "level_accuracy": {
+        "n": 2,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "two_independent": {
+      "level_accuracy": {
+        "n": 2,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    }
+  },
+  "failures": [],
+  "unextracted": []
+}
