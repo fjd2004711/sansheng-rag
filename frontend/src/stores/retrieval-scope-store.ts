@@ -4,8 +4,9 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 export type SourceChoice = "all" | "shared" | "mine";
-/** "qa" answers from the knowledge base; "research" searches the web and checks every claim. */
-export type ChatMode = "qa" | "research";
+/** "qa" answers from the knowledge base; "research" searches the web and checks every claim;
+ * "report" researches authoritative data and writes a full analysis report. */
+export type ChatMode = "qa" | "research" | "report";
 
 interface RetrievalScopeState {
   /** Which library the next question is answered from. */

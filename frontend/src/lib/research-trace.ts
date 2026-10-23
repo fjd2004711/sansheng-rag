@@ -8,6 +8,7 @@ export const RESEARCH_STEPS = new Set([
   "web_evidence",
   "claim_audit",
   "corroborate",
+  "report_progress",
 ]);
 
 export const SOURCE_TIER_LABELS: Record<string, string> = {
@@ -96,6 +97,10 @@ export function describeResearchStep(event: AgentTraceEvent): string | undefined
         .filter(([key]) => (c[key!] ?? 0) > 0)
         .map(([key, label]) => `${label} ${c[key!]}`);
       return `${total} 条说法：${parts.join("，")}`;
+    }
+    case "report_progress": {
+      const stage = typeof d.stage === "string" ? d.stage : "生成报告";
+      return typeof d.percent === "number" ? `${stage}（${d.percent}%）` : stage;
     }
     case "corroborate": {
       const found = typeof d.new_sources === "number" ? d.new_sources : 0;

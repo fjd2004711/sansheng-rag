@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { BookOpen, FileText, Globe } from "lucide-react";
+import { BookOpen, FileText, Globe, ScrollText } from "lucide-react";
 
 import { ROUTES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
@@ -14,6 +14,12 @@ const MODES: Array<{ value: ChatMode; label: string; hint: string; icon: typeof 
     label: "联网调研",
     hint: "在网上查找资料，逐条核对后作答，每句都标出网页出处",
     icon: Globe,
+  },
+  {
+    value: "report",
+    label: "分析报告",
+    hint: "围绕你的问题查找权威数据，逐条核对后写成带数据表和分析的完整报告（约 3–6 分钟，可下载 Word / PDF）",
+    icon: ScrollText,
   },
 ];
 

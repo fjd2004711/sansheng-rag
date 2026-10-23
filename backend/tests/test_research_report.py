@@ -480,3 +480,30 @@ def test_caveats_summarise_single_source_claims() -> None:
     assert notes == [
         "全文有 1 条说法只找到一个来源（其中 1 条只见于自媒体、论坛等低可信来源），使用前建议对照附录一逐条核实表查看原文"
     ]
+
+
+def test_chat_markdown_has_conclusions_table_analysis_caveats_and_download_links() -> None:
+    from app.services.research import render_chat_markdown
+
+    text = render_chat_markdown(_report(), report_id="abc")
+    assert text.startswith("# 大学生就业调研报告")
+    for part in ("## 核心结论", "## 毕业生规模", "| 毕业生人数 |", "**分析**", "## 争议与不确定"):
+        assert part in text
+    assert "/api/v1/reports/abc/download?format=docx" in text
+    assert "/reports?id=abc" in text
+    # Verified claims are only counted; the notes list what a reader should be careful with.
+    assert "需要留意的说法" not in text
+
+
+def test_chat_markdown_flags_non_verified_claims_and_escapes_table_pipes() -> None:
+    from app.services.research import render_chat_markdown
+    from app.services.research.report_models import DataTable
+
+    report = _report()
+    report.sections[0].claims[0].level = "disputed"
+    report.sections[0].claims[0].reason = "[1] 支持，[2] 说法不同"
+    report.sections[0].table = DataTable(caption="c", columns=["a|b"], rows=[["x|y"]])
+    text = render_chat_markdown(report)
+    assert "⚠️ 有争议" in text and "[2] 说法不同" in text
+    assert "a\\|b" in text and "x\\|y" in text
+    assert "下载 Word" not in text
