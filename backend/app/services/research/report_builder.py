@@ -318,23 +318,39 @@ def _cited_sources(text: str, by_index: dict[int, WebSource]) -> list[WebSource]
     return [by_index[n] for n in numbers if n in by_index]
 
 
+# How much a source's credibility counts against topical overlap when choosing a section's evidence.
+_TIER_BONUS = {"authoritative": 3, "reference": 2, "general": 0, "low": -2}
+_MAX_PASSAGES_PER_PAGE = 2
+
+
 def _relevant_sources(
     sources: list[WebSource], planned: OutlineSection, *, limit: int
 ) -> list[WebSource]:
-    """Passages sharing the most terms with this section, most credible first among equals."""
+    """Passages sharing terms with this section, weighted toward credible sites and spread over many pages.
+
+    Term overlap alone let one mirrored document fill the whole evidence window with near-duplicate passages;
+    an official release that states the figure once was crowded out.
+    """
     terms = set(
         re.findall(
             r"[一-鿿]{2}|[a-z0-9]+",
             f"{planned.heading}{planned.goal}{''.join(planned.indicators)}".lower(),
         )
     )
-    tier_rank = {"authoritative": 0, "reference": 1, "general": 2, "low": 3}
 
-    def score(source: WebSource) -> tuple[int, int]:
+    def score(source: WebSource) -> int:
         text = source.content.lower()
-        return (-sum(t in text for t in terms), tier_rank.get(source.tier, 2))
+        return sum(t in text for t in terms) + _TIER_BONUS.get(source.tier, 0)
 
-    ranked = sorted(sources, key=score)[:limit]
+    per_page: dict[str, int] = {}
+    ranked: list[WebSource] = []
+    for source in sorted(sources, key=lambda s: (-score(s), s.index)):
+        if per_page.get(source.url, 0) >= _MAX_PASSAGES_PER_PAGE:
+            continue
+        per_page[source.url] = per_page.get(source.url, 0) + 1
+        ranked.append(source)
+        if len(ranked) >= limit:
+            break
     return sorted(ranked, key=lambda s: s.index)
 
 

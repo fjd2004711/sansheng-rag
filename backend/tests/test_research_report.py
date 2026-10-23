@@ -552,3 +552,19 @@ def test_data_point_whose_name_says_one_year_but_period_another_is_rejected() ->
     assert kept == [] and rejected == 1
     ok = bad.model_copy(update={"indicator": "初次毕业去向落实率"})
     assert verify_data_points([ok], {1: source})[0] == [ok]
+
+
+def test_relevant_sources_prefer_credible_pages_and_cap_passages_per_page() -> None:
+    from app.services.research.report_builder import _relevant_sources
+    from app.services.research.report_models import OutlineSection
+
+    planned = OutlineSection(heading="毕业生规模", goal="毕业生规模", indicators=[])
+
+    def src(i: int, url: str, tier: str, text: str) -> WebSource:
+        return SOURCE.model_copy(update={"index": i, "url": url, "tier": tier, "content": text})
+
+    mirror = [src(i, "https://renrendoc.com/x", "general", "毕业生规模毕业生规模毕业生规模") for i in range(1, 6)]
+    official = src(9, "https://www.moe.gov.cn/a", "authoritative", "毕业生规模1222万人")
+    chosen = _relevant_sources([*mirror, official], planned, limit=3)
+    assert official in chosen
+    assert sum(s.url == "https://renrendoc.com/x" for s in chosen) <= 2
