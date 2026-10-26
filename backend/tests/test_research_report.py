@@ -428,7 +428,9 @@ async def test_build_report_corroborates_weak_claims_and_regrades() -> None:
             ExtractedClaim(claim="青年失业率为17.8%", supporting=[1] if len(calls) == 1 else [1, 2])
         ]
 
-    research = FakeResearch(FakeRetrieval(), host="site{n}.cn", lead="青年失业率为17.8%，处于近年来的较高水平。")
+    research = FakeResearch(
+        FakeRetrieval(), host="site{n}.cn", lead="青年失业率为17.8%，处于近年来的较高水平。"
+    )
     with (
         patch.object(report_builder, "plan_outline", AsyncMock(return_value=outline)),
         patch.object(report_builder, "extract_data_points", AsyncMock(return_value=[])),
@@ -521,7 +523,10 @@ def test_chat_markdown_flags_non_verified_claims_and_escapes_table_pipes() -> No
 def test_official_site_variants_come_first_and_respect_the_limit() -> None:
     from app.services.research.authorities import official_site_query, with_official_variants
 
-    assert official_site_query("教育部 2025届全国普通高校毕业生规模") == "site:moe.gov.cn 2025届全国普通高校毕业生规模"
+    assert (
+        official_site_query("教育部 2025届全国普通高校毕业生规模")
+        == "site:moe.gov.cn 2025届全国普通高校毕业生规模"
+    )
     assert official_site_query("国家统计局 2025年 青年失业率").startswith("site:stats.gov.cn ")
     assert official_site_query("智联招聘 薪资报告") is None
     queries = ["智联招聘 薪资", "教育部 毕业生规模", "人社部 就业通报"]
@@ -563,8 +568,110 @@ def test_relevant_sources_prefer_credible_pages_and_cap_passages_per_page() -> N
     def src(i: int, url: str, tier: str, text: str) -> WebSource:
         return SOURCE.model_copy(update={"index": i, "url": url, "tier": tier, "content": text})
 
-    mirror = [src(i, "https://renrendoc.com/x", "general", "毕业生规模毕业生规模毕业生规模") for i in range(1, 6)]
+    mirror = [
+        src(i, "https://renrendoc.com/x", "general", "毕业生规模毕业生规模毕业生规模")
+        for i in range(1, 6)
+    ]
     official = src(9, "https://www.moe.gov.cn/a", "authoritative", "毕业生规模1222万人")
     chosen = _relevant_sources([*mirror, official], planned, limit=3)
     assert official in chosen
     assert sum(s.url == "https://renrendoc.com/x" for s in chosen) <= 2
+
+
+# ---- synthesis: judgment and advice -------------------------------------------------------------
+
+
+def test_split_synthesis_parses_audience_insights_and_advice_lines() -> None:
+    from app.services.research.report_llm import _split_synthesis
+
+    audience, insights, recs = _split_synthesis(
+        "【读者】应届毕业生\n【综合研判】\n- 规模扩大 [1]（把握：高）\n"
+        "【行动建议】\n1. [高] 建议尽早投递 || 依据：规模预计达1222万人 [1] || 前提与风险：数据为预计值\n"
+        "2. [低] 建议关注政策"
+    )
+    assert audience == "应届毕业生"
+    assert insights.startswith("- 规模扩大")
+    assert [(r.priority, r.action) for r in recs] == [
+        ("高", "建议尽早投递"),
+        ("低", "建议关注政策"),
+    ]
+    assert recs[0].reason == "规模预计达1222万人 [1]" and recs[0].caveat == "数据为预计值"
+
+
+def _synth_report() -> ResearchReport:
+    from app.services.research.report_models import Recommendation
+
+    return _report().model_copy(
+        update={
+            "audience": "应届毕业生",
+            "insights": "- 规模扩大，竞争加剧 [1]（把握：中）",
+            "recommendations": [
+                Recommendation(
+                    action="建议尽早投递简历",
+                    reason="规模预计达1222万人 [1]",
+                    priority="高",
+                    caveat="数据为预计值",
+                    basis="strong",
+                )
+            ],
+        }
+    )
+
+
+def test_render_docx_and_chat_markdown_include_judgment_and_advice() -> None:
+    from app.services.research.report_markdown import render_chat_markdown
+
+    doc = DocxDocument(io.BytesIO(render_docx(_synth_report())))
+    text = "\n".join(p.text for p in doc.paragraphs)
+    assert "三、综合研判" in text and "四、行动建议" in text and "五、争议与不确定" in text
+    assert "建议尽早投递简历" in text
+    markdown = render_chat_markdown(_synth_report())
+    assert "## 综合研判" in markdown and "## 行动建议" in markdown
+    assert "依据充分" in markdown and "前提与风险：数据为预计值" in markdown
+
+
+@pytest.mark.anyio
+async def test_synthesis_grades_premises_and_drops_advice_with_unsourced_numbers() -> None:
+    from app.services.research.report_models import Recommendation
+
+    outline = ReportOutline(
+        title="t",
+        sections=[OutlineSection(heading="规模", goal="多少", queries=["q"], indicators=[])],
+    )
+
+    async def fake_extract(section, evidence, *, already_used=None):
+        return [_point("1222", "毕业生规模预计达1222万人")]
+
+    async def fake_write(topic, section, evidence, data):
+        return "2025届毕业生规模预计达1222万人 [1]。", "规模扩大（推测）[1]。"
+
+    async def fake_claims(question, text, evidence):
+        return [ExtractedClaim(claim="2025届毕业生规模预计达1222万人", supporting=[1])]
+
+    drafts = [
+        Recommendation(
+            action="建议尽早投递", reason="2025届毕业生规模预计达1222万人 [1]", priority="高"
+        ),
+        Recommendation(action="建议把目标薪资定在9999元", reason="规模预计达1222万人 [1]"),
+        Recommendation(action="建议关注招聘会", reason="", priority="低"),
+    ]
+    with (
+        patch.object(report_builder, "plan_outline", AsyncMock(return_value=outline)),
+        patch.object(report_builder, "extract_data_points", fake_extract),
+        patch.object(report_builder, "write_section", fake_write),
+        patch.object(report_builder, "write_summary", AsyncMock(return_value="")),
+        patch.object(
+            report_builder,
+            "write_synthesis",
+            AsyncMock(return_value=("毕业生", "- 判断 [1]", drafts)),
+        ),
+        patch.object(report_builder, "extract_claims", fake_claims),
+    ):
+        report = await report_builder.ReportBuilder(FakeResearch(FakeRetrieval())).build(
+            "大学生就业数据", AsyncMock()
+        )
+
+    assert [r.action for r in report.recommendations] == ["建议尽早投递", "建议关注招聘会"]
+    assert report.recommendations[0].basis == "strong"
+    assert report.recommendations[1].basis == "inference"
+    assert report.audience == "毕业生"

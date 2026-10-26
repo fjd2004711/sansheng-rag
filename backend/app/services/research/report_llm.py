@@ -13,7 +13,12 @@ from app.core.llm_runtime import current_llm
 from app.core.usage_meter import record_openai_response
 from app.services.rag.guard import UNTRUSTED_NOTE
 from app.services.research.report_data import display_value
-from app.services.research.report_models import DataPoint, OutlineSection, ReportOutline
+from app.services.research.report_models import (
+    DataPoint,
+    OutlineSection,
+    Recommendation,
+    ReportOutline,
+)
 
 
 async def _complete(prompt: str, *, temperature: float = 0) -> str:
@@ -151,3 +156,73 @@ async def write_summary(topic: str, sections: list[tuple[str, str]], evidence: s
         f"正文：\n{body[:12000]}\n资料：\n{evidence[:6000]}"
     )
     return (await _complete(prompt)).strip()
+
+
+_AUDIENCE_MARK = "【读者】"
+_INSIGHT_MARK = "【综合研判】"
+_ADVICE_MARK = "【行动建议】"
+_ADVICE_LINE = re.compile(r"^\s*(?:\d+[.、)]|[-*•])\s*\[?(高|中|低)\]?\s*(.+)$")
+
+
+async def write_synthesis(
+    topic: str, sections: list[tuple[str, str, str]], flagged: list[str], evidence: str
+) -> tuple[str, str, list[Recommendation]]:
+    """Cross-section judgment and advice: (audience, insights, recommendations).
+
+    ``sections`` is (heading, facts, analysis). Marked plain text again, not JSON, for the same reason as sections.
+    """
+    body = "\n\n".join(f"## {h}\n{f}\n分析：{a}" for h, f, a in sections)
+    avoid = "\n".join(f"- {c}" for c in flagged[:20]) or "（无）"
+    prompt = (
+        f"你在为调研报告《{topic}》写最后的“综合研判”和“行动建议”。读者要的不是事实罗列，而是“所以呢、我该怎么办”。"
+        "只能依据下面各章的事实与分析以及资料，输出三部分，不要输出其他内容：\n"
+        f"{_AUDIENCE_MARK}\n一句话：从提问看，这份报告主要写给谁、他们面临什么决定（拿不准就按提问最自然的读者写）。\n"
+        f"{_INSIGHT_MARK}\n3～5 条跨章节的判断，每条以“- ”开头：把不同章节的事实放在一起看，指出整体格局、关键矛盾、"
+        "结构性变化或最值得警惕的信号，写清“为什么这样判断”，事实处标注 [n]。"
+        "每条末尾用括号写“把握：高/中/低”并说明原因（来源是否权威、是否多个来源一致、是否只是推测）。\n"
+        f"{_ADVICE_MARK}\n4～6 条具体建议，按优先级排序，每条一行，格式严格为：\n"
+        "1. [高/中/低] 建议做什么（动词开头，具体到谁、做什么、怎么做） || 依据：用到的事实及其 [n] 编号 || 前提与风险：什么情况下不适用、可能的代价\n"
+        "规则：建议必须由上面的事实推出，不是资料里写好的结论；每条依据里的事实要带 [n]；"
+        "不得引入资料里没有的数字、机构、政策名称或案例；不得自行计算、换算或取整出新数字（例如由“44%”推出“56%”）；建议里不要出现数字，除非原样引用事实；"
+        "因果关系只能写成“相关”“可能促成”，除非资料明确说了是原因；建议的力度要与证据强度相当，证据弱的方向写成“先试点”“先核实”，不要替读者作资料撑不起的重大决定；"
+        "下面“不可靠的说法”没有被核实或存在争议，不得作为建议的依据；"
+        "如果证据不足以支持某个方向，建议就写成“先补充…数据/先核实…”，不要硬给结论；"
+        "判断和建议是推论，措辞用“建议”“宜”“可考虑”，不要写成事实；不要提到这些写作规则本身。\n"
+        f"今天：{today_zh()}\n不可靠的说法：\n{avoid}\n各章内容：\n{body[:12000]}\n资料：\n{evidence[:7000]}"
+    )
+    for _ in range(2):
+        audience, insights, recs = _split_synthesis(await _complete(prompt, temperature=0.3))
+        if recs or insights:
+            return audience, insights, recs
+    return "", "", []
+
+
+def _split_synthesis(text: str) -> tuple[str, str, list[Recommendation]]:
+    def part(mark: str, nxt: tuple[str, ...]) -> str:
+        if mark not in text:
+            return ""
+        rest = text.split(mark, 1)[1]
+        for other in nxt:
+            rest = rest.split(other, 1)[0]
+        return rest.strip()
+
+    audience = part(_AUDIENCE_MARK, (_INSIGHT_MARK, _ADVICE_MARK)).splitlines()[0:1]
+    insights = part(_INSIGHT_MARK, (_ADVICE_MARK,))
+    recs: list[Recommendation] = []
+    for line in part(_ADVICE_MARK, ()).splitlines():
+        match = _ADVICE_LINE.match(line)
+        if not match:
+            continue
+        pieces = [p.strip() for p in match.group(2).split("||")]
+        action = pieces[0]
+        reason = caveat = ""
+        for piece in pieces[1:]:
+            if piece.startswith("依据"):
+                reason = piece.split("：", 1)[-1].strip()
+            elif piece.startswith("前提"):
+                caveat = piece.split("：", 1)[-1].strip()
+        if action:
+            recs.append(
+                Recommendation(action=action, reason=reason, priority=match.group(1), caveat=caveat)
+            )
+    return (audience[0].strip() if audience else ""), insights, recs[:6]

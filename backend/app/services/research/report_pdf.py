@@ -21,7 +21,9 @@ from app.services.research.report_chart import chart_png
 from app.services.research.report_fonts import cjk_font_path
 from app.services.research.report_models import DataTable, ResearchReport
 from app.services.research.report_text import (
+    BASIS_LABELS,
     LEVEL_RULES,
+    SYNTHESIS_NOTE,
     TIER_NAMES,
     blocks,
     reference_groups,
@@ -110,7 +112,29 @@ def render_pdf(report: ResearchReport) -> bytes:
         if section.analysis:
             story += [Paragraph("分析", s["h2"]), *_markdown(section.analysis, s)]
 
-    story.append(Paragraph(escape(f"{_numeral(len(report.sections) + 2)}、争议与不确定"), s["h1"]))
+    n = len(report.sections) + 2
+    if report.insights.strip():
+        story.append(Paragraph(escape(f"{_numeral(n)}、综合研判"), s["h1"]))
+        if report.audience:
+            story.append(Paragraph(escape(f"写给：{report.audience}"), s["note"]))
+        story += _markdown(report.insights, s)
+        n += 1
+    if report.recommendations:
+        story += [
+            Paragraph(escape(f"{_numeral(n)}、行动建议"), s["h1"]),
+            Paragraph(escape(SYNTHESIS_NOTE), s["note"]),
+        ]
+        for i, rec in enumerate(report.recommendations, start=1):
+            story.append(Paragraph(escape(f"{i}. [{rec.priority}优先级] {rec.action}"), s["h2"]))
+            for label, text in (
+                ("依据", rec.reason),
+                ("前提与风险", rec.caveat),
+                ("可靠程度", BASIS_LABELS[rec.basis]),
+            ):
+                if text:
+                    story.append(Paragraph(escape(f"{label}：{text}"), s["li"], bulletText="•"))
+        n += 1
+    story.append(Paragraph(escape(f"{_numeral(n)}、争议与不确定"), s["h1"]))
     notes = report.caveats or ["逐条核验没有发现有争议、未能核实或可能过时的内容。"]
     story += [Paragraph(escape(note), s["li"], bulletText="•") for note in notes]
 
@@ -125,6 +149,8 @@ def render_pdf(report: ResearchReport) -> bytes:
         for heading, claims in [
             ("核心结论", report.summary_claims),
             *((x.heading, x.claims) for x in report.sections),
+            ("综合研判", report.insight_claims),
+            *((f"建议：{r.action[:16]}", r.premises) for r in report.recommendations),
         ]
         for claim in claims
     ]

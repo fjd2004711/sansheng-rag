@@ -4,13 +4,18 @@ from __future__ import annotations
 
 from app.services.research.audit import LEVEL_LABELS, AuditedClaim
 from app.services.research.report_models import DataTable, ResearchReport
-from app.services.research.report_text import verification_overview
+from app.services.research.report_text import BASIS_LABELS, SYNTHESIS_NOTE, verification_overview
 
 _ICONS = {"verified": "✅", "single_source": "ℹ️", "disputed": "⚠️", "unverified": "❓"}
 
 
 def render_chat_markdown(report: ResearchReport, *, report_id: str | None = None) -> str:
-    lines: list[str] = [f"# {report.title}", "", f"**核验概况**：{verification_overview(report)}", ""]
+    lines: list[str] = [
+        f"# {report.title}",
+        "",
+        f"**核验概况**：{verification_overview(report)}",
+        "",
+    ]
     if report.summary.strip():
         lines += ["## 核心结论", "", report.summary.strip(), ""]
         lines += _claim_notes(report.summary_claims)
@@ -25,6 +30,22 @@ def render_chat_markdown(report: ResearchReport, *, report_id: str | None = None
         if section.analysis.strip():
             lines += ["**分析**", "", section.analysis.strip(), ""]
         lines += _claim_notes(section.claims)
+    if report.insights.strip():
+        lines += ["## 综合研判", ""]
+        if report.audience:
+            lines += [f"*写给：{report.audience}*", ""]
+        lines += [report.insights.strip(), ""]
+        lines += _claim_notes(report.insight_claims)
+    if report.recommendations:
+        lines += ["## 行动建议", "", f"*{SYNTHESIS_NOTE}*", ""]
+        for i, rec in enumerate(report.recommendations, start=1):
+            lines.append(f"{i}. **[{rec.priority}优先级] {rec.action}**")
+            if rec.reason:
+                lines.append(f"   - 依据：{rec.reason}")
+            if rec.caveat:
+                lines.append(f"   - 前提与风险：{rec.caveat}")
+            lines.append(f"   - 可靠程度：{BASIS_LABELS[rec.basis]}")
+        lines.append("")
     if report.caveats:
         lines += ["## 争议与不确定", "", *(f"- {c}" for c in report.caveats), ""]
     if report_id:

@@ -42,9 +42,11 @@ from app.services.research.report_llm import (
     plan_outline,
     write_section,
     write_summary,
+    write_synthesis,
 )
 from app.services.research.report_models import (
     OutlineSection,
+    Recommendation,
     ReportMethod,
     ReportSection,
     ResearchReport,
@@ -84,7 +86,9 @@ class ReportBuilder:
         planned_queries = list(
             dict.fromkeys(q.strip() for s in outline.sections for q in s.queries if q.strip())
         )
-        queries = with_official_variants(planned_queries, limit=settings.REPORT_MAX_QUERIES) or [topic]
+        queries = with_official_variants(planned_queries, limit=settings.REPORT_MAX_QUERIES) or [
+            topic
+        ]
         log = _TraceLog()
         corpus = self._research.new_corpus()
         try:
@@ -107,8 +111,12 @@ class ReportBuilder:
             queries += await self._corroborate(outline.sections, sections, corpus, log)
             await progress("撰写核心结论", 88)
             summary, summary_claims = await self._summary(outline.title, sections, corpus)
+            await progress("撰写综合研判与行动建议", 92)
+            audience, insights, insight_claims, recommendations = await self._synthesis(
+                outline.title, sections, corpus
+            )
             await progress("整理核实情况", 96)
-            consistent_claims(sections, summary_claims)
+            consistent_claims(sections, [*summary_claims, *insight_claims])
             sources = corpus.sources
             return ResearchReport(
                 title=outline.title,
@@ -116,6 +124,10 @@ class ReportBuilder:
                 generated_at=_now(),
                 summary=summary,
                 summary_claims=summary_claims,
+                audience=audience,
+                insights=insights,
+                insight_claims=insight_claims,
+                recommendations=recommendations,
                 sections=sections,
                 caveats=_caveats(sections, summary_claims, sources),
                 method=ReportMethod(
@@ -254,6 +266,42 @@ class ReportBuilder:
             title, summary, _cited_sources(summary, by_index) or cited
         )
 
+    async def _synthesis(
+        self, title: str, sections: list[ReportSection], corpus: WebCorpus
+    ) -> tuple[str, str, list[AuditedClaim], list[Recommendation]]:
+        """Cross-section judgment and advice. The judgments are inference; only their factual premises are graded."""
+        by_index = {s.index: s for s in corpus.sources}
+        cited = _cited_sources("\n".join(f"{s.body}\n{s.analysis}" for s in sections), by_index)
+        evidence = format_evidence(cited)
+        flagged = [
+            f"{c.claim}（{LEVEL_LABELS[c.level]}）"
+            for s in sections
+            for c in s.claims
+            if c.level in ("disputed", "unverified")
+        ]
+        try:
+            audience, insights, drafts = await write_synthesis(
+                title, [(s.heading, s.body, s.analysis) for s in sections], flagged, evidence
+            )
+        except Exception:
+            logger.warning("report_synthesis_failed", exc_info=True)
+            return "", "", [], []
+        full_evidence = "\n".join(s.content for s in corpus.sources)
+        insights = scrub_unsupported_sentences(insights, full_evidence)[0]
+        insight_claims = await self._grade(
+            title, insights, _cited_sources(insights, by_index) or cited
+        )
+        recommendations: list[Recommendation] = []
+        for rec in drafts:
+            text = f"{rec.action} {rec.reason} {rec.caveat}"
+            if unsupported_numbers(text, full_evidence):
+                continue  # advice built on a number found in no source is dropped, not softened
+            sources = _cited_sources(rec.reason, by_index)
+            rec.premises = await self._grade(title, rec.reason, sources) if sources else []
+            rec.basis = _basis(rec.premises)
+            recommendations.append(rec)
+        return audience, insights, insight_claims, recommendations
+
     async def _grade(
         self, question: str, text: str, sources: list[WebSource]
     ) -> list[AuditedClaim]:
@@ -268,6 +316,15 @@ class ReportBuilder:
         return audit_claims(
             extracted, sources, today=today, stale_days=settings.RESEARCH_STALE_DAYS
         ).claims
+
+
+def _basis(premises: list[AuditedClaim]) -> str:
+    if not premises:
+        return "inference"
+    levels = {c.level for c in premises}
+    if levels & {"disputed", "unverified"}:
+        return "weak"
+    return "strong" if levels == {"verified"} else "mixed"
 
 
 _LEVEL_STRENGTH = {"verified": 0, "single_source": 1, "disputed": 2, "unverified": 3}
