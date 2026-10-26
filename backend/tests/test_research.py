@@ -606,6 +606,14 @@ def test_claim_in_answer_rejects_claims_lifted_from_sources() -> None:
     assert not claim_in_answer("全员劳动生产率比上年提高明显", answer)
 
 
+def test_claim_in_answer_rejects_silently_corrected_claims() -> None:
+    from app.services.research.audit import claim_in_answer
+
+    answer = "2024年全球45%的成年人患有肥胖症[1]。"
+    assert not claim_in_answer("2024年全球成年人超重率为45%", answer, question="全球肥胖情况？")
+    assert claim_in_answer("2024年全球45%的成年人患有肥胖症", answer)
+
+
 def test_usable_title_drops_script_text() -> None:
     from app.services.research.fetcher import _usable_title
 
