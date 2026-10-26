@@ -112,7 +112,7 @@ async def extract_claims(question: str, answer: str, evidence: str) -> list[Extr
     return [
         claim
         for claim in claims
-        if claim_in_answer(claim.claim, answer) and not is_absence_statement(claim.claim)
+        if claim_in_answer(claim.claim, answer, question=question) and not is_absence_statement(claim.claim)
     ]
 
 
@@ -135,10 +135,12 @@ _NUMBER = re.compile(r"\d+(?:\.\d+)?")
 _CJK_OR_WORD = re.compile(r"[\u4e00-\u9fff]|[a-z]+")
 
 
-def claim_in_answer(claim: str, answer: str, *, min_overlap: float = 0.6) -> bool:
+def claim_in_answer(claim: str, answer: str, *, question: str = "", min_overlap: float = 0.75) -> bool:
     """Guard against claims the model lifted from the sources instead of the answer.
 
-    Every number in the claim must occur in the answer, and most of its characters/words must too.
+    Every number in the claim must occur in the answer, and most of its characters/words must too (the question
+    may lend context words). A threshold that is too low lets the model "correct" a false statement into a true
+    one (写“45%的成年人肥胖”，抽成“超重率为45%”), so the false sentence is never audited.
     """
     plain = _strip_citations(answer).replace(",", "").replace("，", "")
     answer_numbers = set(_NUMBER.findall(plain))
@@ -147,7 +149,7 @@ def claim_in_answer(claim: str, answer: str, *, min_overlap: float = 0.6) -> boo
     tokens = _CJK_OR_WORD.findall(claim.lower())
     if not tokens:
         return True
-    answer_tokens = set(_CJK_OR_WORD.findall(plain.lower()))
+    answer_tokens = set(_CJK_OR_WORD.findall(f"{plain} {question}".lower()))
     return sum(t in answer_tokens for t in tokens) / len(tokens) >= min_overlap
 
 
@@ -170,8 +172,10 @@ def _parse_claims(text: str) -> list[ExtractedClaim]:
     return claims[:_MAX_CLAIMS]
 
 
-_QUANTITY = re.compile(r"(\d+(?:\.\d+)?)\s*(万亿|亿|万|%|％|个百分点|百分点)?")
-_UNIT_FACTOR = {"万亿": 1e12, "亿": 1e8, "万": 1e4}
+_QUANTITY = re.compile(
+    r"(\d+(?:\.\d+)?)\s*(万亿|亿|万|%|％|个百分点|百分点|trillion|billion|million|thousand)?(?![a-z])", re.IGNORECASE
+)
+_UNIT_FACTOR = {"万亿": 1e12, "亿": 1e8, "万": 1e4, "trillion": 1e12, "billion": 1e9, "million": 1e6, "thousand": 1e3}
 _DATE_TAIL = re.compile(r"^\s*(?:年|届|月|日|号|级|季度|届)")
 
 
@@ -185,7 +189,7 @@ def _quantities(text: str) -> list[tuple[float, int, str]]:
     plain = re.sub(r"(?<=\d)[ \u202f\u00a0](?=\d{3}(?!\d))", "", plain)  # "299 792 458"
     out: list[tuple[float, int, str]] = []
     for m in _QUANTITY.finditer(plain):
-        digits, unit = m.group(1), m.group(2) or ""
+        digits, unit = m.group(1), (m.group(2) or "").lower()
         if _DATE_TAIL.match(plain[m.end() - len(unit) :] if not unit else plain[m.end() :]) and not unit:
             continue
         value = float(digits)

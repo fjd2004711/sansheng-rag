@@ -1,0 +1,526 @@
+{
+  "mode": "live",
+  "generated_at": "2026-10-26T10:33:09.165555+00:00",
+  "today": "2026-10-23",
+  "cases": 48,
+  "runs_per_case": 3,
+  "gold_claims": 150,
+  "extraction_recall": {
+    "n": 150,
+    "rate": 0.92,
+    "ci95": [
+      0.8733,
+      0.96
+    ]
+  },
+  "false_pass_rate": {
+    "n": 73,
+    "rate": 0.0,
+    "ci95": [
+      0.0,
+      0.0
+    ]
+  },
+  "verified_precision": {
+    "n": 51,
+    "rate": 1.0,
+    "ci95": [
+      1.0,
+      1.0
+    ]
+  },
+  "level_accuracy": {
+    "n": 138,
+    "rate": 1.0,
+    "ci95": [
+      1.0,
+      1.0
+    ]
+  },
+  "support_set_accuracy": {
+    "n": 138,
+    "rate": 0.9783,
+    "ci95": [
+      0.9493,
+      1.0
+    ]
+  },
+  "stale_accuracy": {
+    "n": 15,
+    "rate": 0.8,
+    "ci95": [
+      0.6,
+      1.0
+    ]
+  },
+  "spurious_claims": 9,
+  "by_category": {
+    "ai_answer_page": {
+      "level_accuracy": {
+        "n": 3,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "authority_full": {
+      "level_accuracy": {
+        "n": 15,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "conflict": {
+      "level_accuracy": {
+        "n": 3,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "contradicted": {
+      "level_accuracy": {
+        "n": 12,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "dated_fact": {
+      "level_accuracy": {
+        "n": 3,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "entity_swap": {
+      "level_accuracy": {
+        "n": 3,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "fabricated": {
+      "level_accuracy": {
+        "n": 9,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "fabricated_quote": {
+      "level_accuracy": {
+        "n": 3,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "growth_trap": {
+      "level_accuracy": {
+        "n": 3,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "low_contradicts_authority": {
+      "level_accuracy": {
+        "n": 3,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "low_only": {
+      "level_accuracy": {
+        "n": 3,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "mixed": {
+      "level_accuracy": {
+        "n": 6,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "negation": {
+      "level_accuracy": {
+        "n": 3,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "numeric_near_miss": {
+      "level_accuracy": {
+        "n": 6,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "opinion_as_fact": {
+      "level_accuracy": {
+        "n": 3,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "partial_support": {
+      "level_accuracy": {
+        "n": 6,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "percent_points": {
+      "level_accuracy": {
+        "n": 1,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "positive_paraphrase": {
+      "level_accuracy": {
+        "n": 3,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "positive_snippet_multi": {
+      "level_accuracy": {
+        "n": 3,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "qualifier": {
+      "level_accuracy": {
+        "n": 3,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "same_site": {
+      "level_accuracy": {
+        "n": 3,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "scope_inflation": {
+      "level_accuracy": {
+        "n": 3,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "snippet_only": {
+      "level_accuracy": {
+        "n": 3,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "stale": {
+      "level_accuracy": {
+        "n": 6,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "stale_policy": {
+      "level_accuracy": {
+        "n": 3,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "syndication": {
+      "level_accuracy": {
+        "n": 5,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "syndication_rewrite": {
+      "level_accuracy": {
+        "n": 3,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "two_independent": {
+      "level_accuracy": {
+        "n": 6,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "two_site_same_domain_family": {
+      "level_accuracy": {
+        "n": 3,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "unit_trap": {
+      "level_accuracy": {
+        "n": 6,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "wrong_period": {
+      "level_accuracy": {
+        "n": 3,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    }
+  },
+  "failures": [],
+  "unextracted": [
+    {
+      "case": "F2",
+      "category": "qualifier",
+      "claim": [
+        "咖啡",
+        "预防"
+      ],
+      "truth": "overstated",
+      "expected_level": "unverified",
+      "matched": false
+    },
+    {
+      "case": "G1",
+      "category": "syndication",
+      "claim": [
+        "60架"
+      ],
+      "truth": "true",
+      "expected_level": "single_source",
+      "matched": false
+    },
+    {
+      "case": "H05",
+      "category": "percent_points",
+      "claim": [
+        "上升了2%"
+      ],
+      "truth": "false",
+      "expected_level": "unverified",
+      "matched": false
+    },
+    {
+      "case": "H10",
+      "category": "authority_conflict",
+      "claim": [
+        "5.3%"
+      ],
+      "truth": "contested",
+      "expected_level": "disputed",
+      "matched": false
+    },
+    {
+      "case": "H20",
+      "category": "english_positive",
+      "claim": [
+        "100"
+      ],
+      "truth": "true",
+      "expected_level": "verified",
+      "matched": false
+    },
+    {
+      "case": "F2",
+      "category": "qualifier",
+      "claim": [
+        "咖啡",
+        "预防"
+      ],
+      "truth": "overstated",
+      "expected_level": "unverified",
+      "matched": false
+    },
+    {
+      "case": "H10",
+      "category": "authority_conflict",
+      "claim": [
+        "5.3%"
+      ],
+      "truth": "contested",
+      "expected_level": "disputed",
+      "matched": false
+    },
+    {
+      "case": "H20",
+      "category": "english_positive",
+      "claim": [
+        "100"
+      ],
+      "truth": "true",
+      "expected_level": "verified",
+      "matched": false
+    },
+    {
+      "case": "F2",
+      "category": "qualifier",
+      "claim": [
+        "咖啡",
+        "预防"
+      ],
+      "truth": "overstated",
+      "expected_level": "unverified",
+      "matched": false
+    },
+    {
+      "case": "H05",
+      "category": "percent_points",
+      "claim": [
+        "上升了2%"
+      ],
+      "truth": "false",
+      "expected_level": "unverified",
+      "matched": false
+    },
+    {
+      "case": "H10",
+      "category": "authority_conflict",
+      "claim": [
+        "5.3%"
+      ],
+      "truth": "contested",
+      "expected_level": "disputed",
+      "matched": false
+    },
+    {
+      "case": "H20",
+      "category": "english_positive",
+      "claim": [
+        "100"
+      ],
+      "truth": "true",
+      "expected_level": "verified",
+      "matched": false
+    }
+  ]
+}

@@ -1,0 +1,330 @@
+{
+  "mode": "live",
+  "generated_at": "2026-10-26T10:28:58.909467+00:00",
+  "today": "2026-10-23",
+  "cases": 28,
+  "runs_per_case": 3,
+  "gold_claims": 90,
+  "extraction_recall": {
+    "n": 90,
+    "rate": 0.8667,
+    "ci95": [
+      0.8,
+      0.9333
+    ]
+  },
+  "false_pass_rate": {
+    "n": 27,
+    "rate": 0.0741,
+    "ci95": [
+      0.0,
+      0.1852
+    ]
+  },
+  "verified_precision": {
+    "n": 47,
+    "rate": 0.9574,
+    "ci95": [
+      0.8936,
+      1.0
+    ]
+  },
+  "level_accuracy": {
+    "n": 78,
+    "rate": 0.9615,
+    "ci95": [
+      0.9103,
+      1.0
+    ]
+  },
+  "support_set_accuracy": {
+    "n": 78,
+    "rate": 0.9615,
+    "ci95": [
+      0.9103,
+      1.0
+    ]
+  },
+  "stale_accuracy": {
+    "n": 0,
+    "rate": null,
+    "ci95": null
+  },
+  "spurious_claims": 30,
+  "by_category": {
+    "real_authority": {
+      "level_accuracy": {
+        "n": 33,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "real_contradicted": {
+      "level_accuracy": {
+        "n": 3,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "real_cross_language": {
+      "level_accuracy": {
+        "n": 3,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "real_entity_swap": {
+      "level_accuracy": {
+        "n": 3,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "real_misattributed": {
+      "level_accuracy": {
+        "n": 3,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "real_mixed": {
+      "level_accuracy": {
+        "n": 8,
+        "rate": 0.75,
+        "ci95": [
+          0.5,
+          1.0
+        ]
+      },
+      "false_pass": 2
+    },
+    "real_number_wrong_quantity": {
+      "level_accuracy": {
+        "n": 14,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "real_numeric_wrong": {
+      "level_accuracy": {
+        "n": 5,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "real_reference_single": {
+      "level_accuracy": {
+        "n": 6,
+        "rate": 0.8333,
+        "ci95": [
+          0.5,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    }
+  },
+  "failures": [
+    {
+      "case": "R20",
+      "category": "real_reference_single",
+      "claim": [
+        "8848.86"
+      ],
+      "truth": "true",
+      "expected_level": "single_source",
+      "matched": true,
+      "level": "unverified",
+      "level_ok": false,
+      "false_pass": false,
+      "support_ok": false,
+      "stale_ok": null
+    },
+    {
+      "case": "R28",
+      "category": "real_mixed",
+      "claim": [
+        "得到控制"
+      ],
+      "truth": "false",
+      "expected_level": "unverified",
+      "matched": true,
+      "level": "verified",
+      "level_ok": false,
+      "false_pass": true,
+      "support_ok": false,
+      "stale_ok": null
+    },
+    {
+      "case": "R28",
+      "category": "real_mixed",
+      "claim": [
+        "得到控制"
+      ],
+      "truth": "false",
+      "expected_level": "unverified",
+      "matched": true,
+      "level": "verified",
+      "level_ok": false,
+      "false_pass": true,
+      "support_ok": false,
+      "stale_ok": null
+    }
+  ],
+  "unextracted": [
+    {
+      "case": "R12",
+      "category": "real_english",
+      "claim": [
+        "14%",
+        "1990"
+      ],
+      "truth": "true",
+      "expected_level": "verified",
+      "matched": false
+    },
+    {
+      "case": "R16",
+      "category": "real_number_wrong_quantity",
+      "claim": [
+        "45%"
+      ],
+      "truth": "false",
+      "expected_level": "unverified",
+      "matched": false
+    },
+    {
+      "case": "R07",
+      "category": "real_number_wrong_quantity",
+      "claim": [
+        "新能源汽车",
+        "54.0"
+      ],
+      "truth": "false",
+      "expected_level": "unverified",
+      "matched": false
+    },
+    {
+      "case": "R12",
+      "category": "real_english",
+      "claim": [
+        "14%",
+        "1990"
+      ],
+      "truth": "true",
+      "expected_level": "verified",
+      "matched": false
+    },
+    {
+      "case": "R16",
+      "category": "real_number_wrong_quantity",
+      "claim": [
+        "45%"
+      ],
+      "truth": "false",
+      "expected_level": "unverified",
+      "matched": false
+    },
+    {
+      "case": "R24",
+      "category": "real_numeric_wrong",
+      "claim": [
+        "1946"
+      ],
+      "truth": "false",
+      "expected_level": "unverified",
+      "matched": false
+    },
+    {
+      "case": "R26",
+      "category": "real_numeric_wrong",
+      "claim": [
+        "1994",
+        "2003"
+      ],
+      "truth": "false",
+      "expected_level": "unverified",
+      "matched": false
+    },
+    {
+      "case": "R12",
+      "category": "real_english",
+      "claim": [
+        "14%",
+        "1990"
+      ],
+      "truth": "true",
+      "expected_level": "verified",
+      "matched": false
+    },
+    {
+      "case": "R16",
+      "category": "real_number_wrong_quantity",
+      "claim": [
+        "45%"
+      ],
+      "truth": "false",
+      "expected_level": "unverified",
+      "matched": false
+    },
+    {
+      "case": "R24",
+      "category": "real_numeric_wrong",
+      "claim": [
+        "1946"
+      ],
+      "truth": "false",
+      "expected_level": "unverified",
+      "matched": false
+    },
+    {
+      "case": "R26",
+      "category": "real_numeric_wrong",
+      "claim": [
+        "1994",
+        "2003"
+      ],
+      "truth": "false",
+      "expected_level": "unverified",
+      "matched": false
+    },
+    {
+      "case": "R28",
+      "category": "real_mixed",
+      "claim": [
+        "得到控制"
+      ],
+      "truth": "false",
+      "expected_level": "unverified",
+      "matched": false
+    }
+  ]
+}

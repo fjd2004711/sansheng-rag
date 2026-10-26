@@ -16,6 +16,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import re
 import sys
 from datetime import UTC, date, datetime
 from pathlib import Path
@@ -35,6 +36,53 @@ TODAY = date(2026, 10, 23)
 STALE_DAYS = 365
 
 
+PASSAGE_CHARS = 900
+PASSAGES_PER_PAGE = 3
+
+
+def select_passages(text: str, query: str) -> str:
+    """Production feeds the audit retrieved passages, not whole pages: keep the few most relevant ones.
+
+    Approximates retrieval with character-bigram overlap against question + answer (numbers weigh double).
+    """
+    if len(text) <= PASSAGE_CHARS * PASSAGES_PER_PAGE:
+        return text
+    chunks: list[str] = []
+    current = ""
+    for para in re.split(r"\n\s*\n", text):
+        if current and len(current) + len(para) > PASSAGE_CHARS:
+            chunks.append(current.strip())
+            current = ""
+        current += para + "\n\n"
+    if current.strip():
+        chunks.append(current.strip())
+    q = re.sub(r"\s+", "", query)
+    grams = {q[i : i + 2] for i in range(len(q) - 1)}
+    numbers = set(re.findall(r"\d+(?:\.\d+)?", query))
+
+    def score(chunk: str) -> float:
+        flat = re.sub(r"\s+", "", chunk)
+        return sum(g in flat for g in grams) + 2 * sum(n in flat for n in numbers)
+
+    ranked = sorted(range(len(chunks)), key=lambda i: -score(chunks[i]))[:PASSAGES_PER_PAGE]
+    return "\n…\n".join(chunks[i] for i in sorted(ranked))
+
+
+def resolve_source(s: dict[str, Any], query: str = "") -> dict[str, Any]:
+    """A source is either inline or a reference to a frozen real-page snapshot (verification/real/snapshots)."""
+    if "snapshot" not in s:
+        return s
+    snap = json.loads((HERE / "verification" / "real" / "snapshots" / f"{s['snapshot']}.json").read_text("utf-8"))
+    return {
+        "index": s["index"],
+        "title": snap["title"],
+        "url": snap["url"],
+        "content": select_passages(snap["text"], query),
+        "published_at": snap["published_at"],
+        "from_snippet": snap["from_snippet"],
+    }
+
+
 def to_sources(case: dict[str, Any]) -> list[WebSource]:
     return [
         WebSource(
@@ -48,7 +96,7 @@ def to_sources(case: dict[str, Any]) -> list[WebSource]:
             from_snippet=s["from_snippet"],
             tier=source_tier(s["url"]),
         )
-        for s in case["sources"]
+        for s in (resolve_source(x, case["question"] + case["answer"]) for x in case["sources"])
     ]
 
 
