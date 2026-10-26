@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 from app.services.research.audit import AuditedClaim
@@ -56,6 +58,19 @@ class ReportSection(BaseModel):
     claims: list[AuditedClaim] = Field(default_factory=list)
 
 
+class Recommendation(BaseModel):
+    """One piece of advice: a judgment drawn from the evidence, not a fact the sources state."""
+
+    action: str
+    reason: str
+    priority: Literal["高", "中", "低"] = "中"
+    caveat: str = ""
+    # How well the factual premises in ``reason`` hold up: strong = all verified, mixed = some rest on one source,
+    # weak = some premise is unverified or disputed, inference = it states no checkable fact.
+    basis: Literal["strong", "mixed", "weak", "inference"] = "inference"
+    premises: list[AuditedClaim] = Field(default_factory=list)
+
+
 class ReportMethod(BaseModel):
     queries: list[str]
     pages_read: int
@@ -75,6 +90,10 @@ class ResearchReport(BaseModel):
     summary: str
     summary_claims: list[AuditedClaim] = Field(default_factory=list)
     sections: list[ReportSection]
+    audience: str = ""
+    insights: str = ""
+    insight_claims: list[AuditedClaim] = Field(default_factory=list)
+    recommendations: list[Recommendation] = Field(default_factory=list)
     caveats: list[str] = Field(default_factory=list)
     method: ReportMethod
     sources: list[WebSource]
@@ -83,4 +102,6 @@ class ResearchReport(BaseModel):
         return [
             *self.summary_claims,
             *(claim for section in self.sections for claim in section.claims),
+            *self.insight_claims,
+            *(claim for rec in self.recommendations for claim in rec.premises),
         ]

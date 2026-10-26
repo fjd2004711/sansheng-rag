@@ -58,6 +58,15 @@ def verification_overview(report: ResearchReport) -> str:
     return f"全文共逐条核验 {len(claims)} 条说法：{parts}。有争议、未能核实和可能过时的内容列在“争议与不确定”中。"
 
 
+BASIS_LABELS = {
+    "strong": "依据充分：所依据的事实均已核实",
+    "mixed": "依据一般：部分事实只有单一来源",
+    "weak": "依据不足：所依据的事实含未核实或有争议的部分",
+    "inference": "推断：没有可单独核验的事实前提",
+}
+
+SYNTHESIS_NOTE = "以下是基于上文事实的推论和建议，不是来源原文的结论；每条建议标明了它所依据事实的核实程度，请结合自身情况判断。"
+
 TIER_NAMES = {
     "authoritative": "权威来源",
     "reference": "参考来源",

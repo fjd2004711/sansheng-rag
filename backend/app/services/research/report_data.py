@@ -110,7 +110,9 @@ def trend_chart(points: list[DataPoint]) -> ChartSeries | None:
 
 _YEAR_TOKEN = re.compile(r"(?:19|20)\d{2}")
 # Sentences that leak the writer's own instructions or knowledge from outside the sources.
-_META = re.compile(r"严格遵循|不得自行|原则[，,）)]|常规认知|按照要求|根据要求|提示词|此处不|本模型|作为(?:一个)?AI")
+_META = re.compile(
+    r"严格遵循|不得自行|原则[，,）)]|常规认知|按照要求|根据要求|提示词|此处不|本模型|作为(?:一个)?AI"
+)
 
 
 def _years_conflict(indicator: str, period: str) -> bool:
@@ -130,7 +132,9 @@ def scrub_unsupported_sentences(text: str, evidence: str) -> tuple[str, int]:
         parts = re.split(r"(?<=[。；！？，])", paragraph)
         good = []
         for sentence in parts:
-            if sentence.strip() and (_META.search(sentence) or unsupported_numbers(sentence, evidence)):
+            if sentence.strip() and (
+                _META.search(sentence) or unsupported_numbers(sentence, evidence)
+            ):
                 dropped += 1
             else:
                 good.append(sentence)

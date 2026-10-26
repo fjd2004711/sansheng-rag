@@ -25,6 +25,17 @@ export interface ReportClaim {
   reason: string;
 }
 
+export type RecommendationBasis = "strong" | "mixed" | "weak" | "inference";
+
+export interface ReportRecommendation {
+  action: string;
+  reason: string;
+  priority: "高" | "中" | "低";
+  caveat: string;
+  basis: RecommendationBasis;
+  premises: ReportClaim[];
+}
+
 export interface ReportSource {
   index: number;
   title: string;
@@ -58,6 +69,11 @@ export interface ReportDocument {
   summary: string;
   summary_claims: ReportClaim[];
   sections: ReportSectionData[];
+  /** Absent in reports generated before the synthesis step existed. */
+  audience?: string;
+  insights?: string;
+  insight_claims?: ReportClaim[];
+  recommendations?: ReportRecommendation[];
   caveats: string[];
   method: {
     queries: string[];

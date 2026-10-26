@@ -13,7 +13,9 @@ from app.services.research.audit import LEVEL_LABELS
 from app.services.research.report_chart import chart_png
 from app.services.research.report_models import DataTable, ResearchReport
 from app.services.research.report_text import (
+    BASIS_LABELS,
     LEVEL_RULES,
+    SYNTHESIS_NOTE,
     TIER_NAMES,
     blocks,
     reference_groups,
@@ -49,6 +51,26 @@ def render_docx(report: ResearchReport) -> bytes:
             _markdown(doc, section.analysis)
 
     n = len(report.sections) + 2
+    if report.insights.strip():
+        doc.add_heading(f"{_numeral(n)}、综合研判", level=1)
+        if report.audience:
+            _note(doc, f"写给：{report.audience}")
+        _markdown(doc, report.insights)
+        n += 1
+    if report.recommendations:
+        doc.add_heading(f"{_numeral(n)}、行动建议", level=1)
+        _note(doc, SYNTHESIS_NOTE)
+        for i, rec in enumerate(report.recommendations, start=1):
+            paragraph = doc.add_paragraph()
+            paragraph.add_run(f"{i}. [{rec.priority}优先级] {rec.action}").bold = True
+            for label, text in (
+                ("依据", rec.reason),
+                ("前提与风险", rec.caveat),
+                ("可靠程度", BASIS_LABELS[rec.basis]),
+            ):
+                if text:
+                    doc.add_paragraph(f"{label}：{text}", style="List Bullet")
+        n += 1
     doc.add_heading(f"{_numeral(n)}、争议与不确定", level=1)
     if report.caveats:
         for note in report.caveats:
@@ -68,6 +90,8 @@ def render_docx(report: ResearchReport) -> bytes:
         for heading, claims in [
             ("核心结论", report.summary_claims),
             *((s.heading, s.claims) for s in report.sections),
+            ("综合研判", report.insight_claims),
+            *((f"建议：{r.action[:16]}", r.premises) for r in report.recommendations),
         ]
         for claim in claims
     ]

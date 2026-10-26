@@ -8,6 +8,7 @@ import { useReport } from "@/hooks/use-reports";
 import { CLAIM_LEVEL_LABELS, type ClaimLevel } from "@/lib/claims";
 import type { ReportDocument, ReportSummary } from "@/types/report";
 
+import { ReportAdvice } from "./report-advice";
 import { ReportAppendix } from "./report-appendix";
 import { ReportSection, useCitations } from "./report-section";
 
@@ -29,7 +30,7 @@ export function ReportView({ summary }: { summary: ReportSummary }) {
             </p>
             <p className="text-muted-foreground text-xs">
               生成过程：规划提纲 → 搜索并阅读权威资料 → 摘取并逐字核对数据 → 撰写各章并逐条核验 →
-              为存疑说法补找来源 → 核心结论
+              为存疑说法补找来源 → 核心结论 → 综合研判与行动建议
             </p>
           </>
         )}
@@ -41,7 +42,12 @@ export function ReportView({ summary }: { summary: ReportSummary }) {
 
 function ReportBody({ id, report }: { id: string; report: ReportDocument }) {
   const cite = useCitations(report.sources);
-  const claims = [...report.summary_claims, ...report.sections.flatMap((s) => s.claims)];
+  const claims = [
+    ...report.summary_claims,
+    ...report.sections.flatMap((s) => s.claims),
+    ...(report.insight_claims ?? []),
+    ...(report.recommendations ?? []).flatMap((r) => r.premises),
+  ];
   const counts = (Object.keys(CLAIM_LEVEL_LABELS) as ClaimLevel[])
     .map((level) => [level, claims.filter((c) => c.level === level).length] as const)
     .filter(([, n]) => n > 0);
@@ -81,6 +87,7 @@ function ReportBody({ id, report }: { id: string; report: ReportDocument }) {
       {report.sections.map((section) => (
         <ReportSection key={section.heading} section={section} sources={report.sources} />
       ))}
+      <ReportAdvice report={report} cite={cite} />
       <section>
         <h3 className="mb-2 text-lg font-semibold">争议与不确定</h3>
         {report.caveats.length ? (
