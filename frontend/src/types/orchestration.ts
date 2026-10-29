@@ -102,6 +102,7 @@ export interface Insights {
   averages: Record<string, number>;
   failure_types: Record<string, number>;
   repair_success_rate: number | null;
+  verified_gain: number | null;
   ratings: Record<string, number>;
   tags: Record<string, number>;
   hints: { signal: string; suggestion: string }[];

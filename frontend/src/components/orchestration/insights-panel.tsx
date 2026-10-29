@@ -27,7 +27,13 @@ export function InsightsPanel({ refreshKey }: { refreshKey: unknown }) {
           ["平均耗时", avg.wall_seconds !== undefined ? `${Math.round(avg.wall_seconds)} 秒` : "—"],
           ["平均并行加速", avg.parallel_speedup !== undefined ? `${avg.parallel_speedup}×` : "—"],
           [
-            "自循环修复成功率",
+            "自循环平均提升已核实比例",
+            insights.verified_gain === null
+              ? "—"
+              : `${insights.verified_gain >= 0 ? "+" : ""}${Math.round(insights.verified_gain * 100)} 个百分点`,
+          ],
+          [
+            "修复后通过质量门的比例",
             insights.repair_success_rate === null
               ? "—"
               : `${Math.round(insights.repair_success_rate * 100)}%`,

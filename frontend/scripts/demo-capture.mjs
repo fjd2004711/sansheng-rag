@@ -48,6 +48,8 @@ await page.waitForSelector("text=并行加速");
 await shot(page, "05a_run_top.png");
 await toHeading(page, "质量门与自循环");
 await shot(page, "06_gate.png");
+await page.locator("main.overflow-auto").evaluate((el) => el.scrollBy(0, 640));
+await shot(page, "06b_repairs.png");
 
 // 3. the report: conclusion, judgment, recommendations
 await toHeading(page, "综合研判");
