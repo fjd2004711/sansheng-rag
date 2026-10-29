@@ -72,20 +72,27 @@ export function nodeProgress(
   graph: SpecGraph,
   tasks: TaskRow[],
   events: RunEvent[],
+  runFinished = false,
 ): Record<string, NodeProgress> {
-  const expanded = new Set(
-    events.filter((e) => e.kind === "group_expanded").map((e) => str(e.detail.group)),
-  );
+  const announced = events
+    .filter((e) => e.kind === "group_expanded")
+    .map((e) => ({
+      group: str(e.detail.group),
+      total: Array.isArray(e.detail.tasks) ? e.detail.tasks.length : 0,
+    }));
   const out: Record<string, NodeProgress> = {};
   for (const node of graph.nodes) {
-    const mine = tasks.filter((t) => t.group === node.id || t.group.startsWith(`${node.id}#`));
+    const belongs = (g: string) => g === node.id || g.startsWith(`${node.id}#`);
+    const mine = tasks.filter((t) => belongs(t.group));
+    const expected = announced.filter((a) => belongs(a.group)).reduce((n, a) => n + a.total, 0);
     const done = mine.filter((t) => t.status === "done" || t.status === "skipped").length;
     let status: TaskStatus = "pending";
     if (mine.some((t) => t.status === "failed")) status = "failed";
     else if (mine.some((t) => t.status === "running")) status = "running";
-    else if (mine.length > 0 && expanded.has(node.id) && done === mine.length) status = "done";
-    else if (mine.length > 0) status = "running";
-    out[node.id] = { status, done, total: mine.length };
+    else if (expected > 0 && done >= expected) status = "done";
+    else if (runFinished && mine.length > 0) status = "done";
+    else if (mine.length > 0 || expected > 0) status = "running";
+    out[node.id] = { status, done, total: Math.max(mine.length, expected) };
   }
   return out;
 }
