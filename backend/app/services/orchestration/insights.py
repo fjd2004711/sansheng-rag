@@ -40,6 +40,16 @@ def build_insights(
     failures = Counter(f["type"] for g in first_check for f in g["failures"])
     needed_repair = {g["run_id"] for g in first_check if not g["passed"]}
     fixed = {g["run_id"] for g in gates if g["round"] > 0 and g["passed"]}
+    # Mean gain in verified-claim ratio over the runs that went through at least one repair round.
+    gains = []
+    for rid in {g["run_id"] for g in gates}:
+        mine = sorted((g for g in gates if g["run_id"] == rid), key=lambda g: g["round"])
+        first, last = (
+            mine[0]["metrics"].get("verified_ratio"),
+            mine[-1]["metrics"].get("verified_ratio"),
+        )
+        if len(mine) > 1 and first is not None and last is not None:
+            gains.append(last - first)
     ratings = Counter("helpful" if f["rating"] > 0 else "not_helpful" for f in feedback)
     tags = Counter(t for f in feedback if f["rating"] < 0 for t in f.get("tags", []))
 
@@ -71,6 +81,7 @@ def build_insights(
         runs=len(runs),
         averages=averages,
         failure_types=dict(failures),
+        verified_gain=round(sum(gains) / len(gains), 3) if gains else None,
         repair_success_rate=round(len(fixed & needed_repair) / len(needed_repair), 3)
         if needed_repair
         else None,

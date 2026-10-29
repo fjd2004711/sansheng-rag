@@ -191,7 +191,7 @@ class OrchestrationService:
         runs = await repo.recent_done_runs(self.db, user_id=user_id, limit=50)
         ids = [r.id for r in runs]
         gates = [
-            {"run_id": e.run_id, "round": e.detail.get("round", 0), "passed": bool(e.detail.get("passed")), "failures": e.detail.get("failures", [])}
+            {"run_id": e.run_id, "round": e.detail.get("round", 0), "passed": bool(e.detail.get("passed")), "failures": e.detail.get("failures", []), "metrics": e.detail.get("metrics", {})}
             for e in await repo.gate_events(self.db, run_ids=ids)
         ]  # fmt: skip
         feedback = [

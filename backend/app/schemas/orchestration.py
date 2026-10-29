@@ -105,6 +105,7 @@ class Insights(BaseSchema):
     averages: dict[str, float]
     failure_types: dict[str, int]
     repair_success_rate: float | None = None
+    verified_gain: float | None = None
     ratings: dict[str, int]
     tags: dict[str, int]
     hints: list[dict[str, str]]

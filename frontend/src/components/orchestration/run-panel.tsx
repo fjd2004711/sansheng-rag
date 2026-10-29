@@ -112,15 +112,17 @@ export function RunPanel({ summary }: { summary: RunSummary }) {
         <RunTimeline tasks={tasks} now={now} />
       </section>
 
-      <section className="bg-card space-y-2 rounded-xl border p-4">
-        <h3 className="font-semibold">质量门与自循环</h3>
-        <GateChecks
-          checks={gateChecks(events)}
-          repairs={metrics?.repairs ?? []}
-          outcomes={repairOutcomes(events)}
-          stalled={hasStalled(events)}
-        />
-      </section>
+      {graph?.nodes.some((n) => n.kind === "gate") && (
+        <section className="bg-card space-y-2 rounded-xl border p-4">
+          <h3 className="font-semibold">质量门与自循环</h3>
+          <GateChecks
+            checks={gateChecks(events)}
+            repairs={metrics?.repairs ?? []}
+            outcomes={repairOutcomes(events)}
+            stalled={hasStalled(events)}
+          />
+        </section>
+      )}
 
       {detail?.result && <RunResult id={summary.id} result={detail.result} />}
 

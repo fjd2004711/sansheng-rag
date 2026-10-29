@@ -82,9 +82,16 @@ def test_insights_turn_gate_failures_and_feedback_into_hints() -> None:
             "run_id": rid,
             "round": 0,
             "passed": False,
+            "metrics": {"verified_ratio": 0.4},
             "failures": [{"type": "scope_misplaced"}, {"type": "weak_evidence"}],
         },
-        {"run_id": rid, "round": 1, "passed": True, "failures": []},
+        {
+            "run_id": rid,
+            "round": 1,
+            "passed": True,
+            "metrics": {"verified_ratio": 0.7},
+            "failures": [],
+        },
     ]
     result = build_insights(
         [{"id": rid, "metrics": {"wall_seconds": 300, "parallel_speedup": 1.2, "tokens": 1000}}],
@@ -92,6 +99,8 @@ def test_insights_turn_gate_failures_and_feedback_into_hints() -> None:
         [{"rating": -1, "tags": ["口径不对"]}],
     )
     assert result.failure_types == {"scope_misplaced": 1, "weak_evidence": 1}
+    assert result.verified_gain == 0.3
+    assert result.verified_gain == 0.3
     assert result.repair_success_rate == 1.0 and result.tags == {"口径不对": 1}
     assert any("全国" in h["suggestion"] for h in result.hints)
     assert any("并行加速" in h["signal"] for h in result.hints)
