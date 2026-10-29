@@ -319,9 +319,7 @@ class ReportBuilder:
         texts = [(s.heading, s.body) for s in sections]
         cited = _cited_sources("\n".join(s.body for s in sections), by_index)
         summary = await write_summary(title, texts, format_evidence(cited))
-        return summary, await self.grade(
-            title, summary, _cited_sources(summary, by_index) or cited
-        )
+        return summary, await self.grade(title, summary, _cited_sources(summary, by_index) or cited)
 
     async def synthesis(
         self, title: str, sections: list[ReportSection], corpus: WebCorpus

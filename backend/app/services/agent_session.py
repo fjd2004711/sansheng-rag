@@ -483,7 +483,11 @@ class AgentSession:
 
         async def progress(stage: str, percent: int) -> None:
             await self._send_trace(
-                {"step": "report_progress", "status": "RUNNING", "detail": {"stage": stage, "percent": percent}}
+                {
+                    "step": "report_progress",
+                    "status": "RUNNING",
+                    "detail": {"stage": stage, "percent": percent},
+                }
             )
             async with get_db_context() as db:
                 await ResearchReportService(db).mark_progress(report_id, stage, percent)
@@ -505,7 +509,11 @@ class AgentSession:
         async with get_db_context() as db:
             await ResearchReportService(db).complete(report_id, document)
         await self._send_trace(
-            {"step": "report_progress", "status": "PASS", "detail": {"stage": "报告已生成", "percent": 100}}
+            {
+                "step": "report_progress",
+                "status": "PASS",
+                "detail": {"stage": "报告已生成", "percent": 100},
+            }
         )
         # The report's [n] numbering is the source panel's numbering.
         call = {

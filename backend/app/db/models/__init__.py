@@ -5,6 +5,7 @@ from app.db.models.chat_file import ChatFile
 from app.db.models.conversation import Conversation, Message, ToolCall
 from app.db.models.eval_candidate import EvalCandidate
 from app.db.models.message_feedback import MessageFeedback
+from app.db.models.orchestration import OrchEvent, OrchFeedback, OrchRun, OrchSpec
 from app.db.models.rag_document import RAGDocument
 from app.db.models.research_report import ResearchReport
 from app.db.models.token_usage import TokenUsage
@@ -18,6 +19,10 @@ __all__ = [
     "EvalCandidate",
     "Message",
     "MessageFeedback",
+    "OrchEvent",
+    "OrchFeedback",
+    "OrchRun",
+    "OrchSpec",
     "RAGDocument",
     "ResearchReport",
     "TokenUsage",
