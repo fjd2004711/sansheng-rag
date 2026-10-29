@@ -35,6 +35,7 @@ from app.services.research.report_models import OutlineSection
 
 _QUERY_BATCH = 4
 _REPAIR_QUERIES_PER_SECTION = 2
+_REPAIR_BUDGET_LIMIT = 0.6
 
 
 @dataclass
@@ -50,6 +51,7 @@ class SkillCtx:
     ]  # inserts a group into the running scheduler and waits for it
     make_task: Callable[..., Any]
     make_group: Callable[..., Any]
+    budget_used: Callable[[], float] = lambda: 0.0
 
 
 Skill = Callable[[SkillCtx, Any], Awaitable[Any]]
@@ -262,6 +264,16 @@ async def run_gate(
             },
         )
         if passed or round_ == max_rounds or repair_agent is None:
+            break
+        if ctx.budget_used() > _REPAIR_BUDGET_LIMIT:
+            # A repair round costs about as much as drafting did; do not start one that cannot finish in budget.
+            await ctx.emit(
+                "repair_skipped_budget",
+                {"round": round_, "budget_used": round(ctx.budget_used(), 2)},
+            )
+            st.notes.append(
+                "预算已用掉大半，没有再做自循环修复；质量门未通过的问题已在报告里披露，请对照逐条核实表使用"
+            )
             break
         previous = history[-2]["metrics"].get("verified_ratio", 0) if len(history) > 1 else None
         if previous is not None and diag.metrics.get("verified_ratio", 0) <= previous + 0.01:

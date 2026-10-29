@@ -299,3 +299,45 @@ def test_diagnose_flags_single_school_scope_and_gate_check_reports_why() -> None
     ok, reasons = gate_check(GateSpec(require_scope_disclosed=True, min_verified_ratio=0.5), d)
     assert not ok and len(reasons) == 2
     assert gate_check(GateSpec(), Diagnosis())[0]
+
+
+@pytest.mark.anyio
+async def test_gate_task_is_not_retried_and_has_the_run_budget_as_time_limit() -> None:
+    from app.services.orchestration.engine import NullStore, _Run
+
+    bundle = builtin_bundles()["verified-report"]
+    run = _Run(
+        FakeResearch(FakeRetrieval()),
+        NullStore(),
+        bundle,
+        "x",
+        {},
+        None,
+        None,
+    )
+    gate = next(n for n in bundle.workflow.nodes if n.kind == "gate")
+    task = run._task(gate, "planner", gate.id, "门", None)
+    assert task.retries == 0
+    assert task.timeout >= bundle.workflow.policy.max_seconds
+    section = next(n for n in bundle.workflow.nodes if n.id == "sections")
+    assert run._task(section, "writer", "sections#0", "章", 0).timeout == section.timeout_seconds
+
+
+@pytest.mark.anyio
+async def test_repair_is_skipped_when_most_of_the_budget_is_already_spent() -> None:
+    from unittest.mock import PropertyMock
+
+    from app.services.orchestration.state import Budget
+
+    bundle = builtin_bundles()["verified-report"].model_copy(deep=True)
+    bundle.workflow.policy.max_seconds = 100
+    fakes = Fakes(
+        weak_until_repaired=True
+    )  # the draft fails the gate, so a repair would normally run
+    # 70% of the time budget "already spent": above the 60% line, below the 100% line where tasks get dropped.
+    with patch.object(Budget, "elapsed", new_callable=PropertyMock, return_value=70.0):
+        outcome = await _run(fakes, _outline(1), bundle)
+    assert outcome.status == "done", outcome.error
+    kinds = [e["kind"] for e in outcome.events]
+    assert "repair_skipped_budget" in kinds and outcome.metrics["repair_rounds"] == 0
+    assert any("预算" in c for c in outcome.result["report"]["caveats"])
