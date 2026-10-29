@@ -51,14 +51,14 @@ export function RunPanel({ summary }: { summary: RunSummary }) {
   const detail = useRun(summary.id);
   const [rated, setRated] = useState<1 | -1 | null>(null);
   const [tags, setTags] = useState<string[]>([]);
+  const active = summary.status === "queued" || summary.status === "running";
   const events = useMemo(() => detail?.events ?? [], [detail]);
   const tasks = useMemo(() => deriveTasks(events), [events]);
   const graph = detail?.graph ?? null;
   const progress = useMemo(
-    () => (graph ? nodeProgress(graph, tasks, events) : undefined),
-    [graph, tasks, events],
+    () => (graph ? nodeProgress(graph, tasks, events, !active) : undefined),
+    [graph, tasks, events, active],
   );
-  const active = summary.status === "queued" || summary.status === "running";
   const lastT = events.at(-1)?.t ?? 0;
   const now = active
     ? Math.max(lastT, (Date.now() - new Date(summary.created_at).getTime()) / 1000)

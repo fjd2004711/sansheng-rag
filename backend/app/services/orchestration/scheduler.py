@@ -97,6 +97,10 @@ class Scheduler:
     async def run_group(self, group: Group) -> bool:
         """Insert ``group`` now (used by running handlers, e.g. a repair round) and wait for it."""
         self.add_group(group)
+        if group.expanded:
+            for task in group.tasks:
+                task.queued_at = time.monotonic()
+            await self._emit("group_expanded", {"group": group.id, "tasks": [t.id for t in group.tasks]})
         await group.done_event.wait()
         return group.ok
 
