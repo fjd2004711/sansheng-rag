@@ -40,7 +40,16 @@ export function ReportView({ summary }: { summary: ReportSummary }) {
   return <ReportBody id={summary.id} report={report} />;
 }
 
-function ReportBody({ id, report }: { id: string; report: ReportDocument }) {
+export function ReportBody({
+  id,
+  report,
+  downloadBase,
+}: {
+  id: string;
+  report: ReportDocument;
+  /** Where the Word / PDF files come from; defaults to the report's own endpoint. */
+  downloadBase?: string;
+}) {
   const cite = useCitations(report.sources);
   const claims = [
     ...report.summary_claims,
@@ -69,7 +78,7 @@ function ReportBody({ id, report }: { id: string; report: ReportDocument }) {
           {(["docx", "pdf"] as const).map((format) => (
             <a
               key={format}
-              href={`/api/v1/reports/${id}/download?format=${format}`}
+              href={`${downloadBase ?? `/api/v1/reports/${id}/download`}?format=${format}`}
               className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm"
             >
               <Download className="h-4 w-4" />

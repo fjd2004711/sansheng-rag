@@ -18,6 +18,7 @@ export const ROUTES = {
   CHAT: "/chat",
   RAG: "/rag",
   REPORTS: "/reports",
+  ORCHESTRATION: "/orchestration",
   EVALUATION: "/evaluation",
   ADMIN: "/admin",
 } as const;
