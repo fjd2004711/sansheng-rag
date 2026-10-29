@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChartNoAxesCombined, Database, FileText, LogOut, MessageSquare, ShieldCheck } from "lucide-react";
+import { ChartNoAxesCombined, Database, FileText, LogOut, MessageSquare, Network, ShieldCheck } from "lucide-react";
 
 import { Mascot } from "@/components/brand/mascot";
 import { useTranslations } from "next-intl";
@@ -17,6 +17,7 @@ const NAV = [
   { key: "chat", href: ROUTES.CHAT, icon: MessageSquare },
   { key: "knowledge", href: ROUTES.RAG, icon: Database },
   { key: "reports", href: ROUTES.REPORTS, icon: FileText },
+  { key: "orchestration", href: ROUTES.ORCHESTRATION, icon: Network },
   { key: "evaluation", href: ROUTES.EVALUATION, icon: ChartNoAxesCombined },
   { key: "admin", href: ROUTES.ADMIN, icon: ShieldCheck, adminOnly: true },
 ] as const;
