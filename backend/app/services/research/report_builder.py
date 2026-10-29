@@ -48,6 +48,7 @@ from app.services.research.report_models import (
     OutlineSection,
     Recommendation,
     ReportMethod,
+    ReportOutline,
     ReportSection,
     ResearchReport,
 )
@@ -58,7 +59,7 @@ Progress = Callable[[str, int], Awaitable[None]]
 _QUERY_BATCH = 4
 
 
-class _TraceLog:
+class TraceLog:
     """Collects the research trace (pages read, queries) for the method appendix."""
 
     def __init__(self) -> None:
@@ -79,9 +80,8 @@ class ReportBuilder:
     def __init__(self, research: ResearchService) -> None:
         self._research = research
 
-    async def build(self, topic: str, progress: Progress) -> ResearchReport:
-        started = _now()
-        await progress("规划报告提纲", 3)
+    async def plan(self, topic: str) -> tuple[ReportOutline, list[str]]:
+        """The outline and the search queries (planned ones plus official-site variants)."""
         outline = await plan_outline(topic, max_sections=settings.REPORT_MAX_SECTIONS)
         planned_queries = list(
             dict.fromkeys(q.strip() for s in outline.sections for q in s.queries if q.strip())
@@ -89,10 +89,16 @@ class ReportBuilder:
         queries = with_official_variants(planned_queries, limit=settings.REPORT_MAX_QUERIES) or [
             topic
         ]
-        log = _TraceLog()
+        return outline, queries
+
+    async def build(self, topic: str, progress: Progress) -> ResearchReport:
+        started = _now()
+        await progress("规划报告提纲", 3)
+        outline, queries = await self.plan(topic)
+        log = TraceLog()
         corpus = self._research.new_corpus()
         try:
-            await self._search(queries, corpus, log, progress)
+            await self.search(queries, corpus, log, progress)
             sections: list[ReportSection] = []
             kept_total = rejected_total = 0
             used: list[str] = []
@@ -100,7 +106,7 @@ class ReportBuilder:
                 await progress(
                     f"撰写并核对：{planned.heading}", 45 + int(35 * i / len(outline.sections))
                 )
-                section, kept, rejected = await self._section(outline.title, planned, corpus, used)
+                section, kept, rejected = await self.section(outline.title, planned, corpus, used)
                 sections.append(section)
                 used.extend(
                     f"{p.indicator}（{p.period}）{display_value(p)}" for p in section.data_points
@@ -108,40 +114,25 @@ class ReportBuilder:
                 kept_total += kept
                 rejected_total += rejected
             await progress("为存疑的说法补找权威来源", 82)
-            queries += await self._corroborate(outline.sections, sections, corpus, log)
+            queries += await self.corroborate(outline.sections, sections, corpus, log)
             await progress("撰写核心结论", 88)
-            summary, summary_claims = await self._summary(outline.title, sections, corpus)
+            summary, summary_claims = await self.summary(outline.title, sections, corpus)
             await progress("撰写综合研判与行动建议", 92)
-            audience, insights, insight_claims, recommendations = await self._synthesis(
-                outline.title, sections, corpus
-            )
+            synthesis = await self.synthesis(outline.title, sections, corpus)
             await progress("整理核实情况", 96)
-            consistent_claims(sections, [*summary_claims, *insight_claims])
-            sources = corpus.sources
-            return ResearchReport(
-                title=outline.title,
+            return self.assemble(
+                outline=outline,
                 topic=topic,
-                generated_at=_now(),
+                queries=queries,
+                sections=sections,
                 summary=summary,
                 summary_claims=summary_claims,
-                audience=audience,
-                insights=insights,
-                insight_claims=insight_claims,
-                recommendations=recommendations,
-                sections=sections,
-                caveats=_caveats(sections, summary_claims, sources),
-                method=ReportMethod(
-                    queries=queries,
-                    pages_read=len(log.pages),
-                    full_text_pages=sum(1 for p in log.pages if p.get("full_text")),
-                    sources_by_tier=dict(Counter(s.tier for s in _unique_pages(sources))),
-                    data_points_kept=kept_total,
-                    data_points_rejected=rejected_total,
-                    model=current_llm().model,
-                    started_at=started,
-                    finished_at=_now(),
-                ),
-                sources=sources,
+                synthesis=synthesis,
+                corpus=corpus,
+                log=log,
+                kept=kept_total,
+                rejected=rejected_total,
+                started_at=started,
             )
         finally:
             try:
@@ -149,8 +140,74 @@ class ReportBuilder:
             except Exception:
                 logger.warning("report_collection_cleanup_failed", exc_info=True)
 
-    async def _search(
-        self, queries: list[str], corpus: WebCorpus, log: _TraceLog, progress: Progress
+    def assemble(
+        self,
+        *,
+        outline: ReportOutline,
+        topic: str,
+        queries: list[str],
+        sections: list[ReportSection],
+        summary: str,
+        summary_claims: list[AuditedClaim],
+        synthesis: tuple[str, str, list[AuditedClaim], list[Recommendation]],
+        corpus: WebCorpus,
+        log: TraceLog,
+        kept: int,
+        rejected: int,
+        started_at: str,
+        notes: list[str] | None = None,
+    ) -> ResearchReport:
+        """Final grading consistency, caveats and the method appendix. ``notes`` are run-level disclosures."""
+        audience, insights, insight_claims, recommendations = synthesis
+        premises = [c for r in recommendations for c in r.premises]
+        consistent_claims(sections, [*summary_claims, *insight_claims, *premises])
+        for rec in recommendations:
+            rec.basis = _basis(rec.premises, rec.reason)
+        sources = corpus.sources
+        return ResearchReport(
+            title=outline.title,
+            topic=topic,
+            generated_at=_now(),
+            summary=summary,
+            summary_claims=summary_claims,
+            audience=audience,
+            insights=insights,
+            insight_claims=insight_claims,
+            recommendations=recommendations,
+            sections=sections,
+            caveats=[*(notes or []), *caveats_for(sections, summary_claims, sources)],
+            method=ReportMethod(
+                queries=queries,
+                pages_read=len(log.pages),
+                full_text_pages=sum(1 for p in log.pages if p.get("full_text")),
+                sources_by_tier=dict(Counter(s.tier for s in unique_pages(sources))),
+                data_points_kept=kept,
+                data_points_rejected=rejected,
+                model=current_llm().model,
+                started_at=started_at,
+                finished_at=_now(),
+            ),
+            sources=sources,
+        )
+
+    def new_corpus(self) -> WebCorpus:
+        return self._research.new_corpus()
+
+    async def search_batch(
+        self, queries: list[str], corpus: WebCorpus, log: TraceLog, round_: int
+    ) -> bool:
+        """Search and read one batch of queries; False when the search service failed for all of them."""
+        try:
+            await self._research.gather(
+                queries, corpus, log, round_=round_, max_pages=settings.REPORT_PAGES_PER_BATCH
+            )
+            return True
+        except WebSearchError:
+            logger.warning("report_search_batch_failed batch=%s", queries, exc_info=True)
+            return False
+
+    async def search(
+        self, queries: list[str], corpus: WebCorpus, log: TraceLog, progress: Progress
     ) -> None:
         batches = [queries[i : i + _QUERY_BATCH] for i in range(0, len(queries), _QUERY_BATCH)]
         failures = 0
@@ -174,12 +231,12 @@ class ReportBuilder:
                 message="没有搜到可以读取的网页，换个说法再试试", details={"queries": queries}
             )
 
-    async def _corroborate(
+    async def corroborate(
         self,
         planned: list[OutlineSection],
         sections: list[ReportSection],
         corpus: WebCorpus,
-        log: _TraceLog,
+        log: TraceLog,
     ) -> list[str]:
         """One bounded round: search for independent, official sources on weak claims, then grade again."""
         weak = [
@@ -212,12 +269,12 @@ class ReportBuilder:
             sources = list(
                 {s.index: s for s in [*_cited_sources(section.body, by_index), *found]}.values()
             )
-            regraded = await self._grade(planned[i].goal, section.body, sources)
+            regraded = await self.grade(planned[i].goal, section.body, sources)
             if regraded:
                 section.claims = regraded
         return searches
 
-    async def _section(
+    async def section(
         self, title: str, planned: OutlineSection, corpus: WebCorpus, used: list[str]
     ) -> tuple[ReportSection, int, int]:
         await corpus.retrieve(
@@ -240,7 +297,7 @@ class ReportBuilder:
         body = scrub_unsupported_sentences(body, evidence)[0]
         analysis = scrub_unsupported_sentences(analysis, evidence)[0]
         cited = _cited_sources(body, by_index) or relevant
-        claims = await self._grade(planned.goal, body, cited)
+        claims = await self.grade(planned.goal, body, cited)
         return (
             ReportSection(
                 heading=planned.heading,
@@ -255,18 +312,18 @@ class ReportBuilder:
             rejected,
         )
 
-    async def _summary(
+    async def summary(
         self, title: str, sections: list[ReportSection], corpus: WebCorpus
     ) -> tuple[str, list[AuditedClaim]]:
         by_index = {s.index: s for s in corpus.sources}
         texts = [(s.heading, s.body) for s in sections]
         cited = _cited_sources("\n".join(s.body for s in sections), by_index)
         summary = await write_summary(title, texts, format_evidence(cited))
-        return summary, await self._grade(
+        return summary, await self.grade(
             title, summary, _cited_sources(summary, by_index) or cited
         )
 
-    async def _synthesis(
+    async def synthesis(
         self, title: str, sections: list[ReportSection], corpus: WebCorpus
     ) -> tuple[str, str, list[AuditedClaim], list[Recommendation]]:
         """Cross-section judgment and advice. The judgments are inference; only their factual premises are graded."""
@@ -288,7 +345,7 @@ class ReportBuilder:
             return "", "", [], []
         full_evidence = "\n".join(s.content for s in corpus.sources)
         insights = scrub_unsupported_sentences(insights, full_evidence)[0]
-        insight_claims = await self._grade(
+        insight_claims = await self.grade(
             title, insights, _cited_sources(insights, by_index) or cited
         )
         recommendations: list[Recommendation] = []
@@ -297,18 +354,22 @@ class ReportBuilder:
             if unsupported_numbers(text, full_evidence):
                 continue  # advice built on a number found in no source is dropped, not softened
             sources = _cited_sources(rec.reason, by_index)
-            rec.premises = await self._grade(title, rec.reason, sources) if sources else []
-            rec.basis = _basis(rec.premises)
+            # Advice paraphrases its facts more freely than prose does, so its premises get a looser faithfulness bar.
+            rec.premises = (
+                await self.grade(title, rec.reason, sources, min_overlap=0.6) if sources else []
+            )
             recommendations.append(rec)
         return audience, insights, insight_claims, recommendations
 
-    async def _grade(
-        self, question: str, text: str, sources: list[WebSource]
+    async def grade(
+        self, question: str, text: str, sources: list[WebSource], *, min_overlap: float = 0.75
     ) -> list[AuditedClaim]:
         if not text.strip() or not sources:
             return []
         try:
-            extracted = await extract_claims(question, text, format_evidence(sources))
+            extracted = await extract_claims(
+                question, text, format_evidence(sources), min_overlap=min_overlap
+            )
         except Exception:
             logger.warning("report_claim_extraction_failed", exc_info=True)
             return []
@@ -318,9 +379,10 @@ class ReportBuilder:
         ).claims
 
 
-def _basis(premises: list[AuditedClaim]) -> str:
+def _basis(premises: list[AuditedClaim], reason: str = "") -> str:
     if not premises:
-        return "inference"
+        # Numbers in the stated reason that no premise check could confirm are weak grounds, not "no facts".
+        return "weak" if re.search(r"\d", reason) else "inference"
     levels = {c.level for c in premises}
     if levels & {"disputed", "unverified"}:
         return "weak"
@@ -411,11 +473,11 @@ def _relevant_sources(
     return sorted(ranked, key=lambda s: s.index)
 
 
-def _unique_pages(sources: list[WebSource]) -> list[WebSource]:
+def unique_pages(sources: list[WebSource]) -> list[WebSource]:
     return list({s.url: s for s in sources}.values())
 
 
-def _caveats(
+def caveats_for(
     sections: list[ReportSection], summary_claims: list[AuditedClaim], sources: list[WebSource]
 ) -> list[str]:
     notes: list[str] = []
@@ -448,3 +510,10 @@ def _caveats(
             + "，使用前建议对照附录一逐条核实表查看原文"
         )
     return notes
+
+
+# Public names for the orchestration layer's independent verifier.
+same_claim = _same_claim
+LEVEL_STRENGTH = _LEVEL_STRENGTH
+cited_sources = _cited_sources
+relevant_sources = _relevant_sources

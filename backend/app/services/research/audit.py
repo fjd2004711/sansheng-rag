@@ -79,7 +79,9 @@ class ClaimAudit(BaseModel):
         return sorted((c for c in self.claims if c.level in order), key=lambda c: order[c.level])
 
 
-async def extract_claims(question: str, answer: str, evidence: str) -> list[ExtractedClaim]:
+async def extract_claims(
+    question: str, answer: str, evidence: str, *, min_overlap: float = 0.75
+) -> list[ExtractedClaim]:
     llm = current_llm()
     prompt = (
         f"把下面“回答”里的内容拆成最多 {_MAX_CLAIMS} 条独立的事实性说法（数字、日期、定义、因果、归属等；不要拆出纯过渡语或建议）。"
@@ -112,7 +114,7 @@ async def extract_claims(question: str, answer: str, evidence: str) -> list[Extr
     return [
         claim
         for claim in claims
-        if claim_in_answer(claim.claim, answer, question=question) and not is_absence_statement(claim.claim)
+        if claim_in_answer(claim.claim, answer, question=question, min_overlap=min_overlap) and not is_absence_statement(claim.claim)
     ]
 
 

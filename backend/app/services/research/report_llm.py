@@ -152,7 +152,8 @@ async def write_summary(topic: str, sections: list[tuple[str, str]], evidence: s
     body = "\n\n".join(f"## {heading}\n{text}" for heading, text in sections)
     prompt = (
         f"为调研报告《{topic}》写“核心结论”：3～6 条要点，每条一句话，带关键数字和 [n] 出处编号（沿用正文编号）。"
-        "只能总结正文已有的内容，不得引入新数字或新事实；用“- ”开头的列表输出，不要其他文字。\n"
+        "只能总结正文已有的内容，不得引入新数字或新事实；用“- ”开头的列表输出，不要其他文字。"
+        "排序要分层：先写全国或总体口径的结论；单个学校、单个地区的数据最多合并成一条，必须写成“某校样本显示…，不代表全国”，不得单独当作头条结论。\n"
         f"正文：\n{body[:12000]}\n资料：\n{evidence[:6000]}"
     )
     return (await _complete(prompt)).strip()

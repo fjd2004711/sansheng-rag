@@ -266,7 +266,7 @@ async def test_build_report_keeps_only_verbatim_data_and_lists_caveats() -> None
     async def fake_write(topic, section, evidence, data):
         return "2025届毕业生规模预计达1222万人 [1]，就业率为 97.1% [1]。", "规模扩大（推测）[1]。"
 
-    async def fake_claims(question, text, evidence):
+    async def fake_claims(question, text, evidence, **kw):
         return [ExtractedClaim(claim="2025届毕业生规模预计达1222万人", supporting=[1])]
 
     progress: list[tuple[str, int]] = []
@@ -285,6 +285,7 @@ async def test_build_report_keeps_only_verbatim_data_and_lists_caveats() -> None
             AsyncMock(return_value="- 毕业生规模预计1222万人 [1]。"),
         ),
         patch.object(report_builder, "extract_claims", fake_claims),
+        patch.object(report_builder, "write_synthesis", AsyncMock(return_value=("", "", []))),
     ):
         report = await report_builder.ReportBuilder(research).build("大学生就业数据", record)
 
@@ -421,7 +422,7 @@ async def test_build_report_corroborates_weak_claims_and_regrades() -> None:
     )
     calls: list[str] = []
 
-    async def fake_claims(question, text, evidence):
+    async def fake_claims(question, text, evidence, **kw):
         calls.append(evidence)
         # First grading: one site only; after the corroborating search a second site backs it.
         return [
@@ -487,7 +488,7 @@ def test_caveats_summarise_single_source_claims() -> None:
     weak = _claim("某城市吸纳毕业生比例为17.8%", "single_source", [3])
     weak.reason = "只有 sohu.com（低可信来源）一个网站提到"
     section = ReportSection(heading="分布", body="", claims=[weak])
-    notes = report_builder._caveats([section], [], [SOURCE])
+    notes = report_builder.caveats_for([section], [], [SOURCE])
     assert notes == [
         "全文有 1 条说法只找到一个来源（其中 1 条只见于自媒体、论坛等低可信来源），使用前建议对照附录一逐条核实表查看原文"
     ]
@@ -645,7 +646,7 @@ async def test_synthesis_grades_premises_and_drops_advice_with_unsourced_numbers
     async def fake_write(topic, section, evidence, data):
         return "2025届毕业生规模预计达1222万人 [1]。", "规模扩大（推测）[1]。"
 
-    async def fake_claims(question, text, evidence):
+    async def fake_claims(question, text, evidence, **kw):
         return [ExtractedClaim(claim="2025届毕业生规模预计达1222万人", supporting=[1])]
 
     drafts = [
