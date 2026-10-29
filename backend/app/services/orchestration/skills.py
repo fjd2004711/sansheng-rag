@@ -22,7 +22,7 @@ from app.services.orchestration.verification import (
     gate_check,
     is_narrow_scope,
 )
-from app.services.research.audit import audit_claims, extract_claims
+from app.services.research.audit import AuditedClaim, audit_claims, extract_claims
 from app.services.research.corpus import format_evidence
 from app.services.research.exceptions import WebSearchError
 from app.services.research.report_builder import (
@@ -174,17 +174,43 @@ def _national_goal(planned: OutlineSection) -> OutlineSection:
     return planned.model_copy(update={"goal": goal, "queries": list(dict.fromkeys(queries))[:3]})
 
 
+def _verified_ratio(section) -> float:
+    claims = section.claims
+    return sum(c.level == "verified" for c in claims) / len(claims) if claims else 0.0
+
+
 @skill("repair_report")
 async def repair_report(ctx: SkillCtx, idx: int) -> dict[str, Any]:
-    """Rewrite one failing section with a scope-first goal on top of the enlarged corpus, then re-verify it."""
+    """Rewrite one failing section with a scope-first goal on top of the enlarged corpus, then re-verify it.
+
+    The rewrite replaces the draft only if it is not worse by the independent check; otherwise the old text stays.
+    A "repair" that makes a section worse is a regression, not a fix.
+    """
     st = ctx.state
     assert st.outline is not None and st.corpus is not None
+    before = st.sections[idx]
+    before_data = (st.kept.get(idx, 0), st.rejected.get(idx, 0))
+    before_ratio = _verified_ratio(before)
     planned = _national_goal(st.outline.sections[idx])
     section, kept, rejected = await ctx.builder.section(st.outline.title, planned, st.corpus, [])
     st.sections[idx], st.kept[idx], st.rejected[idx] = section, kept, rejected
-    st.outline.sections[idx] = planned
     await verify_one(ctx, idx)
-    return {"claims": len(section.claims)}
+    after_ratio = _verified_ratio(st.sections[idx])
+    accepted = after_ratio + 0.001 >= before_ratio
+    if accepted:
+        st.outline.sections[idx] = planned
+    else:
+        st.sections[idx] = before
+        st.kept[idx], st.rejected[idx] = before_data
+    await ctx.emit(
+        "repair_accepted" if accepted else "repair_rejected",
+        {
+            "section": before.heading,
+            "before": round(before_ratio, 3),
+            "after": round(after_ratio, 3),
+        },
+    )
+    return {"accepted": accepted, "before": before_ratio, "after": after_ratio}
 
 
 def repair_queries(state: RunState, failures_by_section: dict[int, list[Failure]]) -> list[str]:
@@ -236,6 +262,17 @@ async def run_gate(
             },
         )
         if passed or round_ == max_rounds or repair_agent is None:
+            break
+        previous = history[-2]["metrics"].get("verified_ratio", 0) if len(history) > 1 else None
+        if previous is not None and diag.metrics.get("verified_ratio", 0) <= previous + 0.01:
+            # The last repair round did not move the needle; another one would only spend budget.
+            await ctx.emit(
+                "repair_stalled",
+                {"round": round_, "verified_ratio": diag.metrics.get("verified_ratio")},
+            )
+            st.notes.append(
+                "自循环修复一轮后核实比例没有提升，已停止继续修复；下列说法仍为单一来源或未能核实，请对照逐条核实表使用"
+            )
             break
         by_section = diag.by_section()
         # Failure type decides the repair: weak or authority-less evidence needs more sources first; every failing
@@ -344,6 +381,22 @@ async def assemble_report(ctx: SkillCtx, _item: Any) -> dict[str, Any]:
 # ---- fact-check scenario (same platform, different team and workflow) -----------------------------------------
 
 
+_NUMBER = re.compile(r"\d+(?:\.\d+)?")
+
+
+def _covered(claim: str, graded: list[AuditedClaim]) -> bool:
+    """True when a graded claim carries all of ``claim``'s numbers (or, with none, shares most of its words)."""
+    numbers = set(_NUMBER.findall(claim.replace(",", "")))
+    for g in graded:
+        text = g.claim.replace(",", "")
+        if numbers:
+            if numbers <= set(_NUMBER.findall(text)):
+                return True
+        elif sum(ch in text for ch in set(claim)) / max(len(set(claim)), 1) >= 0.7:
+            return True
+    return False
+
+
 def _claim_query(text: str) -> str:
     text = re.sub(r"[，。；：、“”‘’（）()\"'!?！？,;:]", " ", text)
     text = " ".join(text.split())[:40]
@@ -376,6 +429,10 @@ async def verify_claims(ctx: SkillCtx, _item: Any) -> dict[str, Any]:
     st = ctx.state
     assert st.corpus is not None
     text = str(st.input.get("text") or st.topic)
+    if not st.log.pages:
+        raise WebSearchError(
+            message="没有搜到可以读取的网页，换个说法再试试", details={"queries": st.queries}
+        )
     found = []
     for claim in st.claims_input:
         found.extend(await st.corpus.retrieve(claim.claim, limit=4))

@@ -125,7 +125,8 @@ class _Run:
             self._known += len(detail["tasks"])
         elif kind in ("task_done", "task_skipped"):
             self._done += 1
-            pct = min(99, int(100 * self._done / max(self._known, 1)))
+            ahead = sum(1 for g in self.sched.groups.values() if not g.expanded)
+            pct = min(99, int(100 * self._done / max(self._known + ahead, 1)))
             await self.store.progress(
                 self.run_id, str(detail.get("label") or detail.get("task", "")), pct
             )

@@ -132,7 +132,7 @@ async def test_failed_gate_triggers_a_bounded_repair_round_that_fixes_it() -> No
 
 
 @pytest.mark.anyio
-async def test_repair_rounds_are_capped_and_what_stays_broken_is_disclosed() -> None:
+async def test_a_repair_round_that_changes_nothing_stops_the_loop_and_is_disclosed() -> None:
     class NeverFixed(Fakes):
         async def claims(self, question, text, evidence, **kw):
             return [ExtractedClaim(claim="2025届毕业生规模预计达1222万人", supporting=[])]
@@ -141,9 +141,42 @@ async def test_repair_rounds_are_capped_and_what_stays_broken_is_disclosed() -> 
     assert (
         outcome.status == "done"
     )  # an unfixable draft is still delivered, with its problems visible
-    assert outcome.metrics["repair_rounds"] == 2  # policy.max_repair_rounds, no more
+    kinds = [e["kind"] for e in outcome.events]
+    assert "repair_stalled" in kinds
+    # One repair round, then the stall check stops it well before the policy cap of 2 rounds.
+    assert outcome.metrics["repair_rounds"] == 1
     gates = [e["detail"] for e in outcome.events if e["kind"] == "gate_checked"]
-    assert len(gates) == 3 and not gates[-1]["passed"]
+    assert len(gates) == 2 and not gates[-1]["passed"]
+    assert any("没有提升" in c for c in outcome.result["report"]["caveats"])
+
+
+@pytest.mark.anyio
+async def test_a_rewrite_that_is_worse_than_the_draft_is_rejected_and_the_gap_is_disclosed() -> (
+    None
+):
+    class Regresses(Fakes):
+        """A verified draft that only has single-school data (scope gap); every rewrite loses its support."""
+
+        async def extract(self, section, evidence, *, already_used=None):
+            point = _point("1222", "毕业生规模预计达1222万人")
+            return [point.model_copy(update={"scope": "武汉商学院"})]
+
+        async def claims(self, question, text, evidence, **kw):
+            return [
+                ExtractedClaim(
+                    claim="2025届毕业生规模预计达1222万人", supporting=[] if self.repaired else [1]
+                )
+            ]
+
+    outcome = await _run(Regresses(weak_until_repaired=False), _outline(1))
+    assert outcome.status == "done", outcome.error
+    kinds = [e["kind"] for e in outcome.events]
+    assert "repair_rejected" in kinds and "repair_accepted" not in kinds
+    section = outcome.result["report"]["sections"][0]
+    assert section["claims"][0]["level"] == "verified"  # the better original draft was kept
+    assert (
+        "不代表全国" in section["body"]
+    )  # the scope gap the loop could not close is stated in the text
 
 
 @pytest.mark.anyio
