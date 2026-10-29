@@ -48,14 +48,14 @@ function WorkflowNode({ data }: NodeProps<Node<FlowData>>) {
   return (
     <div
       className={cn(
-        "w-[176px] rounded-lg border-2 px-3 py-2 text-xs transition-colors",
+        "w-[138px] rounded-lg border-2 px-3 py-2 text-xs transition-colors",
         STATUS_STYLE[status],
         node.kind === "gate" && "border-dashed",
       )}
     >
       <Handle type="target" position={Position.Left} className="!bg-muted-foreground" />
       <div className="flex items-center justify-between gap-1">
-        <span className="font-semibold">{node.id}</span>
+        <span className="truncate font-semibold">{node.id}</span>
         <span className="text-[10px] opacity-70">{NODE_KIND_LABELS[node.kind]}</span>
       </div>
       <div className="mt-0.5 flex items-center gap-1 truncate opacity-80">
@@ -99,7 +99,7 @@ export function WorkflowGraph({
       return {
         id: node.id,
         type: "workflow",
-        position: { x: col * 215, y: row * 96 },
+        position: { x: col * 168, y: row * 84 },
         data: { node, progress: progress?.[node.id] },
         draggable: false,
       };

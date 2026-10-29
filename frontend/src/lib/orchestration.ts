@@ -136,3 +136,25 @@ export const NODE_KIND_LABELS: Record<GraphNode["kind"], string> = {
   loop: "自循环",
   merge: "汇总",
 };
+
+export interface RepairOutcome {
+  section: string;
+  accepted: boolean;
+  before: number;
+  after: number;
+}
+
+/** What each rewrite of the self-loop came to: kept (not worse) or thrown away (worse than the draft). */
+export function repairOutcomes(events: RunEvent[]): RepairOutcome[] {
+  return events
+    .filter((e) => e.kind === "repair_accepted" || e.kind === "repair_rejected")
+    .map((e) => ({
+      section: str(e.detail.section),
+      accepted: e.kind === "repair_accepted",
+      before: Number(e.detail.before) || 0,
+      after: Number(e.detail.after) || 0,
+    }));
+}
+
+export const hasStalled = (events: RunEvent[]): boolean =>
+  events.some((e) => e.kind === "repair_stalled");

@@ -73,21 +73,29 @@ class TavilySearchClient:
 class SearxngSearchClient:
     """Self-hosted SearXNG metasearch (free, no key). Needs ``json`` in ``search.formats``."""
 
-    def __init__(self, base_url: str, timeout: float = 20) -> None:
+    def __init__(self, base_url: str, timeout: float = 30) -> None:
         self._url = base_url.rstrip("/") + "/search"
         self._timeout = timeout
 
     async def search(self, query: str, *, limit: int) -> list[WebHit]:
         params = {"q": query, "format": "json", "language": "zh-CN", "safesearch": 0}
-        try:
-            async with httpx.AsyncClient(timeout=self._timeout) as client:
-                response = await client.get(self._url, params=params)
-                response.raise_for_status()
-                data = response.json()
-        except (httpx.HTTPError, ValueError) as exc:
+        data: Any = None
+        error: Exception | None = None
+        # A cold query can take ~20s while engines time out; SearXNG caches it, so one retry usually answers at once.
+        for _ in range(2):
+            try:
+                async with httpx.AsyncClient(timeout=self._timeout) as client:
+                    response = await client.get(self._url, params=params)
+                    response.raise_for_status()
+                    data = response.json()
+                error = None
+                break
+            except (httpx.HTTPError, ValueError) as exc:
+                error = exc
+        if error is not None:
             raise WebSearchError(
-                message="网页搜索失败", details={"provider": "searxng", "error": str(exc)}
-            ) from exc
+                message="网页搜索失败", details={"provider": "searxng", "error": str(error)}
+            ) from error
         results = data.get("results") if isinstance(data, dict) else None
         blocked = data.get("unresponsive_engines") if isinstance(data, dict) else None
         if not results and blocked:

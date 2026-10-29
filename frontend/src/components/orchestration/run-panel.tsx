@@ -7,7 +7,13 @@ import { toast } from "sonner";
 import { Button, Progress } from "@/components/ui";
 import { useRun } from "@/hooks/use-orchestration";
 import { apiClient } from "@/lib/api-client";
-import { deriveTasks, gateChecks, nodeProgress } from "@/lib/orchestration";
+import {
+  deriveTasks,
+  gateChecks,
+  hasStalled,
+  nodeProgress,
+  repairOutcomes,
+} from "@/lib/orchestration";
 import { getErrorMessage } from "@/lib/utils";
 import type { RunMetrics, RunSummary } from "@/types/orchestration";
 
@@ -108,7 +114,12 @@ export function RunPanel({ summary }: { summary: RunSummary }) {
 
       <section className="bg-card space-y-2 rounded-xl border p-4">
         <h3 className="font-semibold">质量门与自循环</h3>
-        <GateChecks checks={gateChecks(events)} repairs={metrics?.repairs ?? []} />
+        <GateChecks
+          checks={gateChecks(events)}
+          repairs={metrics?.repairs ?? []}
+          outcomes={repairOutcomes(events)}
+          stalled={hasStalled(events)}
+        />
       </section>
 
       {detail?.result && <RunResult id={summary.id} result={detail.result} />}
