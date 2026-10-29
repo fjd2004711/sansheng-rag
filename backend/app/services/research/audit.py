@@ -114,7 +114,8 @@ async def extract_claims(
     return [
         claim
         for claim in claims
-        if claim_in_answer(claim.claim, answer, question=question, min_overlap=min_overlap) and not is_absence_statement(claim.claim)
+        if claim_in_answer(claim.claim, answer, question=question, min_overlap=min_overlap)
+        and not is_absence_statement(claim.claim)
     ]
 
 
@@ -137,7 +138,9 @@ _NUMBER = re.compile(r"\d+(?:\.\d+)?")
 _CJK_OR_WORD = re.compile(r"[\u4e00-\u9fff]|[a-z]+")
 
 
-def claim_in_answer(claim: str, answer: str, *, question: str = "", min_overlap: float = 0.75) -> bool:
+def claim_in_answer(
+    claim: str, answer: str, *, question: str = "", min_overlap: float = 0.75
+) -> bool:
     """Guard against claims the model lifted from the sources instead of the answer.
 
     Every number in the claim must occur in the answer, and most of its characters/words must too (the question
@@ -175,9 +178,18 @@ def _parse_claims(text: str) -> list[ExtractedClaim]:
 
 
 _QUANTITY = re.compile(
-    r"(\d+(?:\.\d+)?)\s*(万亿|亿|万|%|％|个百分点|百分点|trillion|billion|million|thousand)?(?![a-z])", re.IGNORECASE
+    r"(\d+(?:\.\d+)?)\s*(万亿|亿|万|%|％|个百分点|百分点|trillion|billion|million|thousand)?(?![a-z])",
+    re.IGNORECASE,
 )
-_UNIT_FACTOR = {"万亿": 1e12, "亿": 1e8, "万": 1e4, "trillion": 1e12, "billion": 1e9, "million": 1e6, "thousand": 1e3}
+_UNIT_FACTOR = {
+    "万亿": 1e12,
+    "亿": 1e8,
+    "万": 1e4,
+    "trillion": 1e12,
+    "billion": 1e9,
+    "million": 1e6,
+    "thousand": 1e3,
+}
 _DATE_TAIL = re.compile(r"^\s*(?:年|届|月|日|号|级|季度|届)")
 
 
@@ -192,7 +204,10 @@ def _quantities(text: str) -> list[tuple[float, int, str]]:
     out: list[tuple[float, int, str]] = []
     for m in _QUANTITY.finditer(plain):
         digits, unit = m.group(1), (m.group(2) or "").lower()
-        if _DATE_TAIL.match(plain[m.end() - len(unit) :] if not unit else plain[m.end() :]) and not unit:
+        if (
+            _DATE_TAIL.match(plain[m.end() - len(unit) :] if not unit else plain[m.end() :])
+            and not unit
+        ):
             continue
         value = float(digits)
         if not unit and "." not in digits and value < 10:
@@ -271,7 +286,10 @@ def grade_claim(
             f"，另有 {len(groups) - 1} 个独立来源印证" if len(groups) > 1 else ""
         )
     elif len(groups) >= 2 and credible_groups:
-        level, reason = "verified", f"{len(groups)} 个独立来源一致：{'、'.join(_group_label(g) for g in groups)}"
+        level, reason = (
+            "verified",
+            f"{len(groups)} 个独立来源一致：{'、'.join(_group_label(g) for g in groups)}",
+        )
     elif len(groups) >= 2:
         level, reason = (
             "single_source",

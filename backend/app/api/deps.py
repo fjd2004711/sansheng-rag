@@ -29,6 +29,7 @@ from app.services.conversation import ConversationService
 from app.services.feedback import FeedbackService
 from app.services.app_settings import AppSettingsService
 from app.services.eval_candidate import EvalCandidateService
+from app.services.orchestration.facade import OrchestrationService
 from app.services.research_report import ResearchReportService
 from app.services.insights import InsightsService
 from app.services.llm_config import LLMConfigService
@@ -98,6 +99,14 @@ def get_research_report_service(db: DBSession) -> ResearchReportService:
 
 
 ResearchReportSvc = Annotated[ResearchReportService, Depends(get_research_report_service)]
+
+
+def get_orchestration_service(db: DBSession) -> OrchestrationService:
+    """Create OrchestrationService instance with database session."""
+    return OrchestrationService(db)
+
+
+OrchestrationSvc = Annotated[OrchestrationService, Depends(get_orchestration_service)]
 
 
 def get_app_settings_service(db: DBSession) -> AppSettingsService:
