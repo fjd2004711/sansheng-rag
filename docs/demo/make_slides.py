@@ -104,12 +104,12 @@ def slide_results(out: Path, eval_path: Path | None) -> None:
     data = json.loads(eval_path.read_text(encoding="utf-8"))
     y = 230
     cols = [90, 640, 940, 1240, 1540]
-    for x, h in zip(cols, ["主题", "总耗时", "并行加速", "修复轮次", "核查员下调"], strict=True):
+    for x, h in zip(cols, ["主题", "总耗时（含修复）", "并行度", "修复轮次", "核查员下调"]):
         text(d, (x, y), h, 26, MUTED, True)
     y += 56
     for r in data["runs"]:
         vals = [r["topic"][:20], f"{round(r['wall_seconds'] or 0)} 秒", f"{r['parallel_speedup']}×", str(r["repair_rounds"]), f"{r['verifier_downgrades']} 条"]
-        for x, v in zip(cols, vals, strict=True):
+        for x, v in zip(cols, vals):
             text(d, (x, y), v, 28, FG)
         y += 50
     y += 30
@@ -125,6 +125,8 @@ def slide_results(out: Path, eval_path: Path | None) -> None:
             text(d, (130, y), f"{label}：{fmt(a)}  →  {fmt(b)}", 26, FG)
             y += 40
         y += 14
+    text(d, (90, 975), "并行度 = 所有任务忙碌时间 ÷ 总耗时（含修复阶段）", 22, MUTED)
+    text(d, (90, 1013), "范围错置重写后仍有 2 章：规则在正文补写“不代表全国”（发生在最后一次检查之后）", 22, MUTED)
     sv = data.get("serial_vs_parallel")
     if sv:
         text(d, (1000, 700), "串行 vs 并行（同一主题，起草阶段实测）", 34, FG, True)

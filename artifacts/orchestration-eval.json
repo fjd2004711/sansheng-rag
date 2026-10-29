@@ -1,0 +1,101 @@
+{
+  "runs": [
+    {
+      "topic": "2025届大学生就业情况怎么样？",
+      "status": "done",
+      "wall_seconds": 1239.33,
+      "draft_seconds": 435.259,
+      "busy_seconds": 3072.61,
+      "parallel_speedup": 2.48,
+      "tasks": 27,
+      "tasks_failed": 0,
+      "tasks_skipped": 0,
+      "llm_calls": 135,
+      "tokens": 650048,
+      "repair_rounds": 2,
+      "verifier_downgrades": 3,
+      "model_switches": 0,
+      "gate_first": {
+        "passed": false,
+        "verified_ratio": 0.603,
+        "authoritative_sections": 0.8,
+        "unsupported_numbers": 0.0,
+        "scope_issues": 2.0
+      },
+      "gate_last": {
+        "passed": false,
+        "verified_ratio": 0.755,
+        "authoritative_sections": 1.0,
+        "unsupported_numbers": 0.0,
+        "scope_issues": 2.0
+      },
+      "first_failures": [
+        "weak_evidence",
+        "weak_evidence",
+        "weak_evidence",
+        "scope_misplaced",
+        "weak_evidence",
+        "no_authority",
+        "scope_misplaced"
+      ],
+      "recommendations": 6,
+      "claims_total": 53
+    },
+    {
+      "topic": "中国新能源汽车产销与渗透率",
+      "status": "done",
+      "wall_seconds": 1337.85,
+      "draft_seconds": 367.198,
+      "busy_seconds": 3388.41,
+      "parallel_speedup": 2.53,
+      "tasks": 30,
+      "tasks_failed": 0,
+      "tasks_skipped": 0,
+      "llm_calls": 177,
+      "tokens": 817643,
+      "repair_rounds": 2,
+      "verifier_downgrades": 8,
+      "model_switches": 0,
+      "gate_first": {
+        "passed": false,
+        "verified_ratio": 0.17,
+        "authoritative_sections": 0.6,
+        "unsupported_numbers": 0.0,
+        "scope_issues": 0.0
+      },
+      "gate_last": {
+        "passed": false,
+        "verified_ratio": 0.448,
+        "authoritative_sections": 0.8,
+        "unsupported_numbers": 0.0,
+        "scope_issues": 0.0
+      },
+      "first_failures": [
+        "weak_evidence",
+        "no_authority",
+        "weak_evidence",
+        "weak_evidence",
+        "no_authority",
+        "weak_evidence",
+        "weak_evidence"
+      ],
+      "recommendations": 6,
+      "claims_total": 58
+    }
+  ],
+  "mean": {
+    "wall_seconds": 1288.59,
+    "parallel_speedup": 2.505,
+    "repair_rounds": 2.0,
+    "verifier_downgrades": 5.5,
+    "tokens": 733845.5
+  },
+  "serial_vs_parallel": {
+    "topic": "2025届大学生就业情况怎么样？",
+    "basis": "起草阶段（规划、检索、分章撰写、独立核查，不含自循环修复）",
+    "serial_seconds": 875.261,
+    "parallel_seconds": 435.259,
+    "measured_speedup": 2.01,
+    "serial_run_status": "done"
+  }
+}
