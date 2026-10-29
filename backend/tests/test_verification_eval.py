@@ -20,8 +20,14 @@ TODAY = date(2026, 10, 23)
 
 def _source(index: int, url: str, content: str, **kw: object) -> WebSource:
     return WebSource(
-        index=index, title="t", url=url, domain=registrable_domain(url), content=content,
-        fetched_at="2026-10-23", tier=source_tier(url), **kw,  # type: ignore[arg-type]
+        index=index,
+        title="t",
+        url=url,
+        domain=registrable_domain(url),
+        content=content,
+        fetched_at="2026-10-23",
+        tier=source_tier(url),
+        **kw,  # type: ignore[arg-type]
     )
 
 
@@ -44,12 +50,29 @@ def test_every_gold_claim_is_actually_in_the_answer() -> None:
 def test_rules_pass_the_gold_set_when_extraction_is_perfect() -> None:
     results = []
     for case in CASES:
-        sources = [_source(s["index"], s["url"], s["content"], published_at=s["published_at"], from_snippet=s["from_snippet"]) for s in case["sources"]]
+        sources = [
+            _source(
+                s["index"],
+                s["url"],
+                s["content"],
+                published_at=s["published_at"],
+                from_snippet=s["from_snippet"],
+            )
+            for s in case["sources"]
+        ]
         extracted = [
-            ExtractedClaim(claim=oracle_claim_text(case, g), supporting=g["supporting"], contradicting=g["contradicting"], time_sensitive=g["time_sensitive"])
+            ExtractedClaim(
+                claim=oracle_claim_text(case, g),
+                supporting=g["supporting"],
+                contradicting=g["contradicting"],
+                time_sensitive=g["time_sensitive"],
+            )
             for g in case["gold_claims"]
         ]
-        graded = [c.model_dump() for c in audit_claims(extracted, sources, today=TODAY, stale_days=365).claims]
+        graded = [
+            c.model_dump()
+            for c in audit_claims(extracted, sources, today=TODAY, stale_days=365).claims
+        ]
         results.append(score_case(case, graded))
     report = aggregate(results)
     assert report["failures"] == []
@@ -73,8 +96,14 @@ def test_syndicated_copies_are_one_independent_source() -> None:
 
 def test_independent_reports_stay_separate() -> None:
     sources = [
-        _source(1, "https://en.wikipedia.org/wiki/X", "Apollo 11 landed on the Moon on July 20, 1969."),
-        _source(2, "https://www.britannica.com/topic/X", "The first crewed lunar landing took place in July 1969, led by Armstrong."),
+        _source(
+            1, "https://en.wikipedia.org/wiki/X", "Apollo 11 landed on the Moon on July 20, 1969."
+        ),
+        _source(
+            2,
+            "https://www.britannica.com/topic/X",
+            "The first crewed lunar landing took place in July 1969, led by Armstrong.",
+        ),
         _source(3, "https://www.reuters.com/x", "据路透社报道，登月任务在1969年7月完成。"),
     ]
     assert len(independent_groups(sources)) == 3
@@ -90,4 +119,6 @@ def test_numbers_match_handles_units_rounding_and_percent_points() -> None:
     assert not numbers_match("增长5.1%", "增长5.0%")
     assert numbers_match("周长40075千米", "about 40,075 km")
     assert not numbers_match("上升了2%", "比上月上升2个百分点")
-    assert numbers_match("1969年7月登月", "landed on July 20, 1969")  # years and small numbers are not checked
+    assert numbers_match(
+        "1969年7月登月", "landed on July 20, 1969"
+    )  # years and small numbers are not checked

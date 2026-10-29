@@ -294,7 +294,9 @@ class FakeSearch:
         n = len(self.queries)
         return [
             WebHit(
-                title=f"r{n}", url=f"https://news{n}.cn/article", snippet=f"{query} 风速资料 {n}，12级风风速32.7米/秒以上"
+                title=f"r{n}",
+                url=f"https://news{n}.cn/article",
+                snippet=f"{query} 风速资料 {n}，12级风风速32.7米/秒以上",
             )
         ]
 

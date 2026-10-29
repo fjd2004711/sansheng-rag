@@ -100,7 +100,9 @@ class Scheduler:
         if group.expanded:
             for task in group.tasks:
                 task.queued_at = time.monotonic()
-            await self._emit("group_expanded", {"group": group.id, "tasks": [t.id for t in group.tasks]})
+            await self._emit(
+                "group_expanded", {"group": group.id, "tasks": [t.id for t in group.tasks]}
+            )
         await group.done_event.wait()
         return group.ok
 
