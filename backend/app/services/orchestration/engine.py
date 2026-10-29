@@ -191,6 +191,7 @@ class _Run:
             builder=self.builder,
             emit=self.emit,
             run_group=self.sched.run_group,
+            budget_used=self.budget.used_fraction,
             make_task=make_task,
             make_group=make_group,
         )
@@ -214,8 +215,12 @@ class _Run:
             priority=node.priority,
             pool=node.pool,
             essential=node.essential,
-            retries=node.retries,
-            timeout=node.timeout_seconds,
+            # A gate runs the repair loop inside itself: it must not be retried (side effects), and its time limit
+            # is the run's budget, not a single task's.
+            retries=0 if node.kind == "gate" else node.retries,
+            timeout=float(max(node.timeout_seconds, self.bundle.workflow.policy.max_seconds))
+            if node.kind == "gate"
+            else float(node.timeout_seconds),
         )
 
     def _group(self, node: NodeSpec) -> Group:

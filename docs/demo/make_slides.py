@@ -127,9 +127,9 @@ def slide_results(out: Path, eval_path: Path | None) -> None:
         y += 14
     sv = data.get("serial_vs_parallel")
     if sv:
-        text(d, (1000, 700), "串行 vs 并行（同一主题实测）", 34, FG, True)
-        text(d, (1000, 760), f"串行配置：{round(sv['serial_wall_seconds'])} 秒", 30, FG)
-        text(d, (1000, 810), f"并行调度：{round(sv['parallel_wall_seconds'])} 秒", 30, GREEN)
+        text(d, (1000, 700), "串行 vs 并行（同一主题，起草阶段实测）", 34, FG, True)
+        text(d, (1000, 760), f"串行配置：{round(sv['serial_seconds'])} 秒", 30, FG)
+        text(d, (1000, 810), f"并行调度：{round(sv['parallel_seconds'])} 秒", 30, GREEN)
         text(d, (1000, 860), f"实测加速：{sv['measured_speedup']}×", 40, GREEN, True)
     img.save(out / "05_results.png")
 

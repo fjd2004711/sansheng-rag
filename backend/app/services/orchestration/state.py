@@ -57,6 +57,10 @@ class Budget:
     def elapsed(self) -> float:
         return time.monotonic() - self.started
 
+    def used_fraction(self) -> float:
+        """How much of the tighter of the two budgets (tokens, time) is spent."""
+        return max(self.meter.total_tokens / self.max_tokens, self.elapsed / self.max_seconds)
+
     def ok(self) -> bool:
         return self.meter.total_tokens < self.max_tokens and self.elapsed < self.max_seconds
 

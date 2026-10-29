@@ -28,6 +28,13 @@ def gate_points(run: dict[str, Any]) -> list[dict[str, Any]]:
     return [e["detail"] for e in run["events"] if e["kind"] == "gate_checked"]
 
 
+def draft_seconds(run: dict[str, Any]) -> float | None:
+    """Seconds until the draft is complete and first checked (plan, search, write, verify) — before any repair, so two
+    runs of the same topic are compared on the same work."""
+    first = next((e for e in run["events"] if e["kind"] == "gate_checked"), None)
+    return first["t"] if first else None
+
+
 def summarise(run: dict[str, Any]) -> dict[str, Any]:
     gates = gate_points(run)
     first, last = (gates[0], gates[-1]) if gates else ({"metrics": {}, "passed": None}, {"metrics": {}, "passed": None})
@@ -37,6 +44,7 @@ def summarise(run: dict[str, Any]) -> dict[str, Any]:
         "topic": run["topic"],
         "status": run["status"],
         "wall_seconds": m.get("wall_seconds"),
+        "draft_seconds": draft_seconds(run),
         "busy_seconds": m.get("busy_seconds"),
         "parallel_speedup": m.get("parallel_speedup"),
         "tasks": m.get("tasks"),
@@ -73,19 +81,21 @@ def main() -> None:
     if args.serial:
         serial = summarise(load(args.serial))
         match = next((r for r in rows if r["topic"] == serial["topic"]), None)
-        if match and serial["wall_seconds"] and match["wall_seconds"]:
+        if match and serial["draft_seconds"] and match["draft_seconds"]:
             out["serial_vs_parallel"] = {
                 "topic": serial["topic"],
-                "serial_wall_seconds": serial["wall_seconds"],
-                "parallel_wall_seconds": match["wall_seconds"],
-                "measured_speedup": round(serial["wall_seconds"] / match["wall_seconds"], 2),
+                "basis": "起草阶段（规划、检索、分章撰写、独立核查，不含自循环修复）",
+                "serial_seconds": serial["draft_seconds"],
+                "parallel_seconds": match["draft_seconds"],
+                "measured_speedup": round(serial["draft_seconds"] / match["draft_seconds"], 2),
+                "serial_run_status": serial["status"],
             }
     Path(args.out).parent.mkdir(exist_ok=True)
     Path(args.out).write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
 
     for r in rows:
         f, last = r["gate_first"], r["gate_last"]
-        print(f"[{r['status']}] {r['topic'][:30]}  wall={r['wall_seconds']}s speedup={r['parallel_speedup']}x tasks={r['tasks']} "
+        print(f"[{r['status']}] {r['topic'][:30]}  draft={r['draft_seconds']}s wall={r['wall_seconds']}s speedup={r['parallel_speedup']}x tasks={r['tasks']} "
               f"repair_rounds={r['repair_rounds']} downgrades={r['verifier_downgrades']}")
         for k in KEYS:
             print(f"    {k:24} first={f[k]}  final={last[k]}")
