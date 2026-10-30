@@ -109,3 +109,62 @@ describe("gateChecks and levels", () => {
     expect(levels.gate).toBe(2);
   });
 });
+
+import {
+  describeEvent,
+  formatDuration,
+  nodeOfGroup,
+  repairOutcomesByRound,
+  tasksByNode,
+  timeAgo,
+} from "./orchestration";
+
+describe("grouping and wording helpers", () => {
+  it("maps task groups to workflow nodes and groups tasks by node", () => {
+    expect(nodeOfGroup("repair#r1:search")).toBe("repair");
+    expect(nodeOfGroup("sections#2")).toBe("sections");
+    expect(nodeOfGroup("plan")).toBe("plan");
+    const grouped = tasksByNode(
+      deriveTasks([
+        ev(1, 0, "task_start", { task: "sections#0", group: "sections", pool: "llm" }),
+        ev(2, 0, "task_start", {
+          task: "repair#r1:search",
+          group: "repair#r1:search",
+          pool: "search",
+        }),
+      ]),
+    );
+    expect(Object.keys(grouped).sort()).toEqual(["repair", "sections"]);
+  });
+
+  it("formats durations and relative times in Chinese", () => {
+    expect(formatDuration(3.21)).toBe("3.2 秒");
+    expect(formatDuration(45)).toBe("45 秒");
+    expect(formatDuration(125)).toBe("2 分 5 秒");
+    expect(formatDuration(120)).toBe("2 分");
+    const now = new Date("2026-10-30T12:00:00Z").getTime();
+    expect(timeAgo("2026-10-30T11:58:00Z", now)).toBe("2 分钟前");
+    expect(timeAgo("2026-10-30T09:00:00Z", now)).toBe("3 小时前");
+    expect(timeAgo("2026-10-27T12:00:00Z", now)).toBe("3 天前");
+  });
+
+  it("describes events and attributes rewrite outcomes to their repair round", () => {
+    const line = describeEvent(
+      ev(1, 4, "gate_checked", { round: 0, passed: false, metrics: { verified_ratio: 0.603 } }),
+    );
+    expect(line).toMatchObject({ tone: "warn", group: "gate" });
+    expect(line.text).toContain("60%");
+    const byRound = repairOutcomesByRound([
+      ev(1, 1, "gate_checked", { round: 0, passed: false }),
+      ev(2, 2, "repair_accepted", { section: "A", before: 0.5, after: 0.8 }),
+      ev(3, 3, "repair_rejected", { section: "B", before: 0.7, after: 0.2 }),
+      ev(4, 4, "gate_checked", { round: 1, passed: false }),
+      ev(5, 5, "repair_accepted", { section: "C", before: 0.1, after: 0.2 }),
+    ]);
+    expect(byRound[1]?.map((o) => [o.section, o.accepted])).toEqual([
+      ["A", true],
+      ["B", false],
+    ]);
+    expect(byRound[2]?.map((o) => o.section)).toEqual(["C"]);
+  });
+});
