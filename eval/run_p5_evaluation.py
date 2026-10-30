@@ -21,7 +21,7 @@ from app.services.rag.reranker import RerankService
 from app.services.rag.retrieval import RetrievalService
 from app.services.rag.vectorstore import QdrantVectorStore
 
-ROOT = Path(__file__).parent
+ROOT = Path(__file__).resolve().parent
 COLLECTION = "p5_eval"
 REPORT = ROOT / "p5-report.json"
 PUBLIC_REPORT = ROOT.parent.parent / "frontend" / "public" / "evaluation" / "p5-report.json"

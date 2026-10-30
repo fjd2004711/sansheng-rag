@@ -82,7 +82,17 @@ function ConversationItem({
           ? "bg-accent text-foreground border-border border"
           : "text-muted-foreground hover:bg-secondary/50 hover:text-secondary-foreground border border-transparent",
       )}
+      role="button"
+      tabIndex={0}
+      aria-current={isActive ? "true" : undefined}
       onClick={onSelect}
+      onKeyDown={(e) => {
+        // Only the row itself: Enter/Space inside the rename box or the menu button keep their own meaning.
+        if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
+          e.preventDefault();
+          onSelect();
+        }
+      }}
     >
       {isActive && (
         <span
@@ -125,9 +135,14 @@ function ConversationItem({
             "touch:opacity-100 h-8 w-8 p-0 opacity-0 group-hover:opacity-100",
             showMenu && "opacity-100",
           )}
+          aria-label="更多操作"
+          aria-expanded={showMenu}
           onClick={(e) => {
             e.stopPropagation();
             setShowMenu(!showMenu);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") setShowMenu(false);
           }}
         >
           <MoreVertical className="h-4 w-4" />
@@ -135,7 +150,12 @@ function ConversationItem({
 
         {showMenu && (
           <>
-            <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)} />
+            <div
+              role="presentation"
+              aria-hidden
+              className="fixed inset-0 z-10"
+              onClick={() => setShowMenu(false)}
+            />
             <div className="bg-popover absolute top-8 right-0 z-20 w-40 rounded-md border shadow-lg">
               <button
                 className="hover:bg-secondary flex min-h-[44px] w-full items-center gap-2 px-3 py-3 text-sm"
@@ -158,7 +178,7 @@ function ConversationItem({
                   }}
                 >
                   <ArchiveRestore className="h-4 w-4" />
-                  Restore
+                  恢复
                 </button>
               ) : (
                 <button
