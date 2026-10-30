@@ -63,12 +63,12 @@ export function UsersPanel() {
 
   const create = async () => {
     try {
-      const created = await apiClient.post<{ id: string; email: string; role: "admin" | "user"; is_active: boolean; created_at: string; full_name: string | null }>("/auth/register", {
+      const user = await apiClient.post<AdminUser>("/v1/users", {
         email: form.email.trim(),
         password: form.password,
         full_name: form.name.trim() || undefined,
+        role: form.admin ? "admin" : "user",
       });
-      const user = form.admin ? await apiClient.patch<AdminUser>(`/v1/users/${created.id}`, { role: "admin" }) : (created as AdminUser);
       setUsers((current) => [...(current ?? []), user]);
       toast.success("账号已创建");
       setCreating(false);

@@ -57,12 +57,29 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[LifespanState, None]:
             await load_saved_rag(db)
     except Exception as e:
         logger.warning("Could not load saved RAG settings: %s", e)
+    await _fail_interrupted_jobs()
     yield state
     if "vector_store" in state:
         with suppress(Exception):
             await state["vector_store"].client.close()  # type: ignore[attr-defined]
 
     await close_db()
+
+
+async def _fail_interrupted_jobs() -> None:
+    """Background runs live in this process; any still marked active at startup died with the previous one."""
+    from app.repositories import orchestration as orch_repo
+    from app.repositories import research_report as report_repo
+
+    message = "服务重启，这次运行中断了，请重新运行"
+    try:
+        async with get_db_context() as db:
+            runs = await orch_repo.fail_active(db, error=message)
+            reports = await report_repo.fail_active(db, error=message)
+        if runs or reports:
+            logger.warning("interrupted_jobs_failed runs=%s reports=%s", runs, reports)
+    except Exception as e:
+        logger.warning("Could not clear interrupted jobs: %s", e)
 
 
 SHOW_DOCS_ENVIRONMENTS = ("local", "staging", "development")

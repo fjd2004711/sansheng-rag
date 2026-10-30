@@ -7,7 +7,13 @@ from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import AlreadyExistsError, AuthenticationError, NotFoundError
+from app.core.config import settings
+from app.core.exceptions import (
+    AlreadyExistsError,
+    AuthenticationError,
+    AuthorizationError,
+    NotFoundError,
+)
 from app.core.security import (
     get_password_hash,
     verify_password,
@@ -66,14 +72,10 @@ class UserService:
         app. Set ``FIRST_ADMIN_EMAIL`` (or run ``cmd create-app-admin``) and
         register before exposing the API publicly.
         """
-        existing = await user_repo.get_by_email(self.db, user_in.email)
-        if existing:
-            raise AlreadyExistsError(
-                message="Email already registered",
-                details={"email": user_in.email},
-            )
-
         is_first_user = await self._is_first_user()
+        if not settings.ALLOW_REGISTRATION and not is_first_user:
+            raise AuthorizationError(message="本站已关闭自助注册，请联系管理员开通账号")
+        await self._ensure_email_free(user_in.email)
 
         hashed_password = get_password_hash(user_in.password)
         user = await user_repo.create(
@@ -87,6 +89,24 @@ class UserService:
         # Registration returns an access boundary. Commit before returning so an immediate login can read the account.
         await self.db.commit()
         return user
+
+    async def registration_open(self) -> bool:
+        return settings.ALLOW_REGISTRATION or await self._is_first_user()
+
+    async def create_by_admin(self, user_in: UserCreate) -> User:
+        """An account an admin creates; unlike self-registration it may be given the admin role."""
+        await self._ensure_email_free(user_in.email)
+        return await user_repo.create(
+            self.db,
+            email=user_in.email,
+            hashed_password=get_password_hash(user_in.password),
+            full_name=user_in.full_name,
+            role=user_in.role.value,
+        )
+
+    async def _ensure_email_free(self, email: str) -> None:
+        if await user_repo.get_by_email(self.db, email):
+            raise AlreadyExistsError(message="Email already registered", details={"email": email})
 
     async def authenticate(self, email: str, password: str) -> User:
         user = await user_repo.get_by_email(self.db, email)

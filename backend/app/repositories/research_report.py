@@ -5,9 +5,20 @@ from typing import Any
 from uuid import UUID
 
 from sqlalchemy import func, select
+from sqlalchemy import update as sa_update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models.research_report import ResearchReport
+
+
+async def fail_active(db: AsyncSession, *, error: str) -> int:
+    """Mark every queued/running report failed (their tasks died with the process); returns how many."""
+    result = await db.execute(
+        sa_update(ResearchReport)
+        .where(ResearchReport.status.in_(("queued", "running")))
+        .values(status="failed", error=error)
+    )
+    return result.rowcount or 0
 
 
 async def get_by_id(db: AsyncSession, report_id: UUID) -> ResearchReport | None:

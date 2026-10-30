@@ -23,6 +23,7 @@ group is for and which are required vs optional.
 | Variable | Required | Default | Description |
 |---|---|---|---|
 | `SECRET_KEY` | **required in prod** | (generated) | JWT signing key. Rotating invalidates all tokens |
+| `ALLOW_REGISTRATION` | no | `true` | `false` closes self-registration; admins create accounts from the admin page. The first account can always register |
 | `API_KEY` | **required in prod** | (generated) | Static admin/service-to-service key for `X-API-Key` header |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | optional | `30` | JWT access token lifetime |
 | `REFRESH_TOKEN_EXPIRE_MINUTES` | optional | `10080` | JWT refresh token lifetime (7 days) |

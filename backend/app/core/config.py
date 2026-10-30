@@ -69,6 +69,9 @@ class Settings(BaseSettings):
             f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
         )
 
+    # False: only an admin can create accounts (the very first account can always register, to bootstrap).
+    ALLOW_REGISTRATION: bool = True
+
     DB_POOL_SIZE: int = 5
     DB_MAX_OVERFLOW: int = 10
     DB_POOL_TIMEOUT: int = 30

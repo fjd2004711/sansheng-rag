@@ -52,6 +52,12 @@ async def register(
     return user
 
 
+@router.get("/config")
+async def auth_config(user_service: UserSvc) -> dict[str, bool]:
+    """What the sign-in pages need to know before anyone is signed in."""
+    return {"registration_open": await user_service.registration_open()}
+
+
 @router.post("/refresh", response_model=Token)
 async def refresh_token(
     request: Request,
