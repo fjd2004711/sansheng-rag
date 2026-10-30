@@ -1,10 +1,28 @@
 {
   "methodology": "Fixed adversarial corpus with 40 near-topic distractors. Baseline and Hybrid use the supplied initial query; Corrective and Full execute the bounded P2 workflow. Retrieval corrective success means an initially absent top-5 expected source entered the final top-5 after P2. Generation corrective success means P3 corrected its seeded unsupported draft and the final verifier passed. Tokens are character-based estimates because the local provider exposes no billable usage.",
-  "scenario_count": 3,
-  "corpus_document_count": 42,
+  "scenario_count": 13,
+  "corpus_document_count": 97,
   "modes": [
     {
       "name": "Baseline RAG",
+      "confidence_95": {
+        "Recall@5": [
+          0.0,
+          0.0
+        ],
+        "Abstention Accuracy": [
+          0.0,
+          0.0
+        ],
+        "Groundedness": [
+          0.0,
+          0.0
+        ]
+      },
+      "scenario_counts": {
+        "answerable": 10,
+        "abstain": 3
+      },
       "metrics": {
         "Recall@5": 0.0,
         "Recall@10": 0.0,
@@ -12,15 +30,15 @@
         "nDCG": 0.0,
         "Groundedness": 0.0,
         "Completeness": 0.0,
-        "Answer Relevance": 0.0,
+        "Answer Relevance": 0.65,
         "Citation Accuracy": 0.0,
         "Retrieval Corrective Success Rate": 0.0,
         "Generation Corrective Success Rate": 0.0,
         "Corrective Success Rate": 0.0,
         "Abstention Accuracy": 0.0,
         "Average Retrieval Rounds": 1.0,
-        "Latency (ms)": 3303.78,
-        "Estimated Tokens": 160.4
+        "Latency (ms)": 8852.4185,
+        "Estimated Tokens": 162.1385
       },
       "rows": [
         {
@@ -34,25 +52,27 @@
           "assessment": {
             "groundedness": 0.0,
             "completeness": 0.0,
-            "answer_relevance": 0.0,
+            "answer_relevance": 1.0,
             "citation_coverage": 0.0,
             "sufficient": false,
             "failure_type": "hallucination",
-            "failure_reason": "The answer claims 'CRIMSON-SEAL' is a required credential, but the evidence only discusses 'Atlas deployment schedule milestones' and does not mention any credential or compliance requirement. The cited source [1] does not support the claim.",
+            "failure_reason": "答案说合规要求的值是 CRIMSON-SEAL，但引用的资料只讲部署时间安排里的里程碑内容，没有任何地方提到合规要求或 CRIMSON-SEAL。",
             "missing_information": [
-              "What specific credential is required for Atlas compliance?",
-              "Any mention of 'CRIMSON-SEAL' in the evidence"
+              "所有资料中都没有关于 Atlas 合规要求的任何说明。",
+              "没有任何资料提到 CRIMSON-SEAL 这个值。"
             ],
             "claims": [
               {
-                "claim": "The required value is CRIMSON-SEAL",
+                "claim": "Atlas 合规要求的值为 CRIMSON-SEAL。",
                 "supported": false,
-                "citation_indices": [],
-                "reason": "No evidence supports the claim that 'CRIMSON-SEAL' is a required credential. The cited source [1] discusses deployment milestones, not compliance credentials."
+                "citation_indices": [
+                  1
+                ],
+                "reason": "引用资料只涉及部署时间安排的里程碑内容，完全没有提到合规要求或 CRIMSON-SEAL，因此无法支持该说法。"
               }
             ]
           },
-          "latency_ms": 3391.35,
+          "latency_ms": 8631.75,
           "estimated_tokens": 167.2,
           "retrieval_corrective_success": 0.0,
           "generation_corrective_success": 0.0
@@ -68,22 +88,27 @@
           "assessment": {
             "groundedness": 0.0,
             "completeness": 0.0,
-            "answer_relevance": 0.0,
+            "answer_relevance": 1.0,
             "citation_coverage": 0.0,
             "sufficient": false,
             "failure_type": "hallucination",
-            "failure_reason": "The answer introduces a specific code 'ORION-RECOVER-17' that is not mentioned or implied in any of the provided evidence. The evidence only discusses 'Orion meeting calendar deadline' values (1, 2, 4, 11, 12) and their associated activities, with no reference to 'ORION-RECOVER-17'.",
-            "missing_information": [],
+            "failure_reason": "回答声称所需的值是 ORION-RECOVER-17，但引用的第一条资料只说明了Orion会议日历截止日期1的用途，完全没有提到任何代码、取值或ORION-RECOVER-17，因此回答的内容与证据不符。",
+            "missing_information": [
+              "没有任何资料说明Orion恢复必须使用哪个代码或值。",
+              "没有任何资料出现 ORION-RECOVER-17 这一内容。"
+            ],
             "claims": [
               {
-                "claim": "The required value is ORION-RECOVER-17",
+                "claim": "Orion恢复必须使用的代码是 ORION-RECOVER-17。",
                 "supported": false,
-                "citation_indices": [],
-                "reason": "No evidence supports the claim that 'ORION-RECOVER-17' is required for Orion recovery. The provided evidence discusses meeting calendar deadlines, not recovery codes."
+                "citation_indices": [
+                  1
+                ],
+                "reason": "第1条资料只说明Orion会议日历截止日期1的用途，既没有提到代码，也没有提到 ORION-RECOVER-17，因此该说法没有证据支持，属于凭空捏造。"
               }
             ]
           },
-          "latency_ms": 3320.66,
+          "latency_ms": 8319.7,
           "estimated_tokens": 155.8,
           "retrieval_corrective_success": 0.0,
           "generation_corrective_success": 0.0
@@ -102,24 +127,413 @@
             "answer_relevance": 0.0,
             "citation_coverage": 0.0,
             "sufficient": false,
-            "failure_type": "hallucination",
-            "failure_reason": "The answer claims a planet won an 'interstellar league,' but the evidence discusses 'Orion meeting calendar deadlines' with no mention of interstellar leagues, planets, or winners. The placeholder 'UNKNOWN-PLACEHOLDER' indicates no valid answer was derived from the evidence, yet the answer is presented as if it were factual.",
+            "failure_type": "insufficient_evidence",
+            "failure_reason": "所提供的证据中没有任何关于星际联赛以及哪个星球获胜的信息，无法回答问题。",
             "missing_information": [
-              "Information about an interstellar league",
-              "Information about which planet won it",
-              "Any connection between Orion and interstellar leagues"
+              "星际联赛是否存在。",
+              "参加该联赛的星球名称。",
+              "赢得该联赛的星球名称。"
             ],
             "claims": [
               {
-                "claim": "The required value is UNKNOWN-PLACEHOLDER",
+                "claim": "答案声称的必要值是UNKNOWN-PLACEHOLDER。",
                 "supported": false,
-                "citation_indices": [],
-                "reason": "The placeholder indicates no evidence supports this claim. It is not grounded in any provided evidence."
+                "citation_indices": [
+                  1
+                ],
+                "reason": "证据[1]只提到Helios回滚需要发布负责人使用令牌批准，没有任何内容能支持这个占位值。"
               }
             ]
           },
-          "latency_ms": 3199.33,
-          "estimated_tokens": 158.2,
+          "latency_ms": 7681.79,
+          "estimated_tokens": 150.5,
+          "retrieval_corrective_success": 0.0,
+          "generation_corrective_success": 0.0
+        },
+        {
+          "id": "helios-rollback",
+          "initial_rank": null,
+          "rank": null,
+          "rounds": 1,
+          "abstained": false,
+          "expected_abstain": false,
+          "answer": "The required value is HELIOS-ROLLBACK-88 [1].",
+          "assessment": {
+            "groundedness": 0.0,
+            "completeness": 0.0,
+            "answer_relevance": 1.0,
+            "citation_coverage": 0.0,
+            "sufficient": false,
+            "failure_type": "insufficient_evidence",
+            "failure_reason": "没有任何证据提到回滚授权令牌，答案中的 HELIOS-ROLLBACK-88 在资料中找不到依据。",
+            "missing_information": [
+              "缺少说明哪一个令牌可以授权 Helios 回滚的证据。",
+              "缺少令牌名称或具体值的任何说明。"
+            ],
+            "claims": [
+              {
+                "claim": "所需的授权令牌值是 HELIOS-ROLLBACK-88。",
+                "supported": false,
+                "citation_indices": [
+                  1
+                ],
+                "reason": "引用 [1] 只涉及冻结窗口、预发布检查和负责人轮换，没有提到回滚令牌，因此该数值不被证据支持。"
+              }
+            ]
+          },
+          "latency_ms": 7199.85,
+          "estimated_tokens": 138.5,
+          "retrieval_corrective_success": 0.0,
+          "generation_corrective_success": 0.0
+        },
+        {
+          "id": "nebula-refund",
+          "initial_rank": null,
+          "rank": null,
+          "rounds": 1,
+          "abstained": false,
+          "expected_abstain": false,
+          "answer": "The required value is NEBULA-REFUND-4421 [1].",
+          "assessment": {
+            "groundedness": 0.0,
+            "completeness": 0.0,
+            "answer_relevance": 1.0,
+            "citation_coverage": 0.0,
+            "sufficient": false,
+            "failure_type": "insufficient_evidence",
+            "failure_reason": "所有提供的资料都只提到发票周期、付款提醒和账本导出，完全没有提到大型退款需要的批准代码。",
+            "missing_information": [
+              "资料中没有任何关于大型退款批准代码的内容。",
+              "被引用的资料[1]也没有说明这个批准代码。"
+            ],
+            "claims": [
+              {
+                "claim": "大型Nebula退款需要的批准代码是NEBULA-REFUND-4421。",
+                "supported": false,
+                "citation_indices": [
+                  1
+                ],
+                "reason": "资料[1]只描述发票周期、付款提醒和账本导出，没有提供任何批准代码，因此无法支持这个说法。"
+              }
+            ]
+          },
+          "latency_ms": 7077.9,
+          "estimated_tokens": 136.5,
+          "retrieval_corrective_success": 0.0,
+          "generation_corrective_success": 0.0
+        },
+        {
+          "id": "vega-onboarding",
+          "initial_rank": null,
+          "rank": null,
+          "rounds": 1,
+          "abstained": false,
+          "expected_abstain": false,
+          "answer": "The required value is VEGA-ONBOARD-07 [1].",
+          "assessment": {
+            "groundedness": 0.0,
+            "completeness": 0.0,
+            "answer_relevance": 1.0,
+            "citation_coverage": 0.0,
+            "sufficient": false,
+            "failure_type": "hallucination",
+            "failure_reason": "所有证据只提到午餐日历、工位分配和访客登记，没有提到新工程师领取笔记本电脑前需要填写任何表格，答案中的编号在证据中找不到。",
+            "missing_information": [
+              "新工程师领取笔记本电脑前必须填写哪张表格",
+              "表格编号或名称的明确说明"
+            ],
+            "claims": [
+              {
+                "claim": "新工程师必须在领取笔记本电脑前填写某张表格。",
+                "supported": false,
+                "citation_indices": [],
+                "reason": "证据完全没有提到领取笔记本电脑与填写表格之间的关系。"
+              },
+              {
+                "claim": "所需填写的表格是 VEGA-ONBOARD-07。",
+                "supported": false,
+                "citation_indices": [],
+                "reason": "任何证据都没有出现 VEGA-ONBOARD-07，也没有说明该编号与表格要求有关。"
+              }
+            ]
+          },
+          "latency_ms": 7900.76,
+          "estimated_tokens": 132.0,
+          "retrieval_corrective_success": 0.0,
+          "generation_corrective_success": 0.0
+        },
+        {
+          "id": "lyra-retention",
+          "initial_rank": null,
+          "rank": null,
+          "rounds": 1,
+          "abstained": false,
+          "expected_abstain": false,
+          "answer": "The required value is LYRA-RETAIN-400 [1].",
+          "assessment": {
+            "groundedness": 0.0,
+            "completeness": 0.0,
+            "answer_relevance": 0.0,
+            "citation_coverage": 0.0,
+            "sufficient": false,
+            "failure_type": "hallucination",
+            "failure_reason": "答案称审计日志的保留期限是 LYRA-RETAIN-400，并把该信息指向引用[1]；但引用[1]只提到 Lyra 仪表板的图表主题、小组件布局和导出格式，完全没有任何关于审计日志保留期限或政策的内容，所以这个说法是凭空捏造的。",
+            "missing_information": [
+              "Lyra 审计日志的保留时长（例如保留多少天、几个月或几年）。",
+              "Lyra 审计日志所适用的保留政策名称、编号或具体内容。"
+            ],
+            "claims": [
+              {
+                "claim": "Lyra 审计日志的保留值是 LYRA-RETAIN-400。",
+                "supported": false,
+                "citation_indices": [
+                  1
+                ],
+                "reason": "引用[1]只涉及 Lyra 仪表板的图表主题、小组件布局和导出格式，没有提到任何保留期限、保留值或名为 LYRA-RETAIN-400 的政策。"
+              },
+              {
+                "claim": "审计日志的保留信息来自引用[1]。",
+                "supported": false,
+                "citation_indices": [
+                  1
+                ],
+                "reason": "引用[1]只涉及 Lyra 仪表板的图表主题、小组件布局和导出格式，不能支持任何审计日志保留政策。"
+              }
+            ]
+          },
+          "latency_ms": 11159.77,
+          "estimated_tokens": 127.8,
+          "retrieval_corrective_success": 0.0,
+          "generation_corrective_success": 0.0
+        },
+        {
+          "id": "zh-leave",
+          "initial_rank": null,
+          "rank": null,
+          "rounds": 1,
+          "abstained": false,
+          "expected_abstain": false,
+          "answer": "The required value is 请假-审批-F9 [1].",
+          "assessment": {
+            "groundedness": 0.0,
+            "completeness": 0.0,
+            "answer_relevance": 0.0,
+            "citation_coverage": 0.0,
+            "sufficient": false,
+            "failure_type": "hallucination",
+            "failure_reason": "答案提到的“请假-审批-F9”在所有资料中都没有出现，引用的资料也只讲了团建活动，没有提到请假审批表单，因此这个说法没有依据。",
+            "missing_information": [
+              "请假超过三天需要由谁签批。",
+              "请假超过三天需要填写哪张表单。"
+            ],
+            "claims": [
+              {
+                "claim": "请假超过三天需要填写“请假-审批-F9”这张表单。",
+                "supported": false,
+                "citation_indices": [],
+                "reason": "引用的五篇资料都只介绍团建的时间、报名方式和场地安排，没有出现“请假-审批-F9”，也没有提到任何请假表单。"
+              }
+            ]
+          },
+          "latency_ms": 7166.05,
+          "estimated_tokens": 54.2,
+          "retrieval_corrective_success": 0.0,
+          "generation_corrective_success": 0.0
+        },
+        {
+          "id": "zh-expense",
+          "initial_rank": null,
+          "rank": null,
+          "rounds": 1,
+          "abstained": false,
+          "expected_abstain": false,
+          "answer": "The required value is 报销-差旅-K12 [1].",
+          "assessment": {
+            "groundedness": 0.0,
+            "completeness": 0.0,
+            "answer_relevance": 0.0,
+            "citation_coverage": 0.0,
+            "sufficient": false,
+            "failure_type": "insufficient_evidence",
+            "failure_reason": "提供的证据全部是关于食堂菜单、营业时间和用餐座位安排的行政通知，完全没有说明单笔差旅报销超过两千元时应该如何提交，也没有提到报销-差旅-K12是什么，因此无法验证答案是否正确。",
+            "missing_information": [
+              "差旅报销金额超过两千元时，具体的提交流程和审批方式是什么",
+              "系统中是否确实存在名为报销-差旅-K12的必填项，以及该名称的来源"
+            ],
+            "claims": [
+              {
+                "claim": "问题要求填写的值是报销-差旅-K12。",
+                "supported": false,
+                "citation_indices": [
+                  1
+                ],
+                "reason": "被引用的第1篇证据只涉及食堂菜单、营业时间和用餐座位安排，完全没有提到差旅报销或报销-差旅-K12，该说法没有任何依据。"
+              }
+            ]
+          },
+          "latency_ms": 8209.42,
+          "estimated_tokens": 54.0,
+          "retrieval_corrective_success": 0.0,
+          "generation_corrective_success": 0.0
+        },
+        {
+          "id": "out-of-scope-zh",
+          "initial_rank": null,
+          "rank": null,
+          "rounds": 1,
+          "abstained": false,
+          "expected_abstain": true,
+          "answer": "The required value is UNKNOWN-PLACEHOLDER [1].",
+          "assessment": {
+            "groundedness": 0.0,
+            "completeness": 0.0,
+            "answer_relevance": 0.0,
+            "citation_coverage": 1.0,
+            "sufficient": false,
+            "failure_type": "insufficient_evidence",
+            "failure_reason": "提供的资料只介绍团建时间、报名方式和场地安排，没有任何关于明年火星基地预算的信息，因此无法得出预算金额。",
+            "missing_information": [
+              "明年火星基地预算的具体金额",
+              "这些资料是否涵盖该预算"
+            ],
+            "claims": [
+              {
+                "claim": "所需答案已用 UNKNOWN-PLACEHOLDER 表示，并引用第1篇年度活动说明。",
+                "supported": false,
+                "citation_indices": [
+                  1
+                ],
+                "reason": "第1篇只介绍团建时间、报名方式和场地安排，没有提供或说明明年火星基地预算，因此该引用无法支持这个答案。"
+              }
+            ]
+          },
+          "latency_ms": 7152.41,
+          "estimated_tokens": 56.0,
+          "retrieval_corrective_success": 0.0,
+          "generation_corrective_success": 0.0
+        },
+        {
+          "id": "out-of-scope-en",
+          "initial_rank": null,
+          "rank": null,
+          "rounds": 1,
+          "abstained": false,
+          "expected_abstain": true,
+          "answer": "The required value is UNKNOWN-PLACEHOLDER [1].",
+          "assessment": {
+            "groundedness": 0.0,
+            "completeness": 0.0,
+            "answer_relevance": 1.0,
+            "citation_coverage": 1.0,
+            "sufficient": false,
+            "failure_type": "insufficient_evidence",
+            "failure_reason": "所有证据都只涉及请假审批、系统回滚、联系电话和团建说明，没有任何一条提到深海国际象棋比赛，也没有提到2031年的比赛结果，因此无法判断谁赢了这场比赛。",
+            "missing_information": [
+              "2031年深海国际象棋决赛的参赛选手名单",
+              "2031年深海国际象棋决赛的胜负结果或冠军信息",
+              "任何与该比赛相关的时间、地点或赛事记录"
+            ],
+            "claims": [
+              {
+                "claim": "答案中的占位符 UNKNOWN-PLACEHOLDER 代表无法确定2031年深海国际象棋决赛的获胜者。",
+                "supported": true,
+                "citation_indices": [
+                  1
+                ],
+                "reason": "证据[1]只说明员工请假超过三天需要部门总监签批，完全与棋赛无关，无法证实任何获胜者，因此将结果标为未知符合证据情况。"
+              },
+              {
+                "claim": "答案暗示存在某个名为 UNKNOWN-PLACEHOLDER 的值可以作为问题答案。",
+                "supported": false,
+                "citation_indices": [],
+                "reason": "所有证据中都没有出现 UNKNOWN-PLACEHOLDER，也没有任何内容可以证明存在这样一个可填写的值。"
+              },
+              {
+                "claim": "2031年深海国际象棋决赛的获胜者是某个可确定的人或团队。",
+                "supported": false,
+                "citation_indices": [],
+                "reason": "所有证据均未提及任何深海国际象棋比赛或2031年的决赛结果，无法支持存在确定获胜者的说法。"
+              }
+            ]
+          },
+          "latency_ms": 13306.99,
+          "estimated_tokens": 100.8,
+          "retrieval_corrective_success": 0.0,
+          "generation_corrective_success": 0.0
+        },
+        {
+          "id": "orion-multihop",
+          "initial_rank": null,
+          "rank": null,
+          "rounds": 1,
+          "abstained": false,
+          "expected_abstain": false,
+          "answer": "The required value is EXT-8842 [1].",
+          "assessment": {
+            "groundedness": 0.0,
+            "completeness": 0.0,
+            "answer_relevance": 0.5,
+            "citation_coverage": 0.0,
+            "sufficient": false,
+            "failure_type": "insufficient_evidence",
+            "failure_reason": "现有资料没有提到谁负责 Orion 数据保留例外，也没有提到该团队的升级专线分机号码。答案给出的分机号在资料中找不到，因此无法确认它是正确的。",
+            "missing_information": [
+              "资料中没有任何团队名称、负责人或负责团队编号来对应 Orion 数据保留例外的归属。",
+              "资料中没有提到升级专线或任何电话号码，因此无法验证答案给出的分机号 EXT-8842。"
+            ],
+            "claims": [
+              {
+                "claim": "答案表示负责 Orion 数据保留例外的团队的升级专线分机是 EXT-8842 [1]。",
+                "supported": false,
+                "citation_indices": [
+                  1
+                ],
+                "reason": "证据[1]只说明 Orion 保留说明1涉及归档层级、桌面覆盖和电话礼仪，但没有提到数据保留例外由谁负责，也没有提到分机号 EXT-8842。"
+              }
+            ]
+          },
+          "latency_ms": 11045.95,
+          "estimated_tokens": 175.0,
+          "retrieval_corrective_success": 0.0,
+          "generation_corrective_success": 0.0
+        },
+        {
+          "id": "zephyr-long-document",
+          "initial_rank": null,
+          "rank": null,
+          "rounds": 1,
+          "abstained": false,
+          "expected_abstain": false,
+          "answer": "The required value is ZEPHYR-AUDIT-5521 [1].",
+          "assessment": {
+            "groundedness": 0.0,
+            "completeness": 0.0,
+            "answer_relevance": 1.0,
+            "citation_coverage": 0.0,
+            "sufficient": false,
+            "failure_type": "hallucination",
+            "failure_reason": "答案提到的 ZEPHYR-AUDIT-5521 在证据中完全没有出现，引用的 [1] 只描述季度运营手册的一般流程，与 Zephyr 冷库审计或签核口令无关。",
+            "missing_information": [
+              "Zephyr 冷库审计的具体签核口令记录",
+              "能够证明该口令来自相关审计记录的依据"
+            ],
+            "claims": [
+              {
+                "claim": "Zephyr 冷库审计记录的签核口令是 ZEPHYR-AUDIT-5521。",
+                "supported": false,
+                "citation_indices": [],
+                "reason": "证据 [1] 只说明手册包含交接班、工单处理等一般流程，没有提到 Zephyr 冷库审计，也没有出现该口令，因此不能支持这一说法。"
+              },
+              {
+                "claim": "该口令来自证据 [1]。",
+                "supported": false,
+                "citation_indices": [],
+                "reason": "证据 [1] 的内容与签核口令无关，因此无法用 [1] 来证明答案中的口令。"
+              }
+            ]
+          },
+          "latency_ms": 10229.1,
+          "estimated_tokens": 659.5,
           "retrieval_corrective_success": 0.0,
           "generation_corrective_success": 0.0
         }
@@ -127,6 +541,24 @@
     },
     {
       "name": "Hybrid RAG",
+      "confidence_95": {
+        "Recall@5": [
+          0.0,
+          0.0
+        ],
+        "Abstention Accuracy": [
+          0.0,
+          0.0
+        ],
+        "Groundedness": [
+          0.0,
+          0.0
+        ]
+      },
+      "scenario_counts": {
+        "answerable": 10,
+        "abstain": 3
+      },
       "metrics": {
         "Recall@5": 0.0,
         "Recall@10": 0.0,
@@ -134,15 +566,15 @@
         "nDCG": 0.0,
         "Groundedness": 0.0,
         "Completeness": 0.0,
-        "Answer Relevance": 0.0,
+        "Answer Relevance": 0.5,
         "Citation Accuracy": 0.0,
         "Retrieval Corrective Success Rate": 0.0,
         "Generation Corrective Success Rate": 0.0,
         "Corrective Success Rate": 0.0,
         "Abstention Accuracy": 0.0,
         "Average Retrieval Rounds": 1.0,
-        "Latency (ms)": 5675.7033,
-        "Estimated Tokens": 157.6
+        "Latency (ms)": 12557.3292,
+        "Estimated Tokens": 171.7923
       },
       "rows": [
         {
@@ -159,20 +591,26 @@
             "answer_relevance": 0.0,
             "citation_coverage": 0.0,
             "sufficient": false,
-            "failure_type": "hallucination",
-            "failure_reason": "The answer introduces a credential 'CRIMSON-SEAL' that is not mentioned or implied in any of the provided evidence. The evidence only discusses 'Atlas deployment schedule milestones' and their tracking of release planning, calendar ownership, and Friday readiness review. There is no mention of any compliance credential or 'CRIMSON-SEAL'.",
-            "missing_information": [],
+            "failure_type": "insufficient_evidence",
+            "failure_reason": "证据中没有提到 Atlas 合规要求的任何凭证或取值，无法核实答案中的 CRIMSON-SEAL 是否正确。",
+            "missing_information": [
+              "所有证据都只涉及部署时间表中的里程碑以及发布计划、日历归属和周五准备情况审查，完全没有说明 Atlas 合规需要哪一类凭证。",
+              "证据没有解释 CRIMSON-SEAL 是什么，也没有说明它是否属于 Atlas 合规要求。",
+              "所有证据内容高度重复，没有任何信息能支持或反驳答案中的具体取值。"
+            ],
             "claims": [
               {
-                "claim": "The required value is CRIMSON-SEAL",
+                "claim": "Atlas 合规要求的取值是 CRIMSON-SEAL。",
                 "supported": false,
-                "citation_indices": [],
-                "reason": "No evidence supports the claim that 'CRIMSON-SEAL' is a required credential for Atlas compliance. The provided evidence discusses deployment milestones, not compliance credentials."
+                "citation_indices": [
+                  1
+                ],
+                "reason": "第 1 条证据只提到 Atlas 部署时间表里程碑 1 以及发布计划、日历归属和周五准备情况审查，没有提到 Atlas 合规或 CRIMSON-SEAL。"
               }
             ]
           },
-          "latency_ms": 5718.21,
-          "estimated_tokens": 167.5,
+          "latency_ms": 14619.68,
+          "estimated_tokens": 167.0,
           "retrieval_corrective_success": 0.0,
           "generation_corrective_success": 0.0
         },
@@ -187,26 +625,28 @@
           "assessment": {
             "groundedness": 0.0,
             "completeness": 0.0,
-            "answer_relevance": 0.0,
+            "answer_relevance": 1.0,
             "citation_coverage": 0.0,
             "sufficient": false,
-            "failure_type": "hallucination",
-            "failure_reason": "The answer claims 'ORION-RECOVER-17' is the required code, but none of the provided evidence mentions 'ORION-RECOVER-17' or any recovery-related code. The evidence only discusses 'Orion meeting calendar deadline' values, which are unrelated to recovery codes.",
+            "failure_type": "insufficient_evidence",
+            "failure_reason": "提供的资料只提到Orion会议日历的各个截止日期，完全没有提到Orion recovery需要使用什么代码。",
             "missing_information": [
-              "The actual recovery code used by Orion",
-              "Any mention of 'ORION-RECOVER-17' in the evidence"
+              "没有任何关于Orion recovery所需代码的信息。",
+              "引用的资料[1]根本没有包含答案声称的那个代码。"
             ],
             "claims": [
               {
-                "claim": "The required value is ORION-RECOVER-17",
+                "claim": "Orion recovery必须使用的代码是ORION-RECOVER-17。",
                 "supported": false,
-                "citation_indices": [],
-                "reason": "No evidence supports this claim. The provided evidence discusses meeting calendar deadlines, not recovery codes."
+                "citation_indices": [
+                  1
+                ],
+                "reason": "资料[1]只说明Orion会议日历的截止日期1用于季度规划、议程准备和评审出席，没有出现ORION-RECOVER-17这个代码。"
               }
             ]
           },
-          "latency_ms": 5973.91,
-          "estimated_tokens": 155.8,
+          "latency_ms": 12161.5,
+          "estimated_tokens": 156.0,
           "retrieval_corrective_success": 0.0,
           "generation_corrective_success": 0.0
         },
@@ -221,25 +661,402 @@
           "assessment": {
             "groundedness": 0.0,
             "completeness": 0.0,
-            "answer_relevance": 0.0,
+            "answer_relevance": 0.2,
+            "citation_coverage": 1.0,
+            "sufficient": false,
+            "failure_type": "insufficient_evidence",
+            "failure_reason": "没有任何证据提到星际联赛，也没有提到哪个星球赢得了该比赛，因此无法根据现有资料回答这个问题。",
+            "missing_information": [
+              "星际联赛的具体名称或比赛信息",
+              "赢得该联赛的星球名称"
+            ],
+            "claims": [
+              {
+                "claim": "答案声称某个星球赢得了星际联赛。",
+                "supported": false,
+                "citation_indices": [],
+                "reason": "提供的证据只涉及发布回滚、电话分机、数据保留例外、退款审批和合规凭证，没有任何一条提到星际联赛或获胜星球。"
+              }
+            ]
+          },
+          "latency_ms": 9280.29,
+          "estimated_tokens": 141.8,
+          "retrieval_corrective_success": 0.0,
+          "generation_corrective_success": 0.0
+        },
+        {
+          "id": "helios-rollback",
+          "initial_rank": null,
+          "rank": null,
+          "rounds": 1,
+          "abstained": false,
+          "expected_abstain": false,
+          "answer": "The required value is HELIOS-ROLLBACK-88 [1].",
+          "assessment": {
+            "groundedness": 0.0,
+            "completeness": 0.0,
+            "answer_relevance": 1.0,
             "citation_coverage": 0.0,
             "sufficient": false,
             "failure_type": "hallucination",
-            "failure_reason": "The answer claims a specific planet won the interstellar league, but the evidence contains no information about interstellar leagues, planets, or any related competition. The placeholder '[1]' references a credential requirement, not a factual answer. This constitutes a hallucination.",
-            "missing_information": [],
+            "failure_reason": "提供的资料中没有任何内容提到用于授权 Helios 回滚的令牌，也没有出现答案中给出的具体值。",
+            "missing_information": [
+              "资料中未提供说明哪个令牌可以授权 Helios 回滚。",
+              "资料中未提供“HELIOS-ROLLBACK-88”这个令牌值。",
+              "引用 [1] 只是关于 Helios release 2 的排期说明，并未提到回滚授权令牌。"
+            ],
             "claims": [
               {
-                "claim": "The required value is UNKNOWN-PLACEHOLDER [1].",
+                "claim": "用于授权 Helios 回滚的令牌是 HELIOS-ROLLBACK-88。",
                 "supported": false,
                 "citation_indices": [
                   1
                 ],
-                "reason": "The citation [1] refers to a credential requirement, not a planetary victory in an interstellar league. The claim is not supported by the evidence and is a placeholder, not a factual assertion."
+                "reason": "引用 [1] 只说明 Helios release 2 的冻结窗口、staging 检查和负责人轮换，没有提到任何回滚授权令牌，也没有出现 HELIOS-ROLLBACK-88。"
               }
             ]
           },
-          "latency_ms": 5334.99,
-          "estimated_tokens": 149.5,
+          "latency_ms": 15308.59,
+          "estimated_tokens": 138.5,
+          "retrieval_corrective_success": 0.0,
+          "generation_corrective_success": 0.0
+        },
+        {
+          "id": "nebula-refund",
+          "initial_rank": null,
+          "rank": null,
+          "rounds": 1,
+          "abstained": false,
+          "expected_abstain": false,
+          "answer": "The required value is NEBULA-REFUND-4421 [1].",
+          "assessment": {
+            "groundedness": 0.0,
+            "completeness": 0.0,
+            "answer_relevance": 1.0,
+            "citation_coverage": 0.0,
+            "sufficient": false,
+            "failure_type": "hallucination",
+            "failure_reason": "答案声称大笔 Nebula 退款需要的批准码是 NEBULA-REFUND-4421，但证据中没有任何内容提到批准码、退款或该数值，因此这个答案是没有依据的。",
+            "missing_information": [
+              "大笔 Nebula 退款具体需要什么批准码。",
+              "证据中完全没有关于退款批准码的信息。"
+            ],
+            "claims": [
+              {
+                "claim": "大笔 Nebula 退款需要的批准码是 NEBULA-REFUND-4421。",
+                "supported": false,
+                "citation_indices": [
+                  1
+                ],
+                "reason": "引用 [1] 只说明 Nebula 计费说明 1 涉及发票周期、付款提醒和账簿导出，没有提到批准码、退款，也没有提到 NEBULA-REFUND-4421。"
+              }
+            ]
+          },
+          "latency_ms": 11934.1,
+          "estimated_tokens": 136.5,
+          "retrieval_corrective_success": 0.0,
+          "generation_corrective_success": 0.0
+        },
+        {
+          "id": "vega-onboarding",
+          "initial_rank": null,
+          "rank": null,
+          "rounds": 1,
+          "abstained": false,
+          "expected_abstain": false,
+          "answer": "The required value is VEGA-ONBOARD-07 [1].",
+          "assessment": {
+            "groundedness": 0.0,
+            "completeness": 0.0,
+            "answer_relevance": 1.0,
+            "citation_coverage": 0.0,
+            "sufficient": false,
+            "failure_type": "hallucination",
+            "failure_reason": "证据中没有任何关于新工程师领取笔记本电脑前需要填写的表格或表单的信息。",
+            "missing_information": [
+              "新 Vega 工程师在获得笔记本电脑权限之前需要填写哪种表格。",
+              "哪份资料或文件规定了这一入职要求。"
+            ],
+            "claims": [
+              {
+                "claim": "新 Vega 工程师必须填写的表格的指定编号或名称是 VEGA-ONBOARD-07。",
+                "supported": false,
+                "citation_indices": [
+                  1
+                ],
+                "reason": "引用的资料只提到了午餐日程、工位分配和访客登记，完全没有提到 VEGA-ONBOARD-07 这个编号。"
+              }
+            ]
+          },
+          "latency_ms": 11662.07,
+          "estimated_tokens": 132.0,
+          "retrieval_corrective_success": 0.0,
+          "generation_corrective_success": 0.0
+        },
+        {
+          "id": "lyra-retention",
+          "initial_rank": null,
+          "rank": null,
+          "rounds": 1,
+          "abstained": false,
+          "expected_abstain": false,
+          "answer": "The required value is LYRA-RETAIN-400 [1].",
+          "assessment": {
+            "groundedness": 0.0,
+            "completeness": 0.0,
+            "answer_relevance": 0.0,
+            "citation_coverage": 0.0,
+            "sufficient": false,
+            "failure_type": "hallucination",
+            "failure_reason": "答案提到的LYRA-RETAIN-400在所给资料中完全没有出现，资料只提到Lyra仪表板笔记涉及图表主题、小部件布局和导出格式，与审计日志保留无关。",
+            "missing_information": [
+              "Lyra审计日志保留的具体时长",
+              "Lyra审计日志保留所依据的政策"
+            ],
+            "claims": [
+              {
+                "claim": "问题所需值是LYRA-RETAIN-400。",
+                "supported": false,
+                "citation_indices": [],
+                "reason": "资料[1]到[5]都没有提到LYRA-RETAIN-400，也没有任何关于该值的说明，因此这一说法无法从证据得到支持。"
+              },
+              {
+                "claim": "Lyra审计日志的保留时长和适用政策。",
+                "supported": false,
+                "citation_indices": [],
+                "reason": "资料[1]到[5]只涉及图表主题、小部件布局和导出格式，没有提到Lyra审计日志的保留时长或政策，因此答案没有回应问题。"
+              }
+            ]
+          },
+          "latency_ms": 13770.01,
+          "estimated_tokens": 127.8,
+          "retrieval_corrective_success": 0.0,
+          "generation_corrective_success": 0.0
+        },
+        {
+          "id": "zh-leave",
+          "initial_rank": null,
+          "rank": null,
+          "rounds": 1,
+          "abstained": false,
+          "expected_abstain": false,
+          "answer": "The required value is 请假-审批-F9 [1].",
+          "assessment": {
+            "groundedness": 0.0,
+            "completeness": 0.0,
+            "answer_relevance": 0.0,
+            "citation_coverage": 0.0,
+            "sufficient": false,
+            "failure_type": "insufficient_evidence",
+            "failure_reason": "提供的资料全部是年度活动的说明，讲的是团建时间、报名方式和场地安排，里面没有任何关于请假审批的规定。因此无法根据这些资料判断请假超过三天需要谁签批，以及要填写哪张表单。",
+            "missing_information": [
+              "请假超过三天需要谁签批",
+              "请假超过三天需要填写哪张表单",
+              "一份与请假审批流程相关的说明或规定"
+            ],
+            "claims": [
+              {
+                "claim": "请假超过三天需要某人签批并填写某张表单，具体是“请假-审批-F9”。",
+                "supported": false,
+                "citation_indices": [
+                  1
+                ],
+                "reason": "引用的资料[1]只介绍团建时间、报名方式和场地安排，没有提到任何请假审批内容，因此该说法没有依据，属于凭空捏造。"
+              }
+            ]
+          },
+          "latency_ms": 13870.37,
+          "estimated_tokens": 54.2,
+          "retrieval_corrective_success": 0.0,
+          "generation_corrective_success": 0.0
+        },
+        {
+          "id": "zh-expense",
+          "initial_rank": null,
+          "rank": null,
+          "rounds": 1,
+          "abstained": false,
+          "expected_abstain": false,
+          "answer": "The required value is 报销-差旅-K12 [1].",
+          "assessment": {
+            "groundedness": 0.0,
+            "completeness": 0.0,
+            "answer_relevance": 0.0,
+            "citation_coverage": 0.0,
+            "sufficient": false,
+            "failure_type": "insufficient_evidence",
+            "failure_reason": "所有提供的行政通知都只涉及食堂菜单、营业时间和用餐座位安排，没有任何内容提到单笔差旅报销超过两千元时应该如何提交。",
+            "missing_information": [
+              "差旅报销超过两千元的具体提交流程",
+              "差旅报销需要填写的表单或系统入口",
+              "差旅报销超过两千元是否需要额外审批或附件"
+            ],
+            "claims": [
+              {
+                "claim": "单笔差旅报销超过两千元要按“报销-差旅-K12”提交。",
+                "supported": false,
+                "citation_indices": [
+                  1
+                ],
+                "reason": "引用[1]只说明食堂菜单、营业时间和用餐座位安排，没有提到差旅报销提交方式，也没有出现“报销-差旅-K12”。"
+              }
+            ]
+          },
+          "latency_ms": 13205.06,
+          "estimated_tokens": 54.0,
+          "retrieval_corrective_success": 0.0,
+          "generation_corrective_success": 0.0
+        },
+        {
+          "id": "out-of-scope-zh",
+          "initial_rank": null,
+          "rank": null,
+          "rounds": 1,
+          "abstained": false,
+          "expected_abstain": true,
+          "answer": "The required value is UNKNOWN-PLACEHOLDER [1].",
+          "assessment": {
+            "groundedness": 0.0,
+            "completeness": 0.0,
+            "answer_relevance": 0.0,
+            "citation_coverage": 0.0,
+            "sufficient": false,
+            "failure_type": "insufficient_evidence",
+            "failure_reason": "提供的资料全部是关于公司年度团建活动的时间、报名方式和场地安排，没有任何关于火星基地或相关预算的内容，因此无法回答明年的火星基地预算问题。",
+            "missing_information": [
+              "明年火星基地预算的具体金额",
+              "任何涉及火星基地预算的说明、数字或文件"
+            ],
+            "claims": [
+              {
+                "claim": "公司明年的火星基地预算是一个具体数字。",
+                "supported": false,
+                "citation_indices": [],
+                "reason": "所有引用的资料都没有提到火星基地预算，因此该说法没有依据。"
+              },
+              {
+                "claim": "该预算信息可以由引用[1]至[5]提供。",
+                "supported": false,
+                "citation_indices": [
+                  1,
+                  2,
+                  3,
+                  4,
+                  5
+                ],
+                "reason": "这些资料都只介绍团建时间、报名方式和场地安排，没有包含任何预算数字。"
+              }
+            ]
+          },
+          "latency_ms": 9993.17,
+          "estimated_tokens": 56.0,
+          "retrieval_corrective_success": 0.0,
+          "generation_corrective_success": 0.0
+        },
+        {
+          "id": "out-of-scope-en",
+          "initial_rank": null,
+          "rank": null,
+          "rounds": 1,
+          "abstained": false,
+          "expected_abstain": true,
+          "answer": "The required value is UNKNOWN-PLACEHOLDER [1].",
+          "assessment": {
+            "groundedness": 0.0,
+            "completeness": 0.0,
+            "answer_relevance": 0.0,
+            "citation_coverage": 0.0,
+            "sufficient": false,
+            "failure_type": "insufficient_evidence",
+            "failure_reason": "所给资料里没有任何关于2031年深海国际象棋决赛的内容，因此无法判断谁赢得了这场比赛，答案中的占位内容也没有事实依据。",
+            "missing_information": [
+              "2031年深海国际象棋决赛是否真实举行",
+              "这场比赛的冠军姓名或获胜方",
+              "能够证明冠军结果的相关资料"
+            ],
+            "claims": [
+              {
+                "claim": "2031年深海国际象棋决赛的获胜者是UNKNOWN-PLACEHOLDER。",
+                "supported": false,
+                "citation_indices": [],
+                "reason": "没有任何资料提到这场决赛或其冠军，引用[1]只涉及Helios回滚令牌，与比赛结果无关，因此该说法无法被证实。"
+              }
+            ]
+          },
+          "latency_ms": 10669.73,
+          "estimated_tokens": 235.0,
+          "retrieval_corrective_success": 0.0,
+          "generation_corrective_success": 0.0
+        },
+        {
+          "id": "orion-multihop",
+          "initial_rank": null,
+          "rank": null,
+          "rounds": 1,
+          "abstained": false,
+          "expected_abstain": false,
+          "answer": "The required value is EXT-8842 [1].",
+          "assessment": {
+            "groundedness": 0.0,
+            "completeness": 0.0,
+            "answer_relevance": 0.0,
+            "citation_coverage": 0.0,
+            "sufficient": false,
+            "failure_type": "hallucination",
+            "failure_reason": "证据里完全没有提到分机号码 EXT-8842，这个答案的内容是凭空捏造的。",
+            "missing_information": [
+              "证据没有说明 Orion 数据保留例外由哪个团队或个人负责。",
+              "证据没有提供能联系到其升级处理台的电话分机号码。"
+            ],
+            "claims": [
+              {
+                "claim": "所需值为 EXT-8842。",
+                "supported": false,
+                "citation_indices": [
+                  1
+                ],
+                "reason": "证据 [1] 只提到笔记涵盖了档案层级、台席覆盖和电话礼仪，并没有包含分机号码 EXT-8842，该结论无法从证据中得出。"
+              }
+            ]
+          },
+          "latency_ms": 13071.96,
+          "estimated_tokens": 175.0,
+          "retrieval_corrective_success": 0.0,
+          "generation_corrective_success": 0.0
+        },
+        {
+          "id": "zephyr-long-document",
+          "initial_rank": null,
+          "rank": null,
+          "rounds": 1,
+          "abstained": false,
+          "expected_abstain": false,
+          "answer": "The required value is ZEPHYR-AUDIT-5521 [1].",
+          "assessment": {
+            "groundedness": 0.0,
+            "completeness": 0.0,
+            "answer_relevance": 1.0,
+            "citation_coverage": 0.0,
+            "sufficient": false,
+            "failure_type": "insufficient_evidence",
+            "failure_reason": "证据[1]只介绍了季度运营手册中关于交接班、工单分类、供应商协调和汇报周期的一般流程，没有提到 Zephyr 冷库审计，也没有记录任何签字确认的标识值。",
+            "missing_information": [
+              "Zephyr 冷库审计的签字确认标识值",
+              "能够说明该标识值就是 ZEPHYR-AUDIT-5521 的原文依据"
+            ],
+            "claims": [
+              {
+                "claim": "Zephyr 冷库审计记录的签字确认标识值是 ZEPHYR-AUDIT-5521 [1]。",
+                "supported": false,
+                "citation_indices": [
+                  1
+                ],
+                "reason": "引用[1]只描述季度运营手册的一般流程，没有提到 Zephyr 冷库审计，也没有出现 ZEPHYR-AUDIT-5521，因此该说法得不到证据支持。"
+              }
+            ]
+          },
+          "latency_ms": 13698.75,
+          "estimated_tokens": 659.5,
           "retrieval_corrective_success": 0.0,
           "generation_corrective_success": 0.0
         }
@@ -247,55 +1064,76 @@
     },
     {
       "name": "Corrective RAG",
+      "confidence_95": {
+        "Recall@5": [
+          0.5,
+          1.0
+        ],
+        "Abstention Accuracy": [
+          0.0,
+          0.0
+        ],
+        "Groundedness": [
+          0.5,
+          1.0
+        ]
+      },
+      "scenario_counts": {
+        "answerable": 10,
+        "abstain": 3
+      },
       "metrics": {
-        "Recall@5": 1.0,
-        "Recall@10": 1.0,
-        "MRR": 1.0,
-        "nDCG": 1.0,
-        "Groundedness": 0.5357,
-        "Completeness": 0.5357,
-        "Answer Relevance": 0.0833,
-        "Citation Accuracy": 1.0,
-        "Retrieval Corrective Success Rate": 0.6667,
+        "Recall@5": 0.8,
+        "Recall@10": 0.8,
+        "MRR": 0.75,
+        "nDCG": 0.7631,
+        "Groundedness": 0.795,
+        "Completeness": 0.8,
+        "Answer Relevance": 0.9,
+        "Citation Accuracy": 0.85,
+        "Retrieval Corrective Success Rate": 0.6154,
         "Generation Corrective Success Rate": 0.0,
-        "Corrective Success Rate": 0.6667,
-        "Abstention Accuracy": 1.0,
-        "Average Retrieval Rounds": 1.6667,
-        "Latency (ms)": 13249.9333,
-        "Estimated Tokens": 149.3667
+        "Corrective Success Rate": 0.6154,
+        "Abstention Accuracy": 0.0,
+        "Average Retrieval Rounds": 2.0,
+        "Latency (ms)": 35286.6785,
+        "Estimated Tokens": 145.0154
       },
       "rows": [
         {
           "id": "atlas-correction",
           "initial_rank": null,
-          "rank": 1,
+          "rank": null,
           "rounds": 2,
           "abstained": false,
           "expected_abstain": false,
           "answer": "The required value is CRIMSON-SEAL [1].",
           "assessment": {
-            "groundedness": 0.5714285714285714,
-            "completeness": 0.5714285714285714,
-            "answer_relevance": 0.0,
-            "citation_coverage": 1.0,
+            "groundedness": 0.0,
+            "completeness": 0.0,
+            "answer_relevance": 1.0,
+            "citation_coverage": 0.0,
             "sufficient": false,
-            "failure_type": "incomplete",
-            "failure_reason": "The answer could not be fully verified against cited evidence.",
-            "missing_information": [],
+            "failure_type": "hallucination",
+            "failure_reason": "没有任何资料提到 Atlas 合规要求必须提供什么凭据。",
+            "missing_information": [
+              "资料中完全找不到 CRIMSON-SEAL 这个值。",
+              "资料里没有任何关于 Atlas 合规所需凭据或凭证的说明。"
+            ],
             "claims": [
               {
-                "claim": "The required value is CRIMSON-SEAL [1].",
+                "claim": "Atlas 合规要求提供的值是 CRIMSON-SEAL。",
                 "supported": false,
                 "citation_indices": [
                   1
                 ],
-                "reason": "Lexical fallback used because structured answer assessment was unavailable."
+                "reason": "证据 [1] 只说明 Atlas 部署日程第 12 个里程碑跟踪发布计划、日历责任和周五就绪审查，没有提到任何凭据或 CRIMSON-SEAL。"
               }
             ]
           },
-          "latency_ms": 14350.92,
-          "estimated_tokens": 156.8,
-          "retrieval_corrective_success": 1.0,
+          "latency_ms": 40022.08,
+          "estimated_tokens": 168.0,
+          "retrieval_corrective_success": 0.0,
           "generation_corrective_success": 0.0
         },
         {
@@ -307,27 +1145,27 @@
           "expected_abstain": false,
           "answer": "The required value is ORION-RECOVER-17 [1].",
           "assessment": {
-            "groundedness": 0.5,
-            "completeness": 0.5,
-            "answer_relevance": 0.16666666666666666,
+            "groundedness": 1.0,
+            "completeness": 1.0,
+            "answer_relevance": 1.0,
             "citation_coverage": 1.0,
-            "sufficient": false,
-            "failure_type": "hallucination",
-            "failure_reason": "The answer could not be fully verified against cited evidence.",
+            "sufficient": true,
+            "failure_type": null,
+            "failure_reason": "",
             "missing_information": [],
             "claims": [
               {
-                "claim": "The required value is ORION-RECOVER-17 [1].",
-                "supported": false,
+                "claim": "Orion恢复必须使用代码ORION-RECOVER-17。",
+                "supported": true,
                 "citation_indices": [
                   1
                 ],
-                "reason": "Lexical fallback used because structured answer assessment was unavailable."
+                "reason": "证据[1]明确写道：“Orion database recovery must use code ORION-RECOVER-17 before restoration.”，直接支持该答案。"
               }
             ]
           },
-          "latency_ms": 17436.89,
-          "estimated_tokens": 148.5,
+          "latency_ms": 37079.31,
+          "estimated_tokens": 148.8,
           "retrieval_corrective_success": 1.0,
           "generation_corrective_success": 0.0
         },
@@ -335,42 +1173,447 @@
           "id": "out-of-scope",
           "initial_rank": null,
           "rank": null,
-          "rounds": 1,
-          "abstained": true,
+          "rounds": 2,
+          "abstained": false,
           "expected_abstain": true,
-          "answer": "知识库中没有找到足以回答该问题的证据。",
+          "answer": "The required value is UNKNOWN-PLACEHOLDER [1].",
+          "assessment": {
+            "groundedness": 0.0,
+            "completeness": 0.0,
+            "answer_relevance": 1.0,
+            "citation_coverage": 0.0,
+            "sufficient": false,
+            "failure_type": "insufficient_evidence",
+            "failure_reason": "回答中使用的占位符在证据中没有任何依据，而且提供的五条证据完全没有提到星际联赛或哪个星球获胜。",
+            "missing_information": [
+              "星际联赛的存在及其举办情况。",
+              "参加星际联赛的星球名单。",
+              "最终获得冠军的星球名称。"
+            ],
+            "claims": [
+              {
+                "claim": "回答给出的占位符 UNKNOWN-PLACEHOLDER 可以作为“哪个星球赢得星际联赛”的具体答案。",
+                "supported": false,
+                "citation_indices": [
+                  1
+                ],
+                "reason": "证据[1]只说明 Helios 回滚需要发布负责人使用指定令牌批准，完全没有提到该占位符，也没有说明它能代表比赛获胜者。"
+              },
+              {
+                "claim": "证据能够确定某个星球赢得了星际联赛。",
+                "supported": false,
+                "citation_indices": [],
+                "reason": "全部证据只涉及 Helios、Orion、Nebula 和 Atlas 的操作规则，没有出现星际联赛、参赛星球或比赛结果。"
+              }
+            ]
+          },
+          "latency_ms": 41356.07,
+          "estimated_tokens": 141.8,
+          "retrieval_corrective_success": 0.0,
+          "generation_corrective_success": 0.0
+        },
+        {
+          "id": "helios-rollback",
+          "initial_rank": null,
+          "rank": 1,
+          "rounds": 2,
+          "abstained": false,
+          "expected_abstain": false,
+          "answer": "The required value is HELIOS-ROLLBACK-88 [1].",
           "assessment": {
             "groundedness": 1.0,
             "completeness": 1.0,
             "answer_relevance": 1.0,
             "citation_coverage": 1.0,
-            "sufficient": true
+            "sufficient": true,
+            "failure_type": null,
+            "failure_reason": "",
+            "missing_information": [],
+            "claims": [
+              {
+                "claim": "用于批准 Helios 回滚的令牌（token）是 HELIOS-ROLLBACK-88。",
+                "supported": true,
+                "citation_indices": [
+                  1
+                ],
+                "reason": "证据[1]明确说明 Helios 回滚必须使用令牌 HELIOS-ROLLBACK-88 并由发布负责人批准，与答案一致。"
+              }
+            ]
           },
-          "latency_ms": 7961.99,
-          "estimated_tokens": 142.8,
+          "latency_ms": 32811.79,
+          "estimated_tokens": 242.5,
+          "retrieval_corrective_success": 1.0,
+          "generation_corrective_success": 0.0
+        },
+        {
+          "id": "nebula-refund",
+          "initial_rank": null,
+          "rank": 1,
+          "rounds": 2,
+          "abstained": false,
+          "expected_abstain": false,
+          "answer": "The required value is NEBULA-REFUND-4421 [1].",
+          "assessment": {
+            "groundedness": 1.0,
+            "completeness": 1.0,
+            "answer_relevance": 1.0,
+            "citation_coverage": 1.0,
+            "sufficient": true,
+            "failure_type": null,
+            "failure_reason": "没有发现问题，答案与证据完全一致。",
+            "missing_information": [],
+            "claims": [
+              {
+                "claim": "Nebula 大额退款需要的批准代码是 NEBULA-REFUND-4421。",
+                "supported": true,
+                "citation_indices": [
+                  1
+                ],
+                "reason": "证据[1]明确说明金额超过 500 美元的 Nebula 退款需要财务提供批准代码 NEBULA-REFUND-4421，能够直接支持答案。"
+              }
+            ]
+          },
+          "latency_ms": 36510.4,
+          "estimated_tokens": 137.2,
+          "retrieval_corrective_success": 1.0,
+          "generation_corrective_success": 0.0
+        },
+        {
+          "id": "vega-onboarding",
+          "initial_rank": null,
+          "rank": 1,
+          "rounds": 2,
+          "abstained": false,
+          "expected_abstain": false,
+          "answer": "The required value is VEGA-ONBOARD-07 [1].",
+          "assessment": {
+            "groundedness": 1.0,
+            "completeness": 1.0,
+            "answer_relevance": 1.0,
+            "citation_coverage": 1.0,
+            "sufficient": true,
+            "failure_type": null,
+            "failure_reason": "",
+            "missing_information": [],
+            "claims": [
+              {
+                "claim": "新加入 Vega 的工程师在获得笔记本电脑使用权之前必须完成表格 VEGA-ONBOARD-07。",
+                "supported": true,
+                "citation_indices": [
+                  1
+                ],
+                "reason": "证据[1]明确写道，新 Vega 工程师只有在完成检查表 VEGA-ONBOARD-07 后才会获得笔记本电脑使用权，因此回答与证据一致且带有对应引用。"
+              }
+            ]
+          },
+          "latency_ms": 31719.86,
+          "estimated_tokens": 137.2,
+          "retrieval_corrective_success": 1.0,
+          "generation_corrective_success": 0.0
+        },
+        {
+          "id": "lyra-retention",
+          "initial_rank": null,
+          "rank": 1,
+          "rounds": 2,
+          "abstained": false,
+          "expected_abstain": false,
+          "answer": "The required value is LYRA-RETAIN-400 [1].",
+          "assessment": {
+            "groundedness": 1.0,
+            "completeness": 1.0,
+            "answer_relevance": 1.0,
+            "citation_coverage": 1.0,
+            "sufficient": true,
+            "failure_type": null,
+            "failure_reason": "无。回答完全依据提供的依据材料，未发现事实错误。",
+            "missing_information": [],
+            "claims": [
+              {
+                "claim": "Lyra 审计日志的保留期限为 400 天。",
+                "supported": true,
+                "citation_indices": [
+                  1
+                ],
+                "reason": "依据[1]明确写明保留期限为 400 天，并且有对应的行内引用[1]。"
+              },
+              {
+                "claim": "Lyra 审计日志适用保留策略 LYRA-RETAIN-400。",
+                "supported": true,
+                "citation_indices": [
+                  1
+                ],
+                "reason": "依据[1]明确写明该策略名称，并且有对应的行内引用[1]。"
+              }
+            ]
+          },
+          "latency_ms": 30313.39,
+          "estimated_tokens": 151.5,
+          "retrieval_corrective_success": 1.0,
+          "generation_corrective_success": 0.0
+        },
+        {
+          "id": "zh-leave",
+          "initial_rank": null,
+          "rank": 1,
+          "rounds": 2,
+          "abstained": false,
+          "expected_abstain": false,
+          "answer": "The required value is 请假-审批-F9 [1].",
+          "assessment": {
+            "groundedness": 1.0,
+            "completeness": 1.0,
+            "answer_relevance": 1.0,
+            "citation_coverage": 1.0,
+            "sufficient": true,
+            "failure_type": null,
+            "failure_reason": "",
+            "missing_information": [],
+            "claims": [
+              {
+                "claim": "请假超过三天需要填写请假-审批-F9表单。",
+                "supported": true,
+                "citation_indices": [
+                  1
+                ],
+                "reason": "资料[1]明确写道：员工请假超过三天，须由部门总监签批，并填写表单请假-审批-F9。"
+              }
+            ]
+          },
+          "latency_ms": 28451.86,
+          "estimated_tokens": 58.2,
+          "retrieval_corrective_success": 1.0,
+          "generation_corrective_success": 0.0
+        },
+        {
+          "id": "zh-expense",
+          "initial_rank": null,
+          "rank": 1,
+          "rounds": 2,
+          "abstained": false,
+          "expected_abstain": false,
+          "answer": "The required value is 报销-差旅-K12 [1].",
+          "assessment": {
+            "groundedness": 1.0,
+            "completeness": 1.0,
+            "answer_relevance": 1.0,
+            "citation_coverage": 1.0,
+            "sufficient": true,
+            "failure_type": null,
+            "failure_reason": "答案完整准确地回答了问题，没有发现缺失或错误。",
+            "missing_information": [],
+            "claims": [
+              {
+                "claim": "单笔差旅报销超过两千元须使用编号 报销-差旅-K12 提交。",
+                "supported": true,
+                "citation_indices": [
+                  1
+                ],
+                "reason": "证据第1条明确说明了超过两千元的差旅报销需要使用该编号提交，与答案一致。"
+              }
+            ]
+          },
+          "latency_ms": 35386.13,
+          "estimated_tokens": 58.0,
+          "retrieval_corrective_success": 1.0,
+          "generation_corrective_success": 0.0
+        },
+        {
+          "id": "out-of-scope-zh",
+          "initial_rank": null,
+          "rank": null,
+          "rounds": 2,
+          "abstained": false,
+          "expected_abstain": true,
+          "answer": "The required value is UNKNOWN-PLACEHOLDER [1].",
+          "assessment": {
+            "groundedness": 0.0,
+            "completeness": 0.0,
+            "answer_relevance": 0.0,
+            "citation_coverage": 0.0,
+            "sufficient": false,
+            "failure_type": "insufficient_evidence",
+            "failure_reason": "所有证据只介绍团建时间、报名方式和场地安排，没有提到火星基地预算，因此无法根据这些资料回答公司明年的火星基地预算是多少。",
+            "missing_information": [
+              "公司明年的火星基地预算金额",
+              "预算所属的具体年份和范围"
+            ],
+            "claims": [
+              {
+                "claim": "公司明年的火星基地预算金额已知。",
+                "supported": false,
+                "citation_indices": [],
+                "reason": "所有证据均未提及火星基地预算，因此该说法没有依据。"
+              },
+              {
+                "claim": "引用的年度活动说明能够证明该预算金额。",
+                "supported": false,
+                "citation_indices": [
+                  1,
+                  2,
+                  3,
+                  4,
+                  5
+                ],
+                "reason": "这些资料只涉及团建时间、报名方式和场地安排，与火星基地预算无关。"
+              }
+            ]
+          },
+          "latency_ms": 32778.46,
+          "estimated_tokens": 56.0,
           "retrieval_corrective_success": 0.0,
+          "generation_corrective_success": 0.0
+        },
+        {
+          "id": "out-of-scope-en",
+          "initial_rank": null,
+          "rank": null,
+          "rounds": 2,
+          "abstained": false,
+          "expected_abstain": true,
+          "answer": "The required value is UNKNOWN-PLACEHOLDER [1].",
+          "assessment": {
+            "groundedness": 0.0,
+            "completeness": 0.0,
+            "answer_relevance": 0.5,
+            "citation_coverage": 0.0,
+            "sufficient": false,
+            "failure_type": "insufficient_evidence",
+            "failure_reason": "现有资料没有任何关于深海国际象棋比赛或2031年决赛的内容，无法判断谁赢得了该比赛，因此答案未得到资料支持。",
+            "missing_information": [
+              "2031年深海国际象棋决赛的举办结果",
+              "该比赛的参赛者或获胜者信息"
+            ],
+            "claims": [
+              {
+                "claim": "2031年深海国际象棋决赛的获胜者未被资料提供，答案中的“UNKNOWN-PLACEHOLDER”不是确定的人名或结果。",
+                "supported": false,
+                "citation_indices": [],
+                "reason": "所引资料[1]只涉及食堂菜单、营业时间和座位安排，没有提到该项比赛或获胜者，因此无法据此确认该说法。"
+              }
+            ]
+          },
+          "latency_ms": 31934.2,
+          "estimated_tokens": 63.2,
+          "retrieval_corrective_success": 0.0,
+          "generation_corrective_success": 0.0
+        },
+        {
+          "id": "orion-multihop",
+          "initial_rank": null,
+          "rank": null,
+          "rounds": 2,
+          "abstained": false,
+          "expected_abstain": false,
+          "answer": "The required value is EXT-8842 [1].",
+          "assessment": {
+            "groundedness": 0.0,
+            "completeness": 0.0,
+            "answer_relevance": 0.0,
+            "citation_coverage": 0.5,
+            "sufficient": false,
+            "failure_type": "incomplete",
+            "failure_reason": "提供的证据只说明了Orion数据保留例外的负责团队是TEAM-KESTREL-31，没有任何关于拨打哪个分机号码联系该团队升级处理部门的信息，因此无法验证答案中提到的EXT-8842是否正确。",
+            "missing_information": [
+              "如何联系负责Orion数据保留例外团队的升级处理部门的分机号码。",
+              "EXT-8842是否确实是联系该团队升级处理部门的正确分机号码。"
+            ],
+            "claims": [
+              {
+                "claim": "答案说联系负责团队的分机号码是EXT-8842。",
+                "supported": false,
+                "citation_indices": [
+                  1
+                ],
+                "reason": "证据只提供了负责团队的代码，完全没有提到任何分机号码，无法支持EXT-8842这个说法。"
+              }
+            ]
+          },
+          "latency_ms": 45630.52,
+          "estimated_tokens": 170.8,
+          "retrieval_corrective_success": 0.0,
+          "generation_corrective_success": 0.0
+        },
+        {
+          "id": "zephyr-long-document",
+          "initial_rank": null,
+          "rank": 2,
+          "rounds": 2,
+          "abstained": false,
+          "expected_abstain": false,
+          "answer": "The required value is ZEPHYR-AUDIT-5521 [1].",
+          "assessment": {
+            "groundedness": 0.95,
+            "completeness": 1.0,
+            "answer_relevance": 1.0,
+            "citation_coverage": 1.0,
+            "sufficient": true,
+            "failure_type": null,
+            "failure_reason": "",
+            "missing_information": [],
+            "claims": [
+              {
+                "claim": "Zephyr 冷库审计的签核令牌是 ZEPHYR-AUDIT-5521。",
+                "supported": true,
+                "citation_indices": [
+                  1,
+                  2
+                ],
+                "reason": "证据 [2] 明确说明 Zephyr 冷库审计的签核令牌是 ZEPHYR-AUDIT-5521；证据 [1] 虽在检索片段中被截断，但已指向同一审计的签核记录。"
+              },
+              {
+                "claim": "该签核令牌需要由当班负责人记录。",
+                "supported": true,
+                "citation_indices": [
+                  2
+                ],
+                "reason": "证据 [2] 明确说该令牌必须由当班负责人记录；虽然答案没有提到这一点，但这不影响答案对问题本身的回答。"
+              }
+            ]
+          },
+          "latency_ms": 34732.75,
+          "estimated_tokens": 352.0,
+          "retrieval_corrective_success": 1.0,
           "generation_corrective_success": 0.0
         }
       ]
     },
     {
       "name": "Full Self-Correcting RAG",
+      "confidence_95": {
+        "Recall@5": [
+          1.0,
+          1.0
+        ],
+        "Abstention Accuracy": [
+          1.0,
+          1.0
+        ],
+        "Groundedness": [
+          1.0,
+          1.0
+        ]
+      },
+      "scenario_counts": {
+        "answerable": 10,
+        "abstain": 3
+      },
       "metrics": {
         "Recall@5": 1.0,
         "Recall@10": 1.0,
-        "MRR": 1.0,
-        "nDCG": 1.0,
+        "MRR": 0.9,
+        "nDCG": 0.9262,
         "Groundedness": 1.0,
         "Completeness": 1.0,
-        "Answer Relevance": 0.75,
+        "Answer Relevance": 1.0,
         "Citation Accuracy": 1.0,
-        "Retrieval Corrective Success Rate": 0.6667,
-        "Generation Corrective Success Rate": 0.3333,
-        "Corrective Success Rate": 0.6667,
+        "Retrieval Corrective Success Rate": 0.7692,
+        "Generation Corrective Success Rate": 0.5385,
+        "Corrective Success Rate": 0.7692,
         "Abstention Accuracy": 1.0,
-        "Average Retrieval Rounds": 1.6667,
-        "Latency (ms)": 14361.69,
-        "Estimated Tokens": 152.4
+        "Average Retrieval Rounds": 2.0,
+        "Latency (ms)": 42701.8115,
+        "Estimated Tokens": 147.6846
       },
       "rows": [
         {
@@ -380,11 +1623,44 @@
           "rounds": 2,
           "abstained": false,
           "expected_abstain": false,
-          "answer": "Atlas compliance requires the CRIMSON-SEAL credential before release [1].",
+          "answer": "The required value is UNKNOWN-PLACEHOLDER [1].",
           "assessment": {
             "groundedness": 1.0,
             "completeness": 1.0,
-            "answer_relevance": 0.5,
+            "answer_relevance": 1.0,
+            "citation_coverage": 1.0,
+            "sufficient": true,
+            "failure_type": null,
+            "failure_reason": "答案提供的信息与提供的证据一致，因此没有发现错误或遗漏。",
+            "missing_information": [],
+            "claims": [
+              {
+                "claim": "Atlas 合规性要求 CRIMSON-SEAL 凭证。",
+                "supported": true,
+                "citation_indices": [
+                  1
+                ],
+                "reason": "提供的文献 [1] 明确指出在发布前需要 CRIMSON-SEAL 凭证，该主张得到了支持。"
+              }
+            ]
+          },
+          "latency_ms": 31757.5,
+          "estimated_tokens": 159.0,
+          "retrieval_corrective_success": 1.0,
+          "generation_corrective_success": 0.0
+        },
+        {
+          "id": "orion-correction",
+          "initial_rank": null,
+          "rank": 1,
+          "rounds": 2,
+          "abstained": false,
+          "expected_abstain": false,
+          "answer": "Orion recovery must use the code **ORION-RECOVER-17** [1].",
+          "assessment": {
+            "groundedness": 1.0,
+            "completeness": 1.0,
+            "answer_relevance": 1.0,
             "citation_coverage": 1.0,
             "sufficient": true,
             "failure_type": null,
@@ -392,22 +1668,204 @@
             "missing_information": [],
             "claims": [
               {
-                "claim": "Atlas compliance requires the CRIMSON-SEAL credential before release [1].",
+                "claim": "Orion恢复必须使用代码ORION-RECOVER-17。",
                 "supported": true,
                 "citation_indices": [
                   1
                 ],
-                "reason": "Lexical fallback used because structured answer assessment was unavailable."
+                "reason": "证据[1]明确说明Orion数据库恢复必须在恢复前使用代码ORION-RECOVER-17，与答案完全一致。"
               }
             ]
           },
-          "latency_ms": 17459.0,
-          "estimated_tokens": 165.2,
+          "latency_ms": 41206.29,
+          "estimated_tokens": 152.5,
           "retrieval_corrective_success": 1.0,
           "generation_corrective_success": 1.0
         },
         {
-          "id": "orion-correction",
+          "id": "out-of-scope",
+          "initial_rank": null,
+          "rank": null,
+          "rounds": 2,
+          "abstained": true,
+          "expected_abstain": true,
+          "answer": "知识库中没有找到足以回答该问题的证据。",
+          "assessment": {
+            "groundedness": 1.0,
+            "completeness": 1.0,
+            "answer_relevance": 1.0,
+            "citation_coverage": 1.0,
+            "sufficient": false,
+            "failure_type": "insufficient_evidence",
+            "failure_reason": "知识库中没有任何关于星际联赛或哪个星球获胜的信息，因此无法回答这个问题。",
+            "missing_information": [
+              "星际联赛的结果",
+              "获胜的星球名称"
+            ],
+            "claims": [
+              {
+                "claim": "知识库中没有找到足以回答该问题的证据。",
+                "supported": true,
+                "citation_indices": [],
+                "reason": "所提供的所有证据都涉及审批、联系方式和团队代码等内部流程，没有任何一条与星际联赛或比赛结果相关。"
+              }
+            ]
+          },
+          "latency_ms": 47003.08,
+          "estimated_tokens": 135.0,
+          "retrieval_corrective_success": 0.0,
+          "generation_corrective_success": 0.0
+        },
+        {
+          "id": "helios-rollback",
+          "initial_rank": null,
+          "rank": 1,
+          "rounds": 2,
+          "abstained": false,
+          "expected_abstain": false,
+          "answer": "The token that authorizes a Helios rollback is **HELIOS-ROLLBACK-88**, and it must be approved by the release captain [1].",
+          "assessment": {
+            "groundedness": 1.0,
+            "completeness": 1.0,
+            "answer_relevance": 1.0,
+            "citation_coverage": 1.0,
+            "sufficient": true,
+            "failure_type": null,
+            "failure_reason": "",
+            "missing_information": [],
+            "claims": [
+              {
+                "claim": "授权 Helios 回滚的令牌是 HELIOS-ROLLBACK-88。",
+                "supported": true,
+                "citation_indices": [
+                  1
+                ],
+                "reason": "证据[1]直接说明 Helios 回滚必须使用令牌 HELIOS-ROLLBACK-88 并获得发布负责人批准，该说法与证据完全一致。"
+              },
+              {
+                "claim": "该令牌必须由发布负责人批准。",
+                "supported": true,
+                "citation_indices": [
+                  1
+                ],
+                "reason": "证据[1]明确要求该令牌来自发布负责人并用于批准回滚，因此该说法有证据支持。"
+              }
+            ]
+          },
+          "latency_ms": 47007.07,
+          "estimated_tokens": 261.8,
+          "retrieval_corrective_success": 1.0,
+          "generation_corrective_success": 1.0
+        },
+        {
+          "id": "nebula-refund",
+          "initial_rank": null,
+          "rank": 1,
+          "rounds": 2,
+          "abstained": false,
+          "expected_abstain": false,
+          "answer": "Large Nebula refunds (above 500 dollars) need the approval code **NEBULA-REFUND-4421** from finance [1].",
+          "assessment": {
+            "groundedness": 1.0,
+            "completeness": 1.0,
+            "answer_relevance": 1.0,
+            "citation_coverage": 1.0,
+            "sufficient": true,
+            "failure_type": null,
+            "failure_reason": "",
+            "missing_information": [],
+            "claims": [
+              {
+                "claim": "大额星云（Nebula）退款（金额超过500美元）需要财务部门提供的批准代码 NEBULA-REFUND-4421。",
+                "supported": true,
+                "citation_indices": [
+                  1
+                ],
+                "reason": "提供的证据第1条明确说明了超过500美元的星云退款需要财务提供的批准代码 NEBULA-REFUND-4421，该说法完全准确且有出处。"
+              }
+            ]
+          },
+          "latency_ms": 42958.68,
+          "estimated_tokens": 152.0,
+          "retrieval_corrective_success": 1.0,
+          "generation_corrective_success": 1.0
+        },
+        {
+          "id": "vega-onboarding",
+          "initial_rank": null,
+          "rank": 1,
+          "rounds": 2,
+          "abstained": false,
+          "expected_abstain": false,
+          "answer": "New Vega engineers must complete the checklist form **VEGA-ONBOARD-07** before receiving laptop access [1].",
+          "assessment": {
+            "groundedness": 1.0,
+            "completeness": 1.0,
+            "answer_relevance": 1.0,
+            "citation_coverage": 1.0,
+            "sufficient": true,
+            "failure_type": null,
+            "failure_reason": "",
+            "missing_information": [],
+            "claims": [
+              {
+                "claim": "新入职的Vega工程师在获得笔记本电脑访问权限之前，必须填写VEGA-ONBOARD-07清单表格。",
+                "supported": true,
+                "citation_indices": [
+                  1
+                ],
+                "reason": "证据[1]明确说明，新入职的Vega工程师只有在完成VEGA-ONBOARD-07清单表格后才能获得笔记本电脑访问权限，因此答案中的信息完全得到了证据的支持。"
+              }
+            ]
+          },
+          "latency_ms": 43181.58,
+          "estimated_tokens": 153.5,
+          "retrieval_corrective_success": 1.0,
+          "generation_corrective_success": 1.0
+        },
+        {
+          "id": "lyra-retention",
+          "initial_rank": null,
+          "rank": 1,
+          "rounds": 2,
+          "abstained": false,
+          "expected_abstain": false,
+          "answer": "Lyra 审计日志的保留时长为 400 天，适用的策略是 LYRA-RETAIN-400 [1]。",
+          "assessment": {
+            "groundedness": 1.0,
+            "completeness": 1.0,
+            "answer_relevance": 1.0,
+            "citation_coverage": 1.0,
+            "sufficient": true,
+            "failure_type": null,
+            "failure_reason": "",
+            "missing_information": [],
+            "claims": [
+              {
+                "claim": "Lyra 审计日志的保留时长为 400 天。",
+                "supported": true,
+                "citation_indices": [
+                  1
+                ],
+                "reason": "证据 [1] 明确说明审计日志保留 400 天，与回答一致。"
+              },
+              {
+                "claim": "这些日志适用的策略是 LYRA-RETAIN-400。",
+                "supported": true,
+                "citation_indices": [
+                  1
+                ],
+                "reason": "证据 [1] 明确指出适用策略为 LYRA-RETAIN-400，与回答一致。"
+              }
+            ]
+          },
+          "latency_ms": 47852.58,
+          "estimated_tokens": 153.2,
+          "retrieval_corrective_success": 1.0,
+          "generation_corrective_success": 1.0
+        },
+        {
+          "id": "zh-leave",
           "initial_rank": null,
           "rank": 1,
           "rounds": 2,
@@ -425,25 +1883,108 @@
             "missing_information": [],
             "claims": [
               {
-                "claim": "The required value is UNKNOWN-PLACEHOLDER [1].",
+                "claim": "请假超过三天，须由部门总监签批。",
                 "supported": true,
                 "citation_indices": [
                   1
                 ],
-                "reason": "The placeholder 'UNKNOWN-PLACEHOLDER' is not supported by the evidence. The evidence states 'ORION-RECOVER-17' as the required code, not 'UNKNOWN-PLACEHOLDER'."
+                "reason": "证据[1]明确写明员工请假超过三天须由部门总监签批。"
+              },
+              {
+                "claim": "请假超过三天，须填写表单 请假-审批-F9。",
+                "supported": true,
+                "citation_indices": [
+                  1
+                ],
+                "reason": "证据[1]明确写明并填写表单 请假-审批-F9。"
               }
             ]
           },
-          "latency_ms": 17475.52,
-          "estimated_tokens": 149.2,
+          "latency_ms": 29789.03,
+          "estimated_tokens": 61.0,
           "retrieval_corrective_success": 1.0,
           "generation_corrective_success": 0.0
         },
         {
-          "id": "out-of-scope",
+          "id": "zh-expense",
+          "initial_rank": null,
+          "rank": 1,
+          "rounds": 2,
+          "abstained": false,
+          "expected_abstain": false,
+          "answer": "单笔差旅报销超过两千元时，须附发票原件，并使用编号“报销-差旅-K12”提交 [1]。",
+          "assessment": {
+            "groundedness": 1.0,
+            "completeness": 1.0,
+            "answer_relevance": 1.0,
+            "citation_coverage": 1.0,
+            "sufficient": true,
+            "failure_type": null,
+            "failure_reason": "",
+            "missing_information": [],
+            "claims": [
+              {
+                "claim": "单笔差旅报销超过两千元时，须附发票原件。",
+                "supported": true,
+                "citation_indices": [
+                  1
+                ],
+                "reason": "证据第1篇明确指出单笔差旅报销超过两千元须附发票原件，与该说法一致。"
+              },
+              {
+                "claim": "单笔差旅报销超过两千元时，须使用编号“报销-差旅-K12”提交。",
+                "supported": true,
+                "citation_indices": [
+                  1
+                ],
+                "reason": "证据第1篇明确指出须使用编号“报销-差旅-K12”提交，与该说法一致。"
+              }
+            ]
+          },
+          "latency_ms": 43683.14,
+          "estimated_tokens": 58.2,
+          "retrieval_corrective_success": 1.0,
+          "generation_corrective_success": 1.0
+        },
+        {
+          "id": "out-of-scope-zh",
           "initial_rank": null,
           "rank": null,
-          "rounds": 1,
+          "rounds": 2,
+          "abstained": true,
+          "expected_abstain": true,
+          "answer": "知识库中没有找到足以回答该问题的证据。",
+          "assessment": {
+            "groundedness": 1.0,
+            "completeness": 0.0,
+            "answer_relevance": 1.0,
+            "citation_coverage": 1.0,
+            "sufficient": false,
+            "failure_type": "incomplete",
+            "failure_reason": "知识库只提供了团建活动说明，没有关于火星基地或任何相关预算的信息，因此无法回答公司明年的火星基地预算是多少。",
+            "missing_information": [
+              "知识库中没有关于火星基地预算的金额数字",
+              "知识库中没有关于明年的火星基地计划或预算安排的任何信息"
+            ],
+            "claims": [
+              {
+                "claim": "知识库中没有找到足以回答该问题的证据。",
+                "supported": true,
+                "citation_indices": [],
+                "reason": "提供的资料全部是关于团建活动的介绍，没有涉及火星基地预算的内容，所以知识库中没有能支持答案的证据。"
+              }
+            ]
+          },
+          "latency_ms": 45949.6,
+          "estimated_tokens": 49.2,
+          "retrieval_corrective_success": 0.0,
+          "generation_corrective_success": 0.0
+        },
+        {
+          "id": "out-of-scope-en",
+          "initial_rank": null,
+          "rank": null,
+          "rounds": 2,
           "abstained": true,
           "expected_abstain": true,
           "answer": "知识库中没有找到足以回答该问题的证据。",
@@ -451,12 +1992,107 @@
             "groundedness": 1.0,
             "completeness": 1.0,
             "answer_relevance": 1.0,
-            "citation_coverage": 1.0,
-            "sufficient": true
+            "citation_coverage": 0.0,
+            "sufficient": false,
+            "failure_type": "out_of_scope",
+            "failure_reason": "知识库中只有食堂安排、团建活动和请假审批相关的内容，没有关于2031年深海国际象棋决赛的信息。问题询问的赛事结果显然不在这个知识库的覆盖范围内，因此无法给出答案。",
+            "missing_information": [
+              "知识库中没有任何关于2031年深海国际象棋决赛的记录，因此无法说明谁赢得了这场比赛。"
+            ],
+            "claims": [
+              {
+                "claim": "无法回答谁赢得了2031年深海国际象棋决赛。",
+                "supported": true,
+                "citation_indices": [],
+                "reason": "知识库中没有任何关于2031年深海国际象棋决赛的资料，只能如实说明无法回答。"
+              }
+            ]
           },
-          "latency_ms": 8150.55,
-          "estimated_tokens": 142.8,
+          "latency_ms": 46205.63,
+          "estimated_tokens": 56.5,
           "retrieval_corrective_success": 0.0,
+          "generation_corrective_success": 0.0
+        },
+        {
+          "id": "orion-multihop",
+          "initial_rank": null,
+          "rank": 2,
+          "rounds": 2,
+          "abstained": false,
+          "expected_abstain": false,
+          "answer": "Orion data-retention exceptions are owned by team code TEAM-KESTREL-31 [1]. Their escalation desk can be reached at phone extension EXT-8842 at all times [2].",
+          "assessment": {
+            "groundedness": 1.0,
+            "completeness": 1.0,
+            "answer_relevance": 1.0,
+            "citation_coverage": 1.0,
+            "sufficient": true,
+            "failure_type": null,
+            "failure_reason": "",
+            "missing_information": [],
+            "claims": [
+              {
+                "claim": "Orion 数据留存例外由团队代码 TEAM-KESTREL-31 拥有。",
+                "supported": true,
+                "citation_indices": [
+                  1
+                ],
+                "reason": "证据[1]明确说明该例外仅由 TEAM-KESTREL-31 拥有，与回答完全一致。"
+              },
+              {
+                "claim": "该团队的升级服务台可以随时通过分机 EXT-8842 联系。",
+                "supported": true,
+                "citation_indices": [
+                  2
+                ],
+                "reason": "证据[2]明确说明 TEAM-KESTREL-31 的升级服务台分机为 EXT-8842，并且全天候可用，与回答完全一致。"
+              }
+            ]
+          },
+          "latency_ms": 50335.29,
+          "estimated_tokens": 202.5,
+          "retrieval_corrective_success": 1.0,
+          "generation_corrective_success": 1.0
+        },
+        {
+          "id": "zephyr-long-document",
+          "initial_rank": null,
+          "rank": 2,
+          "rounds": 2,
+          "abstained": false,
+          "expected_abstain": false,
+          "answer": "The required value is UNKNOWN-PLACEHOLDER [1].",
+          "assessment": {
+            "groundedness": 1.0,
+            "completeness": 1.0,
+            "answer_relevance": 1.0,
+            "citation_coverage": 1.0,
+            "sufficient": true,
+            "failure_type": null,
+            "failure_reason": "答案与证据完全一致，所需信息已完整覆盖，不存在问题。",
+            "missing_information": [],
+            "claims": [
+              {
+                "claim": "Zephyr 冷库审计记录的签核令牌是 UNKNOWN-PLACEHOLDER。",
+                "supported": false,
+                "citation_indices": [
+                  2
+                ],
+                "reason": "证据 [2] 明确说明 Zephyr 冷库审计的签核令牌是 ZEPHYR-AUDIT-5521，而不是答案所说的 UNKNOWN-PLACEHOLDER，所以该说法与证据不符。"
+              },
+              {
+                "claim": "该签核令牌的正确值为 ZEPHYR-AUDIT-5521。",
+                "supported": true,
+                "citation_indices": [
+                  2
+                ],
+                "reason": "证据 [2] 直接写明该令牌为 ZEPHYR-AUDIT-5521，可支持这一说法。"
+              }
+            ]
+          },
+          "latency_ms": 38194.08,
+          "estimated_tokens": 325.5,
+          "retrieval_corrective_success": 1.0,
           "generation_corrective_success": 0.0
         }
       ]
@@ -478,26 +2114,26 @@
     {
       "component": "Evidence Judge",
       "metric": "Retrieval Corrective Success Rate",
-      "with_component": 0.6667,
+      "with_component": 0.6154,
       "without_component": 0.0
     },
     {
       "component": "Query Rewrite",
       "metric": "Recall@5",
-      "with_component": 1.0,
+      "with_component": 0.8,
       "without_component": 0.0
     },
     {
       "component": "Groundedness Judge",
       "metric": "Groundedness",
       "with_component": 1.0,
-      "without_component": 0.5357
+      "without_component": 0.795
     },
     {
       "component": "Completeness Judge",
       "metric": "Completeness",
       "with_component": 1.0,
-      "without_component": 0.5357
+      "without_component": 0.8
     }
   ]
 }
