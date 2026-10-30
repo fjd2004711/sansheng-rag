@@ -9,7 +9,7 @@
 #   scripts/dev_remote.sh clean  down + drop the scratch DB and collection
 set -euo pipefail
 
-SERVER="${SCR_SERVER:-xiaomi250@222.23.213.245}"
+SERVER="${SCR_SERVER:-xiaomi250@100.65.199.107}"
 DB_NAME="${SCR_DEV_DB:-scr_dev}"
 COLLECTION="${SCR_DEV_COLLECTION:-scr_dev_docs}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"

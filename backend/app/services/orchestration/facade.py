@@ -24,6 +24,7 @@ from app.schemas.orchestration import (
     SpecRead,
     SpecValidation,
 )
+from app.services.orchestration import registry
 from app.services.orchestration.builtin import BUILTIN_YAML, builtin_bundles
 from app.services.orchestration.exceptions import SpecError
 from app.services.orchestration.insights import build_insights
@@ -157,6 +158,21 @@ class OrchestrationService:
         detail.graph = graph_of(Bundle.model_validate(run.bundle))
         detail.events = [RunEvent(seq=e.seq, t=e.t, kind=e.kind, detail=e.detail) for e in events]
         return detail
+
+    async def cancel_run(self, user_id: UUID, run_id: UUID) -> OrchRun:
+        """Stop an active run. The executing task records the outcome; an orphaned run is failed here."""
+        run = await self.get_run(user_id, run_id)
+        if run.status not in ("queued", "running"):
+            raise BadRequestError(
+                message="这次运行已经结束，无法取消", details={"status": run.status}
+            )
+        if registry.cancel(run_id):
+            return run
+        return await repo.update_run(
+            self.db,
+            db_run=run,
+            update_data={"status": "failed", "error": registry.CANCELLED_MESSAGE},
+        )
 
     async def delete_run(self, user_id: UUID, run_id: UUID) -> None:
         await self.get_run(user_id, run_id)

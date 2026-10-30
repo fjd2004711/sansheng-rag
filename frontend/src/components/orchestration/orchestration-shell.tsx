@@ -73,7 +73,25 @@ export function OrchestrationShell() {
         </button>
         {tab === "runs" &&
           (run ? (
-            <RunView key={run.id} summary={run} />
+            <RunView
+              key={run.id}
+              summary={run}
+              onCancel={() =>
+                void runs
+                  .cancel(run.id)
+                  .then(() => toast.success("已取消这次运行"))
+                  .catch(() => toast.error("取消失败，运行可能已经结束"))
+              }
+              onRerun={() =>
+                void runs
+                  .create(run.spec_name, run.topic)
+                  .then((created) => {
+                    setRunId(created.id);
+                    toast.success("已重新开始运行");
+                  })
+                  .catch(() => toast.error("无法重新运行：可能已有运行在进行，或今日次数已用完"))
+              }
+            />
           ) : (
             <div className="text-muted-foreground flex flex-1 flex-col items-center justify-center gap-3 text-sm">
               还没有运行。
