@@ -25,7 +25,10 @@ services:
       - POSTGRES_HOST=db
       - QDRANT_HOST=qdrant
       - QDRANT_PORT=6333
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8010 --workers 4
+    # --ws websockets-sansio: the default websocket impl fails the chat handshake (HTTP 500) with websockets >=14.
+    # One worker on purpose: rate limits, flow settings and report slots are in-process state; scale out only
+    # after moving them to Redis (see HANDOFF 8.7).
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8010 --workers 1 --ws websockets-sansio
     networks:
       - backend-internal
       - egress
