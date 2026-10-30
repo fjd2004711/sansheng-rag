@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -21,6 +21,14 @@ export function RegisterForm() {
   const [name, setName] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [closed, setClosed] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/auth/config")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { registration_open?: boolean } | null) => setClosed(data?.registration_open === false))
+      .catch(() => undefined);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,14 +73,20 @@ export function RegisterForm() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
+      {closed && (
+        <p className="bg-muted text-muted-foreground rounded-lg border px-3 py-3 text-sm">
+          本站已关闭自助注册。需要账号请联系管理员开通。
+        </p>
+      )}
+
+      <form onSubmit={handleSubmit} className={closed ? "pointer-events-none space-y-5 opacity-50" : "space-y-5"}>
         <div className="space-y-1.5">
           <Label htmlFor="name">名称（可选）</Label>
           <Input
             id="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            disabled={isLoading}
+            disabled={isLoading || closed}
             autoComplete="name"
             className="h-11 rounded-xl"
           />
@@ -85,7 +99,7 @@ export function RegisterForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            disabled={isLoading}
+            disabled={isLoading || closed}
             autoComplete="email"
             className="h-11 rounded-xl"
           />
@@ -98,7 +112,7 @@ export function RegisterForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            disabled={isLoading}
+            disabled={isLoading || closed}
             autoComplete="new-password"
             className="h-11 rounded-xl"
           />
@@ -111,7 +125,7 @@ export function RegisterForm() {
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
-            disabled={isLoading}
+            disabled={isLoading || closed}
             autoComplete="new-password"
             className="h-11 rounded-xl"
           />
@@ -123,7 +137,7 @@ export function RegisterForm() {
           </p>
         )}
 
-        <Button type="submit" disabled={isLoading} className="h-11 w-full rounded-full">
+        <Button type="submit" disabled={isLoading || closed} className="h-11 w-full rounded-full">
           {isLoading ? (
             "正在创建..."
           ) : (

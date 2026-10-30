@@ -16,7 +16,7 @@ from app.api.deps import (
 )
 from app.core.exceptions import BadRequestError, NotFoundError
 from app.db.models.user import UserRole
-from app.schemas.user import UserRead, UserUpdate
+from app.schemas.user import UserCreate, UserRead, UserUpdate
 
 router = APIRouter()
 
@@ -82,6 +82,16 @@ async def read_users(
 ) -> Any:
     """Get all users (admin only)."""
     return await user_service.list_paginated()
+
+
+@router.post("", response_model=UserRead, status_code=status.HTTP_201_CREATED)
+async def create_user(
+    user_in: UserCreate,
+    user_service: UserSvc,
+    _: CurrentAdmin,
+) -> Any:
+    """Create an account, optionally an admin one (admin only; works while self-registration is closed)."""
+    return await user_service.create_by_admin(user_in)
 
 
 @router.get("/{user_id}", response_model=UserRead)

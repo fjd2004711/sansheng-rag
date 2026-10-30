@@ -4,12 +4,22 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models.orchestration import OrchEvent, OrchFeedback, OrchRun, OrchSpec
 
 # ---- runs -------------------------------------------------------------------------------------------
+
+
+async def fail_active(db: AsyncSession, *, error: str) -> int:
+    """Mark every queued/running run failed (their tasks died with the process); returns how many."""
+    result = await db.execute(
+        update(OrchRun)
+        .where(OrchRun.status.in_(("queued", "running")))
+        .values(status="failed", error=error)
+    )
+    return result.rowcount or 0
 
 
 async def get_run(db: AsyncSession, run_id: UUID) -> OrchRun | None:
