@@ -71,6 +71,11 @@ async def get_run(run_id: UUID, service: OrchestrationSvc, user: CurrentUser) ->
     return await service.run_detail(user.id, run_id)
 
 
+@router.post("/runs/{run_id}/cancel", response_model=RunSummary)
+async def cancel_run(run_id: UUID, service: OrchestrationSvc, user: CurrentUser) -> Any:
+    return await service.cancel_run(user.id, run_id)
+
+
 @router.delete("/runs/{run_id}", status_code=status.HTTP_204_NO_CONTENT, response_model=None)
 async def delete_run(run_id: UUID, service: OrchestrationSvc, user: CurrentUser) -> None:
     await service.delete_run(user.id, run_id)

@@ -7,6 +7,7 @@ from uuid import UUID
 from app.core.exceptions import AppException
 from app.db.session import get_db_context
 from app.services.llm_config import load_runtime
+from app.services.orchestration import registry
 from app.services.orchestration.engine import OrchestrationEngine
 from app.services.orchestration.facade import OrchestrationService
 from app.services.orchestration.spec import Bundle
@@ -43,8 +44,10 @@ async def execute_run_in_background(*, run_id: UUID, user_id: UUID) -> None:
         topic, run_input = run.topic, dict(run.run_input)
 
     status, result, metrics, error = "failed", None, None, None
-    engine = OrchestrationEngine(research=ResearchService.from_settings(), store=DbRunStore())
+    registry.register(run_id)
     try:
+        # Built inside the try: a missing search service must fail this run, not leave it "running".
+        engine = OrchestrationEngine(research=ResearchService.from_settings(), store=DbRunStore())
         outcome = await engine.execute(
             bundle, topic=topic, run_input=run_input, run_id=run_id, runtime=runtime
         )
@@ -58,12 +61,15 @@ async def execute_run_in_background(*, run_id: UUID, user_id: UUID) -> None:
         logger.warning("orch_run_failed run=%s error=%s", run_id, exc.message)
         error = exc.message
     except asyncio.CancelledError:
-        error = "运行被取消（服务重启）"
-        raise
+        by_user = registry.release(run_id)
+        error = registry.CANCELLED_MESSAGE if by_user else "运行被取消（服务重启）"
+        if not by_user:
+            raise
     except Exception as exc:
         logger.exception("orch_run_crashed run=%s", run_id)
         error = f"运行失败：{type(exc).__name__}"
     finally:
+        registry.release(run_id)
         try:
             async with get_db_context() as db:
                 await OrchestrationService(db).finish(

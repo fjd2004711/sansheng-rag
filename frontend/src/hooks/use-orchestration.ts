@@ -81,7 +81,14 @@ export function useRuns() {
     },
     [refresh],
   );
-  return { items, loading, active, refresh, create, remove };
+  const cancel = useCallback(
+    async (id: string) => {
+      await apiClient.post(`/v1/orchestration/runs/${id}/cancel`, {});
+      await refresh();
+    },
+    [refresh],
+  );
+  return { items, loading, active, refresh, create, remove, cancel };
 }
 
 /** One run with its event log; polls while it is running so the timeline and graph move live. */

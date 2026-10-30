@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { AlertCircle, LayoutDashboard, ScrollText } from "lucide-react";
+import { AlertCircle, LayoutDashboard, RotateCcw, ScrollText, Square } from "lucide-react";
 
 import { Spinner } from "@/components/ui";
 import { useRun } from "@/hooks/use-orchestration";
@@ -110,7 +110,15 @@ function StatsStrip({
 }
 
 /** One run: header, workflow canvas with live status, node inspector, bottom dock — or the finished deliverable. */
-export function RunView({ summary }: { summary: RunSummary }) {
+export function RunView({
+  summary,
+  onCancel,
+  onRerun,
+}: {
+  summary: RunSummary;
+  onCancel: () => void;
+  onRerun: () => void;
+}) {
   const detail = useRun(summary.id);
   const [view, setView] = useState<"canvas" | "result">("canvas");
   const [selected, setSelected] = useState<string | null>(null);
@@ -169,6 +177,27 @@ export function RunView({ summary }: { summary: RunSummary }) {
             </div>
           )}
           {summary.status === "done" && <FeedbackButtons runId={summary.id} />}
+          {active ? (
+            <button
+              type="button"
+              onClick={() => {
+                if (window.confirm("取消这次运行？已经完成的步骤不会保留。")) onCancel();
+              }}
+              className="text-muted-foreground hover:text-foreground hover:bg-muted flex shrink-0 items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium"
+            >
+              <Square className="h-3 w-3" />
+              取消运行
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={onRerun}
+              className="text-muted-foreground hover:text-foreground hover:bg-muted flex shrink-0 items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium"
+            >
+              <RotateCcw className="h-3 w-3" />
+              重新运行
+            </button>
+          )}
         </div>
         <StatsStrip
           metrics={metrics}
