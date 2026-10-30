@@ -94,13 +94,30 @@ class GenerationCorrector:
                 "trace": [],
             }
         )
+        trace = [GenerationTraceEvent.model_validate(event) for event in state["trace"]]
+        abstained = state.get("abstained", False)
+        if (
+            not abstained
+            and state["answer"].strip().startswith(_ABSTAIN_MESSAGE.rstrip("。"))
+            and not any(event.step == "partial_answer" for event in trace)
+        ):
+            # The model wrote the refusal itself and it passed verification: still a refusal, and recorded as one.
+            abstained = True
+            trace.append(
+                GenerationTraceEvent(
+                    step="abstain",
+                    round=state["correction_round"],
+                    status="COMPLETE",
+                    detail={"reason": "回答本身说明资料里没有这个问题的答案。"},
+                )
+            )
         return GenerationCorrectionResult(
             answer=state["answer"],
             evidence=state["evidence"],
             assessment=state["assessment"],
             correction_round=state["correction_round"],
-            abstained=state.get("abstained", False),
-            trace=[GenerationTraceEvent.model_validate(event) for event in state["trace"]],
+            abstained=abstained,
+            trace=trace,
         )
 
     async def _verify(self, state: GenerationCorrectionState) -> GenerationCorrectionState:

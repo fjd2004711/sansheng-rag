@@ -24,6 +24,19 @@ describe("deriveVerdict", () => {
     expect(verdict).toMatchObject({ kind: "verified", citations: 2, searches: 1, rewrites: 0, groundedness: 0.9 });
   });
 
+  it("is abstained when the answer is a refusal even though verification passed", () => {
+    const verdict = deriveVerdict(
+      [
+        ev("retrieve", "COMPLETE", { query: "a" }),
+        ev("evidence_evaluate", "FAIL", { failure_reason: "资料与问题无关" }),
+        ev("max_rounds_reached", "STOP"),
+        ev("answer_verify", "PASS", { groundedness: 1 }),
+      ],
+      "知识库中没有找到足以回答该问题的证据。现有资料只涉及发布和值班。",
+    );
+    expect(verdict?.kind).toBe("abstained");
+  });
+
   it("is corrected when a rewrite happened and the final verification passes", () => {
     const verdict = deriveVerdict(
       [
