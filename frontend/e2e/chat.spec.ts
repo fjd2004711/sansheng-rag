@@ -9,7 +9,7 @@ test.describe("对话", () => {
     await expect(page.getByText(/早上好|中午好|下午好|晚上好|夜深了/)).toBeVisible();
     await expect(page.getByText(/讲了什么|还没有可用的资料/).first()).toBeVisible({ timeout: 20_000 });
     await expect(page.getByRole("radio", { name: /共享库/ })).toBeVisible();
-    await expect(page.getByText("运作流程")).toBeVisible();
+    await expect(page.locator("text=运作流程 >> visible=true").first()).toBeVisible();
   });
 
   test("输入法组词时回车不会发送", async ({ page }) => {
@@ -30,7 +30,9 @@ test.describe("对话", () => {
   test("提问 → 核对结论 → 详细过程 → 追问建议 → 反馈，刷新后仍在", async ({ page }) => {
     test.setTimeout(240_000);
     await page.goto("/chat");
-    await page.getByRole("button", { name: /超课时津贴每节多少钱/ }).click();
+    // Suggestions are built from the library's documents (no canned questions), so type the demo question.
+    await page.getByLabel("输入你的问题").fill("超课时津贴每节多少钱？");
+    await page.getByLabel("输入你的问题").press("Enter");
 
     // The answer text only appears after verification; a progress line is shown meanwhile.
     await expect(page.getByText(/正在(检索资料|判断|撰写|核对|换个问法)/).first()).toBeVisible({ timeout: 30_000 });

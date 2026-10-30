@@ -29,7 +29,7 @@ export function ChatModeToggle() {
   const setMode = useRetrievalScopeStore((state) => state.setMode);
 
   return (
-    <div className="inline-flex items-center gap-1.5">
+    <div className="inline-flex shrink-0 items-center gap-1.5">
       <div
         role="radiogroup"
         aria-label="回答方式"
@@ -44,7 +44,7 @@ export function ChatModeToggle() {
             title={hint}
             onClick={() => setMode(value)}
             className={cn(
-              "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs transition-colors",
+              "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs whitespace-nowrap transition-colors",
               mode === value
                 ? "bg-background text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground",
