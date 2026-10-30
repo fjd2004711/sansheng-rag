@@ -223,3 +223,29 @@ async def test_verification_trace_lists_each_claim_with_its_verdict() -> None:
     claims = result.trace[0].detail["claims"]
     assert [c["supported"] for c in claims] == [True, False]
     assert claims[1]["reason"] == "资料没有提到"
+
+
+@pytest.mark.anyio
+async def test_a_refusal_the_model_wrote_and_that_passed_verification_counts_as_abstained() -> None:
+    refusal = "知识库中没有找到足以回答该问题的证据。现有资料只涉及发布和值班。"
+    corrector = GenerationCorrector(
+        lambda _query: None,  # type: ignore[arg-type,return-value]
+        FakeEvaluator(assessment(True), assessment(True)),
+        max_corrections=1,
+    )
+    result = await corrector.run("火星基地预算？", refusal, "unrelated evidence")
+    assert result.abstained is True
+    assert result.answer == refusal
+    assert result.trace[-1].step == "abstain"
+
+
+@pytest.mark.anyio
+async def test_a_normal_answer_is_not_mistaken_for_a_refusal() -> None:
+    corrector = GenerationCorrector(
+        lambda _query: None,  # type: ignore[arg-type,return-value]
+        FakeEvaluator(assessment(True), assessment(True)),
+        max_corrections=1,
+    )
+    result = await corrector.run("每节多少钱？", "每节 35 元 [1]。", "evidence")
+    assert result.abstained is False
+    assert all(event.step != "abstain" for event in result.trace)

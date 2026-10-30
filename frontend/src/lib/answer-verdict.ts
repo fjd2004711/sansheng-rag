@@ -39,6 +39,9 @@ function lastReason(trace: AgentTraceEvent[]): string | undefined {
   return abstain ? describeFailure(abstain.detail) : undefined;
 }
 
+/** The standard refusal wording; a model can write it itself and still pass verification, which is not "verified". */
+const REFUSAL_START = /^\s*(知识库中没有找到|资料中没有找到|网上没有找到)/;
+
 const CORRECTION_STEPS = new Set(["query_rewrite", "regenerate", "retrieve_missing"]);
 
 /** Summarise a finished answer's trace into one trust verdict for the UI. Null when nothing was traced. */
@@ -68,6 +71,7 @@ export function deriveVerdict(
   if (audit && Object.values(audit).some((n) => n > 0)) kind = "cross_checked";
   else if (trace.some((e) => e.step === "partial_answer")) kind = "partial";
   else if (trace.some((e) => e.step === "abstain")) kind = "abstained";
+  else if (REFUSAL_START.test(content)) kind = "abstained";
   else if (lastVerify?.status === "PASS") kind = trace.some((e) => CORRECTION_STEPS.has(e.step)) ? "corrected" : "verified";
 
   return {
