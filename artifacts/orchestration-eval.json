@@ -81,14 +81,57 @@
       ],
       "recommendations": 6,
       "claims_total": 58
+    },
+    {
+      "topic": "2025年中国新能源汽车销量与渗透率情况",
+      "status": "done",
+      "wall_seconds": 786.74,
+      "draft_seconds": 304.274,
+      "busy_seconds": 1857.21,
+      "parallel_speedup": 2.36,
+      "tasks": 24,
+      "tasks_failed": 0,
+      "tasks_skipped": 0,
+      "llm_calls": 118,
+      "tokens": 447545,
+      "repair_rounds": 1,
+      "verifier_downgrades": 2,
+      "model_switches": 0,
+      "gate_first": {
+        "passed": false,
+        "verified_ratio": 0.174,
+        "authoritative_sections": 0.2,
+        "unsupported_numbers": 0.0,
+        "scope_issues": 0.0
+      },
+      "gate_last": {
+        "passed": true,
+        "verified_ratio": 0.547,
+        "authoritative_sections": 0.8,
+        "unsupported_numbers": 0.0,
+        "scope_issues": 0.0
+      },
+      "first_failures": [
+        "weak_evidence",
+        "no_authority",
+        "weak_evidence",
+        "no_authority",
+        "weak_evidence",
+        "no_authority",
+        "weak_evidence",
+        "no_authority",
+        "weak_evidence"
+      ],
+      "recommendations": 6,
+      "claims_total": 53
     }
   ],
   "mean": {
-    "wall_seconds": 1288.59,
-    "parallel_speedup": 2.505,
-    "repair_rounds": 2.0,
-    "verifier_downgrades": 5.5,
-    "tokens": 733845.5
+    "wall_seconds": 1121.307,
+    "parallel_speedup": 2.457,
+    "repair_rounds": 1.667,
+    "verifier_downgrades": 4.333,
+    "tokens": 638412.0
   },
   "serial_vs_parallel": {
     "topic": "2025届大学生就业情况怎么样？",

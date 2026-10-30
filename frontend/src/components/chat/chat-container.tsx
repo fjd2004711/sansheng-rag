@@ -398,7 +398,8 @@ function ChatUI({
               />
             </div>
             <div className="border-foreground/8 flex items-center justify-between border-t px-3 py-2 sm:px-4">
-              <div className="flex items-center gap-2">
+              {/* Wraps onto a second row when the column is narrow (trace panel open, phones); controls never break mid-word. */}
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 [&_button]:whitespace-nowrap">
                 <span
                   className={`inline-flex items-center gap-1.5 font-mono text-[10px] tracking-wider uppercase ${isConnected ? "text-muted-foreground" : "text-destructive"}`}
                 >

@@ -42,15 +42,17 @@ export function Header() {
                 key={item.href}
                 href={item.href}
                 aria-current={isActive(item.href) ? "page" : undefined}
+                aria-label={t(item.key)}
+                title={t(item.key)}
                 className={cn(
-                  "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors sm:px-3",
+                  "inline-flex items-center gap-1.5 rounded-md p-2 text-sm font-medium transition-colors sm:px-3 sm:py-1.5",
                   isActive(item.href)
                     ? "bg-foreground/5 text-foreground"
                     : "text-muted-foreground hover:text-foreground hover:bg-foreground/5",
                 )}
               >
-                <item.icon className="h-3.5 w-3.5" />
-                {t(item.key)}
+                <item.icon className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
+                <span className="hidden sm:inline">{t(item.key)}</span>
               </Link>
             ))}
           </nav>
