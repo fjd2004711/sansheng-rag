@@ -78,11 +78,16 @@ class LLMJSONReranker(BaseReranker):
         record_openai_response(response)
         rankings = _parse_rankings(response.choices[0].message.content or "")
         if not rankings:
-            logger.warning(
-                "Reranker returned no parseable ranking; preserving RRF order (finish=%s, reply starts: %r)",
-                response.choices[0].finish_reason,
-                (response.choices[0].message.content or "")[:160],
-            )
+            reply = (response.choices[0].message.content or "").strip()
+            if reply == "[]":
+                # The model judged no passage relevant (e.g. an out-of-scope question); the evidence judge decides next.
+                logger.info("Reranker found no relevant passage; preserving RRF order")
+            else:
+                logger.warning(
+                    "Reranker returned no parseable ranking; preserving RRF order (finish=%s, reply starts: %r)",
+                    response.choices[0].finish_reason,
+                    reply[:160],
+                )
             return candidates[:top_k]
 
         ranked: list[SearchResult] = []
