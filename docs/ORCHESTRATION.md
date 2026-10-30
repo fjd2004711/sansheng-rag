@@ -24,7 +24,7 @@
 | 改进建议 | `…/orchestration/insights.py` | 失败类型与用户反馈聚合成改进提示（规则，人工应用） |
 | 持久化 | `app/db/models/orchestration.py`、迁移 `0036_orchestration` | 运行、事件日志、用户自定义定义、运行反馈 |
 | 接口 | `app/api/routes/v1/orchestration.py` | `/api/v1/orchestration/{specs,runs,insights}` |
-| 前端 | `frontend/src/components/orchestration/` | 工作流图（React Flow，运行时实时着色）、调度时间线（甘特图）、质量门与修复记录、定义编辑与校验、改进建议 |
+| 前端 | `frontend/src/components/orchestration/` | 应用式界面（参考 Dify / n8n 的画布、LangSmith 的链路视图）：左侧栏（新建运行、历史运行、工作流定义、改进建议）；运行页 = 顶部指标行 + 节点卡片画布（实时着色，点击节点浮出详情）+ 底部面板（瀑布式调度时间线、质量门与自循环、事件日志）+ 报告阅读视图（目录、核实徽章、下载）；定义页 = 画布 + 智能体/策略/YAML 编辑与校验；改进建议仪表盘 |
 
 LangChain 负责每个 Agent 内部的模型调用与检索（复用本项目已有的报告流水线）；**编排层是自研的 asyncio 调度器，没有使用 LangGraph**（与最初计划不同，见“没做的”）。
 
@@ -87,6 +87,8 @@ cd ../frontend && npm run dev                       # 打开 /orchestration
 ```
 
 接口：`POST /api/v1/orchestration/runs {"spec": "verified-report", "topic": "…"}`，`GET /runs/{id}` 返回结果、图和全部事件，`GET /runs/{id}/download?format=docx|pdf` 导出报告。
+
+界面开发：没有数据库/搜索/模型时，`cd backend && uv run uvicorn scripts.orch_mock_server:app --port 8010` 会用 `artifacts/orchestration-runs/` 里保存的真实运行数据提供一个模拟后端（仅开发用，其中一个运行被截断成“进行中”以便设计实时状态），再用 `BACKEND_URL=http://localhost:8010` 启动前端、给浏览器一个任意的 `access_token` cookie 即可。
 
 评测汇总：`python eval/orchestration_eval.py run1.json run2.json --serial serial.json`（输入是 `GET /runs/{id}` 的 JSON，指标全部从事件日志计算）。
 

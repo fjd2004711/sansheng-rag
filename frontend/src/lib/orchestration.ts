@@ -165,3 +165,150 @@ export function repairOutcomes(events: RunEvent[]): RepairOutcome[] {
 
 export const hasStalled = (events: RunEvent[]): boolean =>
   events.some((e) => e.kind === "repair_stalled");
+
+/** The workflow node a task group belongs to ("repair#r1:search" → "repair", "sections#2" → "sections"). */
+export function nodeOfGroup(group: string): string {
+  return group.split("#")[0] ?? group;
+}
+
+export function tasksByNode(tasks: TaskRow[]): Record<string, TaskRow[]> {
+  const out: Record<string, TaskRow[]> = {};
+  for (const t of tasks) (out[nodeOfGroup(t.group)] ??= []).push(t);
+  return out;
+}
+
+export function formatDuration(seconds: number): string {
+  if (seconds < 10) return `${seconds.toFixed(1)} 秒`;
+  if (seconds < 60) return `${Math.round(seconds)} 秒`;
+  const m = Math.floor(seconds / 60);
+  const s = Math.round(seconds % 60);
+  return s ? `${m} 分 ${s} 秒` : `${m} 分`;
+}
+
+export function timeAgo(iso: string, now = Date.now()): string {
+  const s = Math.max(0, (now - new Date(iso).getTime()) / 1000);
+  if (s < 60) return "刚刚";
+  if (s < 3600) return `${Math.floor(s / 60)} 分钟前`;
+  if (s < 86400) return `${Math.floor(s / 3600)} 小时前`;
+  return `${Math.floor(s / 86400)} 天前`;
+}
+
+export type EventTone = "info" | "ok" | "warn" | "bad";
+
+export interface EventLine {
+  seq: number;
+  t: number;
+  kind: string;
+  tone: EventTone;
+  group: "task" | "gate" | "repair" | "system";
+  text: string;
+}
+
+const pctText = (v: unknown) => (typeof v === "number" ? `${Math.round(v * 100)}%` : "—");
+
+/** One readable line per event, built only from its structured fields. */
+export function describeEvent(e: RunEvent): EventLine {
+  const d = e.detail;
+  const base = { seq: e.seq, t: e.t, kind: e.kind };
+  const name = str(d.label) || str(d.task) || str(d.group);
+  switch (e.kind) {
+    case "group_expanded":
+      return {
+        ...base,
+        tone: "info",
+        group: "system",
+        text: `展开节点 ${str(d.group)}，共 ${Array.isArray(d.tasks) ? d.tasks.length : 0} 个任务`,
+      };
+    case "task_start":
+      return {
+        ...base,
+        tone: "info",
+        group: "task",
+        text: `开始 ${name}${Number(d.attempt) > 1 ? `（第 ${d.attempt} 次尝试）` : ""}`,
+      };
+    case "task_done":
+      return {
+        ...base,
+        tone: "ok",
+        group: "task",
+        text: `完成 ${name}${typeof d.seconds === "number" ? `（${formatDuration(d.seconds)}）` : ""}`,
+      };
+    case "task_failed":
+      return {
+        ...base,
+        tone: "bad",
+        group: "task",
+        text: `失败 ${name}：${str(d.error).slice(0, 120)}`,
+      };
+    case "task_skipped":
+      return { ...base, tone: "warn", group: "task", text: `跳过 ${name}：${str(d.reason)}` };
+    case "task_retry":
+      return {
+        ...base,
+        tone: "warn",
+        group: "task",
+        text: `重试 ${name}（${str(d.reason) === "model_fallback" ? "模型降级后无损重试" : "出错"}）`,
+      };
+    case "gate_checked":
+      return {
+        ...base,
+        tone: d.passed ? "ok" : "warn",
+        group: "gate",
+        text: `质量门第 ${Number(d.round) || 0} 次检查：${d.passed ? "通过" : "未通过"}（已核实 ${pctText((d.metrics as Record<string, number> | undefined)?.verified_ratio)}）`,
+      };
+    case "repair_accepted":
+      return {
+        ...base,
+        tone: "ok",
+        group: "repair",
+        text: `采用重写：${str(d.section)}（${pctText(d.before)} → ${pctText(d.after)}）`,
+      };
+    case "repair_rejected":
+      return {
+        ...base,
+        tone: "warn",
+        group: "repair",
+        text: `放弃重写，保留原稿：${str(d.section)}（${pctText(d.before)} → ${pctText(d.after)}）`,
+      };
+    case "repair_stalled":
+      return { ...base, tone: "warn", group: "repair", text: "一轮修复没有进展，停止继续修复" };
+    case "repair_skipped_budget":
+      return { ...base, tone: "warn", group: "repair", text: "预算已用掉大半，不再开始新一轮修复" };
+    case "model_fallback":
+      return { ...base, tone: "warn", group: "system", text: `模型出错，自动降级到 ${str(d.to)}` };
+    case "verifier_overturned":
+      return {
+        ...base,
+        tone: "info",
+        group: "gate",
+        text: `核查员下调 ${str(d.section)} 的 ${d.claims} 条说法`,
+      };
+    case "search_batch_failed":
+      return {
+        ...base,
+        tone: "warn",
+        group: "system",
+        text: `一批搜索失败：${Array.isArray(d.queries) ? (d.queries as string[]).join("、").slice(0, 60) : ""}`,
+      };
+    default:
+      return { ...base, tone: "info", group: "system", text: e.kind };
+  }
+}
+
+/** Rewrite outcomes grouped by the repair round they belong to (the gate check that triggered them + 1). */
+export function repairOutcomesByRound(events: RunEvent[]): Record<number, RepairOutcome[]> {
+  const out: Record<number, RepairOutcome[]> = {};
+  let round = 0;
+  for (const e of events) {
+    if (e.kind === "gate_checked") round = Number(e.detail.round) || 0;
+    if (e.kind === "repair_accepted" || e.kind === "repair_rejected") {
+      (out[round + 1] ??= []).push({
+        section: str(e.detail.section),
+        accepted: e.kind === "repair_accepted",
+        before: Number(e.detail.before) || 0,
+        after: Number(e.detail.after) || 0,
+      });
+    }
+  }
+  return out;
+}

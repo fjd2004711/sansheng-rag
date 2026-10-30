@@ -1,5 +1,5 @@
-import { OrchestrationWorkspace } from "@/components/orchestration/orchestration-workspace";
+import { OrchestrationShell } from "@/components/orchestration/orchestration-shell";
 
 export default function OrchestrationPage() {
-  return <OrchestrationWorkspace />;
+  return <OrchestrationShell />;
 }

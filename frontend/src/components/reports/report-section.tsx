@@ -33,7 +33,7 @@ export function ReportSection({
   return (
     <section className="space-y-3">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h3 className="text-lg font-semibold">{section.heading}</h3>
+        <h3 className="text-xl font-semibold tracking-tight">{section.heading}</h3>
         {counts.length > 0 && (
           <span className="text-muted-foreground text-xs">
             核验：{counts.map(([level, n]) => `${CLAIM_LEVEL_LABELS[level]} ${n}`).join(" · ")}

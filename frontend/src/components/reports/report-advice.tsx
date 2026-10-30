@@ -43,7 +43,7 @@ export function ReportAdvice({
     <>
       {report.insights?.trim() && (
         <section className="space-y-2">
-          <h3 className="text-lg font-semibold">综合研判</h3>
+          <h3 className="text-xl font-semibold tracking-tight">综合研判</h3>
           {report.audience && (
             <p className="text-muted-foreground text-xs">写给：{report.audience}</p>
           )}
@@ -54,7 +54,7 @@ export function ReportAdvice({
       )}
       {recommendations.length > 0 && (
         <section className="space-y-3">
-          <h3 className="text-lg font-semibold">行动建议</h3>
+          <h3 className="text-xl font-semibold tracking-tight">行动建议</h3>
           <p className="text-muted-foreground text-xs">
             以下是基于上文事实的推论和建议，不是来源原文的结论；每条标明了它所依据事实的核实程度。
           </p>
