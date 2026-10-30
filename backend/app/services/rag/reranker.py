@@ -78,7 +78,11 @@ class LLMJSONReranker(BaseReranker):
         record_openai_response(response)
         rankings = _parse_rankings(response.choices[0].message.content or "")
         if not rankings:
-            logger.warning("Reranker returned no parseable ranking; preserving RRF order")
+            logger.warning(
+                "Reranker returned no parseable ranking; preserving RRF order (finish=%s, reply starts: %r)",
+                response.choices[0].finish_reason,
+                (response.choices[0].message.content or "")[:160],
+            )
             return candidates[:top_k]
 
         ranked: list[SearchResult] = []
@@ -101,18 +105,12 @@ class LLMJSONReranker(BaseReranker):
         return ranked[:top_k]
 
 
-def _parse_rankings(content: Any) -> list[tuple[int, float]]:
-    text = content if isinstance(content, str) else str(content)
-    match = re.search(r"\[[\s\S]*\]", text)
-    if not match:
-        return []
-    try:
-        value = json.loads(match.group(0))
-    except json.JSONDecodeError:
-        return []
+_ITEM = re.compile(r'\{[^{}]*?"id"\s*:\s*(\d+)[^{}]*?"score"\s*:\s*(-?\d+(?:\.\d+)?)[^{}]*?\}')
+
+
+def _rankings_from(value: Any) -> list[tuple[int, float]]:
     if not isinstance(value, list):
         return []
-
     rankings: list[tuple[int, float]] = []
     for item in value:
         if not isinstance(item, dict):
@@ -121,6 +119,21 @@ def _parse_rankings(content: Any) -> list[tuple[int, float]]:
         if isinstance(candidate_id, int) and isinstance(score, (int, float)):
             rankings.append((candidate_id, float(score)))
     return rankings
+
+
+def _parse_rankings(content: Any) -> list[tuple[int, float]]:
+    """The ranking array from a model reply, tolerating prose, code fences, stray brackets and truncation."""
+    text = content if isinstance(content, str) else str(content)
+    decoder = json.JSONDecoder()
+    for match in re.finditer(r"\[", text):
+        try:
+            value, _ = decoder.raw_decode(text[match.start() :])
+        except json.JSONDecodeError:
+            continue
+        if rankings := _rankings_from(value):
+            return rankings
+    # A reply cut off mid-array still carries complete items before the cut.
+    return [(int(i), float(score)) for i, score in _ITEM.findall(text)]
 
 
 class RerankService:
