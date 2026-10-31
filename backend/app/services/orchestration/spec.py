@@ -66,6 +66,8 @@ class NodeSpec(BaseModel):
     map_over: str | None = (
         None  # name of a collection the upstream node produces; the node fans out over it
     )
+    # Map node over the same collection as a dependency: item i starts when that dependency's item i is done.
+    pipeline: bool = False
     pool: Literal["none", "search", "llm"] = "llm"
     priority: int = 5  # lower runs first among ready nodes
     essential: bool = True  # non-essential work is dropped first when the budget runs out

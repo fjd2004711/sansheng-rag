@@ -231,16 +231,21 @@ class _Run:
 
             async def expand_map() -> list[Task]:
                 items = expand_items(self.state, map_over)
-                return [
+                tasks = [
                     self._task(
                         node, agent_name, f"{node.id}#{i}", item_label(self.state, map_over, it), it
                     )
                     for i, it in enumerate(items)
                 ]
+                if node.pipeline:
+                    for i, task in enumerate(tasks):
+                        task.needs = [f"{dep}#{i}" for dep in node.depends_on]
+                return tasks
 
             return Group(
                 id=node.id,
                 deps=list(node.depends_on),
+                pipelined=list(node.depends_on) if node.pipeline else [],
                 expand=expand_map,
                 priority=node.priority,
                 essential=node.essential,
