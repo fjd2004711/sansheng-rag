@@ -112,11 +112,13 @@ export function FlowCanvas({
 }) {
   const { nodes, edges } = useMemo(() => {
     const levels = levelsOf(graph);
-    const below: Record<number, number> = {};
+    // Nodes that share a column (parallel branches, a repair loop under its gate) stack downward, in node order.
+    const used: Record<number, number> = {};
     const placed: Node<CardData>[] = graph.nodes.map((node) => {
       const col = levels[node.id] ?? 0;
       const isRepair = graph.edges.some((e) => e.kind === "repair" && e.target === node.id);
-      const row = isRepair ? (below[col] = (below[col] ?? 0) + 1) : 0;
+      const row = Math.max(used[col] ?? 0, isRepair ? 1 : 0);
+      used[col] = row + 1;
       return {
         id: node.id,
         type: "card",
