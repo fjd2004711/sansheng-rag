@@ -152,7 +152,12 @@ async def recheck_support(
             return claim
         async with gate:
             try:
-                kept = await _entailing_sources(claim.claim, {i: by_index[i] for i in candidates})
+                pool = {i: by_index[i] for i in candidates}
+                kept = await _entailing_sources(claim.claim, pool)
+                if kept is not None and len(kept) < len(candidates):
+                    # One sample must not decide: a source is dropped only when two independent asks both reject it.
+                    again = await _entailing_sources(claim.claim, pool)
+                    kept = None if again is None else kept | again
             except Exception:
                 logger.warning("support_recheck_failed", exc_info=True)
                 return claim

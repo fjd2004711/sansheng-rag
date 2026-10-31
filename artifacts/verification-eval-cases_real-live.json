@@ -1,20 +1,20 @@
 {
   "mode": "live",
-  "generated_at": "2026-10-31T02:54:44.214708+00:00",
+  "generated_at": "2026-10-31T03:29:32.163071+00:00",
   "today": "2026-10-23",
   "cases": 28,
   "runs_per_case": 2,
   "gold_claims": 60,
   "extraction_recall": {
     "n": 60,
-    "rate": 0.75,
+    "rate": 0.7667,
     "ci95": [
       0.65,
-      0.85
+      0.8667
     ]
   },
   "false_pass_rate": {
-    "n": 16,
+    "n": 15,
     "rate": 0.0,
     "ci95": [
       0.0,
@@ -22,7 +22,7 @@
     ]
   },
   "verified_precision": {
-    "n": 26,
+    "n": 29,
     "rate": 1.0,
     "ci95": [
       1.0,
@@ -30,7 +30,7 @@
     ]
   },
   "level_accuracy": {
-    "n": 45,
+    "n": 46,
     "rate": 1.0,
     "ci95": [
       1.0,
@@ -38,10 +38,10 @@
     ]
   },
   "support_set_accuracy": {
-    "n": 45,
-    "rate": 0.9778,
+    "n": 46,
+    "rate": 1.0,
     "ci95": [
-      0.9333,
+      1.0,
       1.0
     ]
   },
@@ -65,7 +65,7 @@
     },
     "real_contradicted": {
       "level_accuracy": {
-        "n": 2,
+        "n": 1,
         "rate": 1.0,
         "ci95": [
           1.0,
@@ -87,7 +87,7 @@
     },
     "real_entity_swap": {
       "level_accuracy": {
-        "n": 2,
+        "n": 1,
         "rate": 1.0,
         "ci95": [
           1.0,
@@ -107,9 +107,20 @@
       },
       "false_pass": 0
     },
+    "real_mixed": {
+      "level_accuracy": {
+        "n": 4,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
     "real_number_wrong_quantity": {
       "level_accuracy": {
-        "n": 9,
+        "n": 7,
         "rate": 1.0,
         "ci95": [
           1.0,
@@ -120,7 +131,7 @@
     },
     "real_numeric_wrong": {
       "level_accuracy": {
-        "n": 3,
+        "n": 5,
         "rate": 1.0,
         "ci95": [
           1.0,
@@ -131,7 +142,7 @@
     },
     "real_reference_single": {
       "level_accuracy": {
-        "n": 3,
+        "n": 2,
         "rate": 1.0,
         "ci95": [
           1.0,
@@ -155,71 +166,11 @@
       "matched": false
     },
     {
-      "case": "R12",
-      "category": "real_english",
-      "claim": [
-        "14%",
-        "1990"
-      ],
-      "truth": "true",
-      "expected_level": "verified",
-      "matched": false
-    },
-    {
-      "case": "R14",
+      "case": "R10",
       "category": "real_number_wrong_quantity",
       "claim": [
-        "44%"
-      ],
-      "truth": "false",
-      "expected_level": "unverified",
-      "matched": false
-    },
-    {
-      "case": "R24",
-      "category": "real_numeric_wrong",
-      "claim": [
-        "1946"
-      ],
-      "truth": "false",
-      "expected_level": "unverified",
-      "matched": false
-    },
-    {
-      "case": "R28",
-      "category": "real_mixed",
-      "claim": [
-        "14亿"
-      ],
-      "truth": "true",
-      "expected_level": "verified",
-      "matched": false
-    },
-    {
-      "case": "R28",
-      "category": "real_mixed",
-      "claim": [
-        "尚未察觉"
-      ],
-      "truth": "true",
-      "expected_level": "verified",
-      "matched": false
-    },
-    {
-      "case": "R28",
-      "category": "real_mixed",
-      "claim": [
-        "得到控制"
-      ],
-      "truth": "false",
-      "expected_level": "unverified",
-      "matched": false
-    },
-    {
-      "case": "R04",
-      "category": "real_numeric_wrong",
-      "claim": [
-        "41218"
+        "汽车制造业",
+        "72.2"
       ],
       "truth": "false",
       "expected_level": "unverified",
@@ -257,23 +208,14 @@
       "matched": false
     },
     {
-      "case": "R24",
-      "category": "real_numeric_wrong",
+      "case": "R22",
+      "category": "real_contradicted",
       "claim": [
-        "1946"
+        "1953",
+        "中国登山队"
       ],
       "truth": "false",
       "expected_level": "unverified",
-      "matched": false
-    },
-    {
-      "case": "R28",
-      "category": "real_mixed",
-      "claim": [
-        "14亿"
-      ],
-      "truth": "true",
-      "expected_level": "verified",
       "matched": false
     },
     {
@@ -284,6 +226,68 @@
       ],
       "truth": "true",
       "expected_level": "verified",
+      "matched": false
+    },
+    {
+      "case": "R07",
+      "category": "real_number_wrong_quantity",
+      "claim": [
+        "新能源汽车",
+        "54.0"
+      ],
+      "truth": "false",
+      "expected_level": "unverified",
+      "matched": false
+    },
+    {
+      "case": "R12",
+      "category": "real_english",
+      "claim": [
+        "14%",
+        "1990"
+      ],
+      "truth": "true",
+      "expected_level": "verified",
+      "matched": false
+    },
+    {
+      "case": "R16",
+      "category": "real_number_wrong_quantity",
+      "claim": [
+        "45%"
+      ],
+      "truth": "false",
+      "expected_level": "unverified",
+      "matched": false
+    },
+    {
+      "case": "R19",
+      "category": "real_entity_swap",
+      "claim": [
+        "柯林斯"
+      ],
+      "truth": "false",
+      "expected_level": "unverified",
+      "matched": false
+    },
+    {
+      "case": "R20",
+      "category": "real_reference_single",
+      "claim": [
+        "8848.86"
+      ],
+      "truth": "true",
+      "expected_level": "single_source",
+      "matched": false
+    },
+    {
+      "case": "R24",
+      "category": "real_numeric_wrong",
+      "claim": [
+        "1946"
+      ],
+      "truth": "false",
+      "expected_level": "unverified",
       "matched": false
     },
     {

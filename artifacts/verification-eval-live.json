@@ -1,20 +1,20 @@
 {
   "mode": "live",
-  "generated_at": "2026-10-31T02:55:25.224606+00:00",
+  "generated_at": "2026-10-31T03:29:25.163492+00:00",
   "today": "2026-10-23",
   "cases": 48,
   "runs_per_case": 2,
   "gold_claims": 100,
   "extraction_recall": {
     "n": 100,
-    "rate": 0.84,
+    "rate": 0.88,
     "ci95": [
-      0.77,
-      0.91
+      0.81,
+      0.94
     ]
   },
   "false_pass_rate": {
-    "n": 42,
+    "n": 46,
     "rate": 0.0,
     "ci95": [
       0.0,
@@ -22,7 +22,7 @@
     ]
   },
   "verified_precision": {
-    "n": 32,
+    "n": 30,
     "rate": 1.0,
     "ci95": [
       1.0,
@@ -30,26 +30,26 @@
     ]
   },
   "level_accuracy": {
-    "n": 84,
-    "rate": 0.9881,
+    "n": 88,
+    "rate": 0.9773,
     "ci95": [
-      0.9643,
+      0.9432,
       1.0
     ]
   },
   "support_set_accuracy": {
-    "n": 84,
-    "rate": 0.9167,
+    "n": 88,
+    "rate": 0.9205,
     "ci95": [
-      0.8571,
-      0.9643
+      0.8636,
+      0.9659
     ]
   },
   "stale_accuracy": {
-    "n": 10,
-    "rate": 0.9,
+    "n": 9,
+    "rate": 0.7778,
     "ci95": [
-      0.7,
+      0.4444,
       1.0
     ]
   },
@@ -101,7 +101,7 @@
     },
     "contradicted": {
       "level_accuracy": {
-        "n": 7,
+        "n": 8,
         "rate": 1.0,
         "ci95": [
           1.0,
@@ -113,17 +113,17 @@
     "dated_fact": {
       "level_accuracy": {
         "n": 1,
-        "rate": 1.0,
+        "rate": 0.0,
         "ci95": [
-          1.0,
-          1.0
+          0.0,
+          0.0
         ]
       },
       "false_pass": 0
     },
     "english_positive": {
       "level_accuracy": {
-        "n": 1,
+        "n": 2,
         "rate": 1.0,
         "ci95": [
           1.0,
@@ -156,7 +156,7 @@
     },
     "fabricated_quote": {
       "level_accuracy": {
-        "n": 1,
+        "n": 2,
         "rate": 1.0,
         "ci95": [
           1.0,
@@ -267,9 +267,9 @@
     "positive_snippet_multi": {
       "level_accuracy": {
         "n": 2,
-        "rate": 1.0,
+        "rate": 0.5,
         "ci95": [
-          1.0,
+          0.0,
           1.0
         ]
       },
@@ -277,7 +277,7 @@
     },
     "qualifier": {
       "level_accuracy": {
-        "n": 3,
+        "n": 4,
         "rate": 1.0,
         "ci95": [
           1.0,
@@ -289,9 +289,9 @@
     "same_site": {
       "level_accuracy": {
         "n": 2,
-        "rate": 0.5,
+        "rate": 1.0,
         "ci95": [
-          0.0,
+          1.0,
           1.0
         ]
       },
@@ -310,7 +310,7 @@
     },
     "stale": {
       "level_accuracy": {
-        "n": 4,
+        "n": 3,
         "rate": 1.0,
         "ci95": [
           1.0,
@@ -376,7 +376,7 @@
     },
     "unit_trap": {
       "level_accuracy": {
-        "n": 2,
+        "n": 3,
         "rate": 1.0,
         "ci95": [
           1.0,
@@ -399,19 +399,34 @@
   },
   "failures": [
     {
-      "case": "N1",
-      "category": "same_site",
+      "case": "J3",
+      "category": "dated_fact",
       "claim": [
-        "4.2"
+        "14.1亿"
       ],
       "truth": "true",
-      "expected_level": "single_source",
+      "expected_level": "verified",
       "matched": true,
-      "level": "disputed",
+      "level": "unverified",
       "level_ok": false,
       "false_pass": false,
       "support_ok": false,
-      "stale_ok": true
+      "stale_ok": null
+    },
+    {
+      "case": "H14",
+      "category": "positive_snippet_multi",
+      "claim": [
+        "2400万"
+      ],
+      "truth": "true",
+      "expected_level": "verified",
+      "matched": true,
+      "level": "single_source",
+      "level_ok": false,
+      "false_pass": false,
+      "support_ok": false,
+      "stale_ok": null
     }
   ],
   "unextracted": [
@@ -426,23 +441,13 @@
       "matched": false
     },
     {
-      "case": "C1",
-      "category": "contradicted",
+      "case": "J2",
+      "category": "stale",
       "claim": [
-        "8844.43"
+        "2500"
       ],
-      "truth": "false",
-      "expected_level": "unverified",
-      "matched": false
-    },
-    {
-      "case": "H02",
-      "category": "unit_trap",
-      "claim": [
-        "1.41亿"
-      ],
-      "truth": "false",
-      "expected_level": "unverified",
+      "truth": "true",
+      "expected_level": "verified",
       "matched": false
     },
     {
@@ -467,26 +472,6 @@
       "matched": false
     },
     {
-      "case": "H15",
-      "category": "ai_answer_page",
-      "claim": [
-        "显著提高记忆力"
-      ],
-      "truth": "unsupported",
-      "expected_level": "single_source",
-      "matched": false
-    },
-    {
-      "case": "H18",
-      "category": "fabricated_quote",
-      "claim": [
-        "无需政策干预"
-      ],
-      "truth": "false",
-      "expected_level": "unverified",
-      "matched": false
-    },
-    {
       "case": "A1",
       "category": "authority_full",
       "claim": [
@@ -494,16 +479,6 @@
       ],
       "truth": "true",
       "expected_level": "verified",
-      "matched": false
-    },
-    {
-      "case": "F1",
-      "category": "qualifier",
-      "claim": [
-        "12个月"
-      ],
-      "truth": "false",
-      "expected_level": "unverified",
       "matched": false
     },
     {
@@ -568,13 +543,13 @@
       "matched": false
     },
     {
-      "case": "H20",
-      "category": "english_positive",
+      "case": "H15",
+      "category": "ai_answer_page",
       "claim": [
-        "100"
+        "显著提高记忆力"
       ],
-      "truth": "true",
-      "expected_level": "verified",
+      "truth": "unsupported",
+      "expected_level": "single_source",
       "matched": false
     }
   ]
