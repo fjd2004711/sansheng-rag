@@ -27,7 +27,7 @@ def _claim(**kw: Any) -> ExtractedClaim:
 
 @pytest.mark.anyio
 async def test_a_source_the_recheck_rejects_stops_counting_as_support() -> None:
-    with patch.object(audit, "_entailing_sources", AsyncMock(return_value={2})):
+    with patch.object(audit, "_entailing_sources", AsyncMock(side_effect=[{2}, {2}])):
         [out] = await recheck_support([_claim()], SOURCES, enabled=True)
     assert out.supporting == [2]
     assert out.contradicting == []  # dropped, not turned into a dispute
@@ -35,7 +35,15 @@ async def test_a_source_the_recheck_rejects_stops_counting_as_support() -> None:
 
 
 @pytest.mark.anyio
-async def test_when_every_source_is_rejected_the_claim_has_no_support() -> None:
+async def test_a_single_rejection_is_not_enough_to_drop_a_source() -> None:
+    # The first ask rejects source 1, the second confirms it: it stays.
+    with patch.object(audit, "_entailing_sources", AsyncMock(side_effect=[{2}, {1, 2}])):
+        [out] = await recheck_support([_claim()], SOURCES, enabled=True)
+    assert out.supporting == [1, 2]
+
+
+@pytest.mark.anyio
+async def test_when_every_source_is_rejected_twice_the_claim_has_no_support() -> None:
     with patch.object(audit, "_entailing_sources", AsyncMock(return_value=set())):
         [out] = await recheck_support([_claim()], SOURCES, enabled=True)
     assert out.supporting == []

@@ -7,6 +7,7 @@ no source are listed as caveats.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import re
 from collections import Counter
@@ -353,17 +354,21 @@ class ReportBuilder:
         insight_claims = await self.grade(
             title, insights, _cited_sources(insights, by_index) or cited
         )
-        recommendations: list[Recommendation] = []
-        for rec in drafts:
+        async def premises_of(rec: Recommendation) -> Recommendation | None:
             text = f"{rec.action} {rec.reason} {rec.caveat}"
             if unsupported_numbers(text, full_evidence):
-                continue  # advice built on a number found in no source is dropped, not softened
+                return None  # advice built on a number found in no source is dropped, not softened
             sources = _cited_sources(rec.reason, by_index)
             # Advice paraphrases its facts more freely than prose does, so its premises get a looser faithfulness bar.
             rec.premises = (
                 await self.grade(title, rec.reason, sources, min_overlap=0.6) if sources else []
             )
-            recommendations.append(rec)
+            return rec
+
+        # Each recommendation's premises are graded independently; doing them one by one made this step the
+        # longest single task of a run.
+        graded = await asyncio.gather(*(premises_of(rec) for rec in drafts))
+        recommendations = [rec for rec in graded if rec is not None]
         return audience, insights, insight_claims, recommendations
 
     async def grade(

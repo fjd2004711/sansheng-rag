@@ -83,7 +83,7 @@ policy:
   max_seconds: 2400
   max_repair_rounds: 2
   search_concurrency: 2
-  llm_concurrency: 4
+  llm_concurrency: 6
 nodes:
   - {id: plan, kind: agent, agent: planner, priority: 1}
   - {id: search, kind: map, agent: researcher, depends_on: [plan], map_over: query_batches, pool: search, priority: 2}
