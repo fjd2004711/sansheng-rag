@@ -82,14 +82,14 @@ policy:
   max_tokens: 1500000
   max_seconds: 2400
   max_repair_rounds: 2
-  search_concurrency: 2
+  search_concurrency: 3
   llm_concurrency: 6
 nodes:
   - {id: plan, kind: agent, agent: planner, priority: 1}
   - {id: search, kind: map, agent: researcher, depends_on: [plan], map_over: query_batches, pool: search, priority: 2}
   - {id: sections, kind: map, agent: writer, depends_on: [search], map_over: sections, pool: llm, priority: 3}
   - {id: search_national, kind: map, agent: researcher, depends_on: [search], map_over: national_batches, pool: search, priority: 5, essential: false}
-  - {id: verify, kind: map, agent: verifier, depends_on: [sections], map_over: sections, pool: llm, priority: 4}
+  - {id: verify, kind: map, agent: verifier, depends_on: [sections], map_over: sections, pipeline: true, pool: llm, priority: 2}
   - id: gate_sections
     kind: gate
     depends_on: [verify, search_national]
@@ -151,7 +151,7 @@ team: fact-check-team
 policy:
   max_tokens: 200000
   max_seconds: 900
-  search_concurrency: 2
+  search_concurrency: 3
 nodes:
   - {id: extract, kind: agent, agent: extractor, priority: 1}
   - {id: search, kind: agent, agent: researcher, depends_on: [extract], pool: search, priority: 2}

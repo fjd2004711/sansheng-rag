@@ -171,3 +171,56 @@ async def test_model_error_triggers_fallback_without_spending_an_attempt() -> No
     await s.run()
     assert used == ["primary", "backup"] and s.groups["g"].ok
     assert events.kinds("task_retry")[0]["reason"] == "model_fallback"
+
+
+@pytest.mark.anyio
+async def test_pipelined_group_starts_each_item_when_its_own_upstream_item_is_done() -> None:
+    events, log = Events(), []
+    s = _sched(events)
+
+    def make(name: str, group: str, delay: float, needs: list[str] | None = None) -> Task:
+        async def work() -> None:
+            await asyncio.sleep(delay)
+            log.append(name)
+
+        return _task(name, group, work, pool="llm", needs=needs or [])
+
+    async def expand_up() -> list[Task]:
+        return [make("up#0", "up", 0.05), make("up#1", "up", 0.4)]
+
+    async def expand_down() -> list[Task]:
+        return [make("down#0", "down", 0.05, ["up#0"]), make("down#1", "down", 0.05, ["up#1"])]
+
+    s.add_group(Group(id="up", expand=expand_up))
+    s.add_group(Group(id="down", deps=["up"], pipelined=["up"], expand=expand_down))
+    await s.run()
+    assert log == ["up#0", "down#0", "up#1", "down#1"]  # down#0 did not wait for the slow up#1
+    assert s.groups["down"].ok
+
+
+@pytest.mark.anyio
+async def test_pipelined_item_is_skipped_when_its_upstream_item_fails() -> None:
+    events = Events()
+    s = _sched(events)
+
+    async def boom() -> None:
+        raise RuntimeError("x")
+
+    async def fine() -> None:
+        return None
+
+    async def expand_up() -> list[Task]:
+        return [_task("up#0", "up", boom, retries=0), _task("up#1", "up", fine)]
+
+    async def expand_down() -> list[Task]:
+        return [
+            _task("down#0", "down", fine, needs=["up#0"]),
+            _task("down#1", "down", fine, needs=["up#1"]),
+        ]
+
+    s.add_group(Group(id="up", expand=expand_up))
+    s.add_group(Group(id="down", deps=["up"], pipelined=["up"], expand=expand_down))
+    await s.run()
+    statuses = {t.id: t.status for t in s.groups["down"].tasks}
+    assert statuses == {"down#0": "failed", "down#1": "done"}
+    assert not s.groups["down"].ok

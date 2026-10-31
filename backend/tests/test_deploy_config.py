@@ -5,7 +5,9 @@ ROOT = Path(__file__).resolve().parents[2]
 
 def _backend_command(compose: str) -> str:
     return next(
-        line.strip() for line in (ROOT / compose).read_text().splitlines() if "uvicorn app.main:app" in line
+        line.strip()
+        for line in (ROOT / compose).read_text().splitlines()
+        if "uvicorn app.main:app" in line
     )
 
 

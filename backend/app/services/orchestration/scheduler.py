@@ -33,6 +33,8 @@ class Task:
     essential: bool = True
     retries: int = 1
     timeout: float = 900.0
+    # Task ids that must be done first: lets a downstream map node start item i as soon as upstream item i is done.
+    needs: list[str] = field(default_factory=list)
     status: Status = "pending"
     attempts: int = 0
     queued_at: float = 0.0
@@ -46,6 +48,8 @@ class Task:
 class Group:
     id: str
     deps: list[str] = field(default_factory=list)
+    # Deps whose items are matched one-to-one (``Task.needs``): this group may expand once they have expanded.
+    pipelined: list[str] = field(default_factory=list)
     expand: Callable[[], Awaitable[list[Task]]] | None = None
     tasks: list[Task] = field(default_factory=list)
     priority: int = 5
@@ -160,13 +164,19 @@ class Scheduler:
             )
 
     def _deps_ok(self, group: Group) -> bool:
-        return all((d := self.groups.get(dep)) is not None and d.ok for dep in group.deps)
+        for dep in group.deps:
+            d = self.groups.get(dep)
+            if d is None or not (d.expanded if dep in group.pipelined else d.ok):
+                return False
+        return True
 
     def _skip_blocked(self) -> None:
         for group in self.groups.values():
             if group.expanded:
                 continue
             for dep in group.deps:
+                if dep in group.pipelined:
+                    continue
                 d = self.groups.get(dep)
                 if d is not None and d.finished and not d.ok:
                     group.expanded = True
@@ -185,7 +195,23 @@ class Scheduler:
         ready = [
             t for g in self.groups.values() if g.expanded for t in g.tasks if t.status == "pending"
         ]
+        by_id = {t.id: t for g in self.groups.values() for t in g.tasks}
         for task in sorted(ready, key=lambda t: (t.priority, t.queued_at)):
+            blockers = [by_id[n] for n in task.needs if n in by_id]
+            if any(b.status in ("failed", "skipped") for b in blockers):
+                task.status, task.error = "failed", "上游任务未完成"
+                await self._emit(
+                    "task_failed",
+                    {
+                        "task": task.id,
+                        "group": task.group,
+                        "error": task.error,
+                        "essential": task.essential,
+                    },
+                )
+                continue
+            if any(b.status != "done" for b in blockers):
+                continue
             if not task.essential and not self._budget_ok():
                 task.status = "skipped"
                 task.error = "预算已用尽，已取消这项非必要任务"

@@ -735,7 +735,16 @@ async def test_concurrent_page_indexing_never_overlaps_inserts() -> None:
     store = type("Store", (), {"insert_document": staticmethod(insert_document)})()
     corpus = WebCorpus(type("R", (), {"store": store})(), chunk_size=200, chunk_overlap=0)
     pages = [
-        [WebPage(url=f"https://example.com/{b}/{i}", title="t", domain="example.com", text="正文内容" * 30, fetched_at="") for i in range(3)]
+        [
+            WebPage(
+                url=f"https://example.com/{b}/{i}",
+                title="t",
+                domain="example.com",
+                text="正文内容" * 30,
+                fetched_at="",
+            )
+            for i in range(3)
+        ]
         for b in range(4)
     ]
     await asyncio.gather(*(corpus.add_pages(batch) for batch in pages))

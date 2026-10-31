@@ -721,8 +721,13 @@ async def test_corroboration_regrades_sections_concurrently() -> None:
             contradicting=[], domains=[], reason="r",
         )  # fmt: skip
 
-    sections = [ReportSection(heading=f"h{i}", body="正文 [1]", claims=[weak(f"说法{i} 12%")]) for i in range(4)]
-    planned = [OutlineSection(heading=f"h{i}", goal="g", indicators=[], queries=[]) for i in range(4)]
+    sections = [
+        ReportSection(heading=f"h{i}", body="正文 [1]", claims=[weak(f"说法{i} 12%")])
+        for i in range(4)
+    ]
+    planned = [
+        OutlineSection(heading=f"h{i}", goal="g", indicators=[], queries=[]) for i in range(4)
+    ]
     running = peak = 0
 
     async def slow_grade(*args: Any, **kwargs: Any) -> list[AuditedClaim]:
