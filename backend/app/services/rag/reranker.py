@@ -58,7 +58,9 @@ class LLMJSONReranker(BaseReranker):
         ]
         prompt = (
             "Rank the evidence passages by relevance to the user query. "
-            "Return only a JSON array ordered from most to least relevant. "
+            f"Return only a JSON array of the {top_k} most relevant passages, ordered from most to least "
+            "relevant, and leave out the rest (a shorter reply is faster). If fewer than that are relevant, "
+            "return only those, or [] when none is. "
             'Each item must contain {"id": integer, "score": number from 0 to 100}.\n'
             f"Query: {query}\nCandidates: {json.dumps(payload, ensure_ascii=False)}"
         )
