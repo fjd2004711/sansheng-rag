@@ -79,7 +79,7 @@ name: verified-report
 description: 带独立核查与有界自循环的调研分析报告
 team: research-report-team
 policy:
-  max_tokens: 900000
+  max_tokens: 1500000
   max_seconds: 2400
   max_repair_rounds: 2
   search_concurrency: 2
