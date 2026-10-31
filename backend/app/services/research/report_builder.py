@@ -263,10 +263,14 @@ class ReportBuilder:
             logger.warning("report_corroboration_search_failed", exc_info=True)
             return searches
         extra: dict[int, list[WebSource]] = {}
-        for i, claim in weak:
-            extra.setdefault(i, []).extend(await corpus.retrieve(claim.claim, limit=4))
+        found_per_claim = await asyncio.gather(
+            *(corpus.retrieve(claim.claim, limit=4) for _, claim in weak)
+        )
+        for (i, _claim), found in zip(weak, found_per_claim, strict=True):
+            extra.setdefault(i, []).extend(found)
         by_index = {s.index: s for s in corpus.sources}
-        for i, found in extra.items():
+
+        async def regrade(i: int, found: list[WebSource]) -> None:
             section = sections[i]
             sources = list(
                 {s.index: s for s in [*_cited_sources(section.body, by_index), *found]}.values()
@@ -274,6 +278,9 @@ class ReportBuilder:
             regraded = await self.grade(planned[i].goal, section.body, sources)
             if regraded:
                 section.claims = regraded
+
+        # Sections are independent; grading them one after another was the longest serial stretch of a repair round.
+        await asyncio.gather(*(regrade(i, found) for i, found in extra.items()))
         return searches
 
     async def section(
@@ -282,8 +289,9 @@ class ReportBuilder:
         await corpus.retrieve(
             f"{planned.heading} {planned.goal}", limit=settings.REPORT_SECTION_EVIDENCE
         )
-        for indicator in planned.indicators:
-            await corpus.retrieve(indicator, limit=3)
+        await asyncio.gather(
+            *(corpus.retrieve(indicator, limit=3) for indicator in planned.indicators)
+        )
         relevant = _relevant_sources(
             corpus.sources, planned, limit=settings.REPORT_SECTION_EVIDENCE + 6
         )
@@ -354,6 +362,7 @@ class ReportBuilder:
         insight_claims = await self.grade(
             title, insights, _cited_sources(insights, by_index) or cited
         )
+
         async def premises_of(rec: Recommendation) -> Recommendation | None:
             text = f"{rec.action} {rec.reason} {rec.caveat}"
             if unsupported_numbers(text, full_evidence):

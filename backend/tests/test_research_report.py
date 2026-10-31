@@ -705,3 +705,37 @@ async def test_summary_writer_is_told_which_claims_are_disputed_or_single_source
     assert len(weak) == 2
     assert any("47.9%" in w and "有争议" in w for w in weak)
     assert not any("1649" in w for w in weak)
+
+
+@pytest.mark.anyio
+async def test_corroboration_regrades_sections_concurrently() -> None:
+    import asyncio
+    from types import SimpleNamespace
+
+    from app.services.research.audit import AuditedClaim
+    from app.services.research.report_models import OutlineSection, ReportSection
+
+    def weak(text: str) -> AuditedClaim:
+        return AuditedClaim(
+            claim=text, level="single_source", supported=True, citation_indices=[1],
+            contradicting=[], domains=[], reason="r",
+        )  # fmt: skip
+
+    sections = [ReportSection(heading=f"h{i}", body="正文 [1]", claims=[weak(f"说法{i} 12%")]) for i in range(4)]
+    planned = [OutlineSection(heading=f"h{i}", goal="g", indicators=[], queries=[]) for i in range(4)]
+    running = peak = 0
+
+    async def slow_grade(*args: Any, **kwargs: Any) -> list[AuditedClaim]:
+        nonlocal running, peak
+        running += 1
+        peak = max(peak, running)
+        await asyncio.sleep(0.02)
+        running -= 1
+        return [weak("x")]
+
+    corpus = SimpleNamespace(sources=[], retrieve=AsyncMock(return_value=[]))
+    research = SimpleNamespace(gather=AsyncMock())
+    builder = report_builder.ReportBuilder(research)  # type: ignore[arg-type]
+    with patch.object(builder, "grade", slow_grade):
+        await builder.corroborate(planned, sections, corpus, SimpleNamespace())  # type: ignore[arg-type]
+    assert peak >= 3
