@@ -31,6 +31,7 @@ from app.services.research.audit import (
     audit_event,
     corroboration_query,
     extract_claims,
+    recheck_support,
     summary_markdown,
 )
 from app.services.research.corpus import WebCorpus, format_evidence
@@ -235,6 +236,7 @@ class ResearchService:
         except Exception:
             logger.warning("research_claim_extraction_failed", exc_info=True)
             extracted = []
+        extracted = await recheck_support(extracted, corpus.sources)
         today = datetime.now(ZoneInfo(settings.TIMEZONE)).date()
         audit = audit_claims(
             extracted, corpus.sources, today=today, stale_days=settings.RESEARCH_STALE_DAYS

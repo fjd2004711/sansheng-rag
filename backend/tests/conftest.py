@@ -68,3 +68,9 @@ def api_key_headers() -> dict[str, str]:
 # Note: For integration tests requiring authenticated users,
 # use dependency overrides with mock users instead of test_user fixture.
 # See tests/api/test_auth.py and tests/api/test_users.py for examples.
+
+
+@pytest.fixture(autouse=True)
+def _no_model_calls_from_support_recheck(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Tests that grade claims use canned extractions; the re-check would otherwise try to reach a model."""
+    monkeypatch.setattr(settings, "RESEARCH_RECHECK_SUPPORT", False)

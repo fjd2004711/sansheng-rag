@@ -199,6 +199,8 @@ class Settings(BaseSettings):
     RESEARCH_MAX_CORROBORATED_CLAIMS: int = 3
     # A time-sensitive claim whose newest source is older than this is flagged as possibly outdated.
     RESEARCH_STALE_DAYS: int = 365
+    # A second, independent model check that each cited source really states the claim (costs one call per claim).
+    RESEARCH_RECHECK_SUPPORT: bool = True
     # Research reports (Word / PDF): a longer pipeline run as a background job.
     REPORT_MAX_SECTIONS: int = 6
     REPORT_MAX_QUERIES: int = 14

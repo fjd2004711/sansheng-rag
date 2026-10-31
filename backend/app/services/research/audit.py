@@ -15,7 +15,9 @@ A time-sensitive claim (about the present, with no stated period) whose newest d
 
 from __future__ import annotations
 
+import asyncio
 import json
+import logging
 import re
 from datetime import date
 from typing import Any, Literal
@@ -24,12 +26,15 @@ from openai import AsyncOpenAI
 from pydantic import BaseModel, Field
 
 from app.core.clock import today_zh
+from app.core.config import settings
 from app.core.llm_runtime import current_llm
 from app.core.usage_meter import record_openai_response
 from app.services.rag.guard import UNTRUSTED_NOTE
 from app.services.research.credibility import TIER_LABELS, registrable_domain
 from app.services.research.independence import independent_groups, origin_of
 from app.services.research.models import WebSource
+
+logger = logging.getLogger(__name__)
 
 Level = Literal["verified", "single_source", "disputed", "unverified"]
 
@@ -117,6 +122,92 @@ async def extract_claims(
         if claim_in_answer(claim.claim, answer, question=question, min_overlap=min_overlap)
         and not is_absence_statement(claim.claim)
     ]
+
+
+_RECHECK_CONCURRENCY = 4
+_RECHECK_PASSAGE_CHARS = 1800
+
+
+async def recheck_support(
+    claims: list[ExtractedClaim], sources: list[WebSource], *, enabled: bool | None = None
+) -> list[ExtractedClaim]:
+    """A second, independent look at which sources really state each claim.
+
+    Extraction names the supporting sources in the same call that wrote the claim, so it grades its own work.
+    Here each claim is judged on its own against only its candidate sources: same subject, same metric, same
+    period and scope. A source that merely contains the same number for something else stops counting as
+    support. It is not turned into a contradiction (that would invent disputes); a failed check keeps the
+    original judgement.
+    """
+    if enabled is None:
+        enabled = settings.RESEARCH_RECHECK_SUPPORT
+    if not enabled:
+        return claims
+    by_index = {s.index: s for s in sources}
+    gate = asyncio.Semaphore(_RECHECK_CONCURRENCY)
+
+    async def one(claim: ExtractedClaim) -> ExtractedClaim:
+        candidates = [i for i in dict.fromkeys(claim.supporting) if i in by_index]
+        if not candidates:
+            return claim
+        async with gate:
+            try:
+                kept = await _entailing_sources(claim.claim, {i: by_index[i] for i in candidates})
+            except Exception:
+                logger.warning("support_recheck_failed", exc_info=True)
+                return claim
+        if kept is None:
+            return claim
+        dropped = [i for i in candidates if i not in kept]
+        if not dropped:
+            return claim
+        note = (
+            claim.note + "；" if claim.note else ""
+        ) + f"复核：{_cite([by_index[i] for i in dropped])} 并未陈述同一件事"
+        return claim.model_copy(
+            update={"supporting": [i for i in candidates if i in kept], "note": note}
+        )
+
+    return list(await asyncio.gather(*(one(c) for c in claims)))
+
+
+async def _entailing_sources(claim: str, candidates: dict[int, WebSource]) -> set[int] | None:
+    """Indices among ``candidates`` whose text states the claim; None when the reply cannot be read."""
+    llm = current_llm()
+    passages = "\n\n".join(
+        f"[{i}] {s.content[:_RECHECK_PASSAGE_CHARS]}" for i, s in candidates.items()
+    )
+    prompt = (
+        "判断下面每份资料是否陈述了这条“说法”所说的同一件事。"
+        "只有出现下面这些情况才判为不陈述：对象不同；指标不同（例如“已诊断”“已治疗”“已控制”是不同指标，“增长”和“占比”也不同）；"
+        "时间或范围不同（如把单校、单地区数据当成全国）；数字对不上；资料说的是相反或更弱的结论（如“尚未批准”对“已批准”）。"
+        "下面这些仍然算陈述：意思相同但措辞不同；万与亿等单位换算后一致；“约”“大约”“左右”等近似说法；"
+        "资料转述或引用了同一事实（“据某某报道”“转自某某”）；资料比说法多出一些无关细节。"
+        '只返回 JSON：{"entails": [资料编号...]}，编号只能从下面出现的里选。\n'
+        f"说法：{claim}\n资料：\n{passages}"
+    )
+    async with AsyncOpenAI(base_url=llm.base_url, api_key=llm.api_key) as client:
+        response = await client.chat.completions.create(
+            model=llm.model,
+            messages=[
+                {"role": "system", "content": UNTRUSTED_NOTE},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0,
+            extra_body=llm.extra_body,
+        )
+    record_openai_response(response)
+    match = re.search(r"\{[\s\S]*\}", response.choices[0].message.content or "")
+    if not match:
+        return None
+    try:
+        value = json.loads(match.group(0))
+    except json.JSONDecodeError:
+        return None
+    entails = value.get("entails") if isinstance(value, dict) else None
+    if not isinstance(entails, list):
+        return None
+    return {i for i in entails if isinstance(i, int) and i in candidates}
 
 
 _ABSENCE = re.compile(

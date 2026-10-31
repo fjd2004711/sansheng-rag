@@ -676,3 +676,32 @@ async def test_synthesis_grades_premises_and_drops_advice_with_unsourced_numbers
     assert report.recommendations[0].basis == "strong"
     assert report.recommendations[1].basis == "inference"
     assert report.audience == "毕业生"
+
+
+@pytest.mark.anyio
+async def test_summary_writer_is_told_which_claims_are_disputed_or_single_source() -> None:
+    from types import SimpleNamespace
+
+    from app.services.research.audit import AuditedClaim
+    from app.services.research.report_models import ReportSection
+
+    def claim(text: str, level: str) -> AuditedClaim:
+        return AuditedClaim(
+            claim=text, level=level, supported=level != "unverified",  # type: ignore[arg-type]
+            citation_indices=[1], contradicting=[], domains=[], reason="r",
+        )  # fmt: skip
+
+    section = ReportSection(
+        heading="h", body="正文 [1]", analysis="", claims=[
+            claim("渗透率为47.9%", "disputed"), claim("销量1649万辆", "verified"), claim("出口261万辆", "single_source"),
+        ],
+    )  # fmt: skip
+    writer = AsyncMock(return_value="- x")
+    builder = report_builder.ReportBuilder(SimpleNamespace())  # type: ignore[arg-type]
+    corpus = SimpleNamespace(sources=[])
+    with patch.object(report_builder, "write_summary", writer):
+        await builder.summary("t", [section], corpus)  # type: ignore[arg-type]
+    weak = writer.await_args.kwargs["weak"]
+    assert len(weak) == 2
+    assert any("47.9%" in w and "有争议" in w for w in weak)
+    assert not any("1649" in w for w in weak)

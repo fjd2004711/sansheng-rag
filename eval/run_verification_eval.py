@@ -27,7 +27,7 @@ sys.path.insert(0, str(HERE))
 
 from verification_scoring import aggregate, load_cases, oracle_claim_text, score_case
 
-from app.services.research.audit import ExtractedClaim, audit_claims, extract_claims
+from app.services.research.audit import ExtractedClaim, audit_claims, extract_claims, recheck_support
 from app.services.research.corpus import format_evidence
 from app.services.research.credibility import registrable_domain, source_tier
 from app.services.research.models import WebSource
@@ -36,6 +36,7 @@ TODAY = date(2026, 10, 23)
 STALE_DAYS = 365
 
 
+RECHECK = True  # set by --no-recheck for an A/B comparison
 PASSAGE_CHARS = 900
 PASSAGES_PER_PAGE = 3
 
@@ -118,6 +119,7 @@ async def grade(case: dict[str, Any], mode: str) -> list[dict[str, Any]]:
         extracted = oracle_claims(case)
     else:
         extracted = await extract_claims(case["question"], case["answer"], format_evidence(sources))
+        extracted = await recheck_support(extracted, sources, enabled=RECHECK)
     audit = audit_claims(extracted, sources, today=TODAY, stale_days=STALE_DAYS)
     return [c.model_dump() for c in audit.claims]
 
@@ -128,7 +130,10 @@ async def main() -> None:
     parser.add_argument("--repeat", type=int, default=1, help="live only: runs per case, to expose model variance")
     parser.add_argument("--cases", default=str(HERE / "verification" / "cases.jsonl"))
     parser.add_argument("--out", default=None)
+    parser.add_argument("--no-recheck", action="store_true", help="skip the independent support re-check (baseline)")
     args = parser.parse_args()
+    global RECHECK
+    RECHECK = not args.no_recheck
 
     cases = load_cases(Path(args.cases))
     runs = args.repeat if args.mode == "live" else 1

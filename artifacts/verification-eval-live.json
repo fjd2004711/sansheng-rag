@@ -1,20 +1,20 @@
 {
   "mode": "live",
-  "generated_at": "2026-10-23T16:18:00.765706+00:00",
+  "generated_at": "2026-10-31T02:55:25.224606+00:00",
   "today": "2026-10-23",
   "cases": 48,
   "runs_per_case": 2,
   "gold_claims": 100,
   "extraction_recall": {
     "n": 100,
-    "rate": 0.92,
+    "rate": 0.84,
     "ci95": [
-      0.86,
-      0.97
+      0.77,
+      0.91
     ]
   },
   "false_pass_rate": {
-    "n": 50,
+    "n": 42,
     "rate": 0.0,
     "ci95": [
       0.0,
@@ -22,7 +22,7 @@
     ]
   },
   "verified_precision": {
-    "n": 33,
+    "n": 32,
     "rate": 1.0,
     "ci95": [
       1.0,
@@ -30,34 +30,45 @@
     ]
   },
   "level_accuracy": {
-    "n": 92,
-    "rate": 1.0,
+    "n": 84,
+    "rate": 0.9881,
     "ci95": [
-      1.0,
+      0.9643,
       1.0
     ]
   },
   "support_set_accuracy": {
-    "n": 92,
-    "rate": 0.9783,
+    "n": 84,
+    "rate": 0.9167,
     "ci95": [
-      0.9457,
-      1.0
+      0.8571,
+      0.9643
     ]
   },
   "stale_accuracy": {
     "n": 10,
-    "rate": 0.8,
+    "rate": 0.9,
     "ci95": [
-      0.5,
+      0.7,
       1.0
     ]
   },
-  "spurious_claims": 9,
+  "spurious_claims": 7,
   "by_category": {
     "ai_answer_page": {
       "level_accuracy": {
-        "n": 2,
+        "n": 1,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "authority_conflict": {
+      "level_accuracy": {
+        "n": 1,
         "rate": 1.0,
         "ci95": [
           1.0,
@@ -68,7 +79,7 @@
     },
     "authority_full": {
       "level_accuracy": {
-        "n": 10,
+        "n": 8,
         "rate": 1.0,
         "ci95": [
           1.0,
@@ -90,7 +101,7 @@
     },
     "contradicted": {
       "level_accuracy": {
-        "n": 8,
+        "n": 7,
         "rate": 1.0,
         "ci95": [
           1.0,
@@ -101,7 +112,18 @@
     },
     "dated_fact": {
       "level_accuracy": {
-        "n": 2,
+        "n": 1,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "false_pass": 0
+    },
+    "english_positive": {
+      "level_accuracy": {
+        "n": 1,
         "rate": 1.0,
         "ci95": [
           1.0,
@@ -134,7 +156,7 @@
     },
     "fabricated_quote": {
       "level_accuracy": {
-        "n": 2,
+        "n": 1,
         "rate": 1.0,
         "ci95": [
           1.0,
@@ -156,7 +178,7 @@
     },
     "low_contradicts_authority": {
       "level_accuracy": {
-        "n": 1,
+        "n": 2,
         "rate": 1.0,
         "ci95": [
           1.0,
@@ -211,7 +233,7 @@
     },
     "opinion_as_fact": {
       "level_accuracy": {
-        "n": 2,
+        "n": 1,
         "rate": 1.0,
         "ci95": [
           1.0,
@@ -255,7 +277,7 @@
     },
     "qualifier": {
       "level_accuracy": {
-        "n": 4,
+        "n": 3,
         "rate": 1.0,
         "ci95": [
           1.0,
@@ -267,20 +289,9 @@
     "same_site": {
       "level_accuracy": {
         "n": 2,
-        "rate": 1.0,
+        "rate": 0.5,
         "ci95": [
-          1.0,
-          1.0
-        ]
-      },
-      "false_pass": 0
-    },
-    "scope_inflation": {
-      "level_accuracy": {
-        "n": 2,
-        "rate": 1.0,
-        "ci95": [
-          1.0,
+          0.0,
           1.0
         ]
       },
@@ -321,7 +332,7 @@
     },
     "syndication": {
       "level_accuracy": {
-        "n": 3,
+        "n": 4,
         "rate": 1.0,
         "ci95": [
           1.0,
@@ -365,7 +376,7 @@
     },
     "unit_trap": {
       "level_accuracy": {
-        "n": 4,
+        "n": 2,
         "rate": 1.0,
         "ci95": [
           1.0,
@@ -386,76 +397,174 @@
       "false_pass": 0
     }
   },
-  "failures": [],
-  "unextracted": [
+  "failures": [
     {
-      "case": "G1",
-      "category": "syndication",
+      "case": "N1",
+      "category": "same_site",
       "claim": [
-        "60架"
+        "4.2"
       ],
       "truth": "true",
       "expected_level": "single_source",
-      "matched": false
-    },
+      "matched": true,
+      "level": "disputed",
+      "level_ok": false,
+      "false_pass": false,
+      "support_ok": false,
+      "stale_ok": true
+    }
+  ],
+  "unextracted": [
     {
-      "case": "H05",
-      "category": "percent_points",
-      "claim": [
-        "上升了2%"
-      ],
-      "truth": "false",
-      "expected_level": "unverified",
-      "matched": false
-    },
-    {
-      "case": "H10",
-      "category": "authority_conflict",
-      "claim": [
-        "5.3%"
-      ],
-      "truth": "contested",
-      "expected_level": "disputed",
-      "matched": false
-    },
-    {
-      "case": "H20",
-      "category": "english_positive",
-      "claim": [
-        "100"
-      ],
-      "truth": "true",
-      "expected_level": "verified",
-      "matched": false
-    },
-    {
-      "case": "H05",
-      "category": "percent_points",
-      "claim": [
-        "上升了2%"
-      ],
-      "truth": "false",
-      "expected_level": "unverified",
-      "matched": false
-    },
-    {
-      "case": "H10",
-      "category": "authority_conflict",
-      "claim": [
-        "5.3%"
-      ],
-      "truth": "contested",
-      "expected_level": "disputed",
-      "matched": false
-    },
-    {
-      "case": "H11",
-      "category": "low_contradicts_authority",
+      "case": "A1",
+      "category": "authority_full",
       "claim": [
         "8848.86"
       ],
       "truth": "true",
       "expected_level": "verified",
+      "matched": false
+    },
+    {
+      "case": "C1",
+      "category": "contradicted",
+      "claim": [
+        "8844.43"
+      ],
+      "truth": "false",
+      "expected_level": "unverified",
+      "matched": false
+    },
+    {
+      "case": "H02",
+      "category": "unit_trap",
+      "claim": [
+        "1.41亿"
+      ],
+      "truth": "false",
+      "expected_level": "unverified",
+      "matched": false
+    },
+    {
+      "case": "H05",
+      "category": "percent_points",
+      "claim": [
+        "上升了2%"
+      ],
+      "truth": "false",
+      "expected_level": "unverified",
+      "matched": false
+    },
+    {
+      "case": "H08",
+      "category": "scope_inflation",
+      "claim": [
+        "全国",
+        "97.2%"
+      ],
+      "truth": "false",
+      "expected_level": "unverified",
+      "matched": false
+    },
+    {
+      "case": "H15",
+      "category": "ai_answer_page",
+      "claim": [
+        "显著提高记忆力"
+      ],
+      "truth": "unsupported",
+      "expected_level": "single_source",
+      "matched": false
+    },
+    {
+      "case": "H18",
+      "category": "fabricated_quote",
+      "claim": [
+        "无需政策干预"
+      ],
+      "truth": "false",
+      "expected_level": "unverified",
+      "matched": false
+    },
+    {
+      "case": "A1",
+      "category": "authority_full",
+      "claim": [
+        "8848.86"
+      ],
+      "truth": "true",
+      "expected_level": "verified",
+      "matched": false
+    },
+    {
+      "case": "F1",
+      "category": "qualifier",
+      "claim": [
+        "12个月"
+      ],
+      "truth": "false",
+      "expected_level": "unverified",
+      "matched": false
+    },
+    {
+      "case": "J3",
+      "category": "dated_fact",
+      "claim": [
+        "14.1亿"
+      ],
+      "truth": "true",
+      "expected_level": "verified",
+      "matched": false
+    },
+    {
+      "case": "H02",
+      "category": "unit_trap",
+      "claim": [
+        "1.41亿"
+      ],
+      "truth": "false",
+      "expected_level": "unverified",
+      "matched": false
+    },
+    {
+      "case": "H05",
+      "category": "percent_points",
+      "claim": [
+        "上升了2%"
+      ],
+      "truth": "false",
+      "expected_level": "unverified",
+      "matched": false
+    },
+    {
+      "case": "H08",
+      "category": "scope_inflation",
+      "claim": [
+        "全国",
+        "97.2%"
+      ],
+      "truth": "false",
+      "expected_level": "unverified",
+      "matched": false
+    },
+    {
+      "case": "H10",
+      "category": "authority_conflict",
+      "claim": [
+        "5.3%"
+      ],
+      "truth": "contested",
+      "expected_level": "disputed",
+      "matched": false
+    },
+    {
+      "case": "H12",
+      "category": "opinion_as_fact",
+      "claim": [
+        "下降了15%"
+      ],
+      "truth": "false",
+      "expected_level": "unverified",
       "matched": false
     },
     {
