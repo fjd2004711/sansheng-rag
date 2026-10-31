@@ -81,6 +81,8 @@ class RunState:
     log: TraceLog = field(default_factory=TraceLog)
     outline: ReportOutline | None = None
     queries: list[str] = field(default_factory=list)
+    # Official, national-scope searches run while sections are being drafted (the search pool is idle then).
+    national_queries: list[str] = field(default_factory=list)
     sections: dict[int, ReportSection] = field(default_factory=dict)
     kept: dict[int, int] = field(default_factory=dict)
     rejected: dict[int, int] = field(default_factory=dict)
