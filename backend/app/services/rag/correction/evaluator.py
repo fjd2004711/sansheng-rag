@@ -51,7 +51,9 @@ class EvidenceEvaluator:
             "keys relevance_scores (0..1 array), sufficient (boolean), missing_information "
             "(string array), failure_type (insufficient_evidence|ambiguous_query|out_of_scope|"
             "irrelevant_evidence|null), failure_reason (string). "
-            "Write failure_reason and every missing_information item in Chinese, as plain sentences a non-technical reader understands (say what is missing or wrong, not internal terms). \n"
+            "Write failure_reason and every missing_information item in Chinese, as plain sentences a non-technical reader understands (say what is missing or wrong, not internal terms). "
+            'When sufficient is true, set failure_type to null and use "" and [] for failure_reason and '
+            "missing_information (no explanation needed). \n"
             f"Question: {question}\nQuery: {query}\nEvidence: {json.dumps(payload, ensure_ascii=False)}"
         )
         parsed = _json_object(await self._complete(prompt))
