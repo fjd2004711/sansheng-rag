@@ -73,6 +73,9 @@ def expand_items(state: RunState, map_over: str) -> list[Any]:
     if map_over == "query_batches":
         q = state.queries
         return [q[i : i + _QUERY_BATCH] for i in range(0, len(q), _QUERY_BATCH)]
+    if map_over == "national_batches":
+        q = state.national_queries
+        return [q[i : i + _QUERY_BATCH] for i in range(0, len(q), _QUERY_BATCH)]
     if map_over == "sections":
         return list(range(len(state.outline.sections))) if state.outline else []
     raise ValueError(f"未知的 map_over：{map_over}")
@@ -81,7 +84,7 @@ def expand_items(state: RunState, map_over: str) -> list[Any]:
 def item_label(state: RunState, map_over: str, item: Any) -> str:
     if map_over == "sections" and state.outline:
         return state.outline.sections[item].heading
-    if map_over == "query_batches":
+    if map_over in ("query_batches", "national_batches"):
         return "、".join(item)[:40]
     return str(item)
 
@@ -93,6 +96,9 @@ def item_label(state: RunState, map_over: str, item: Any) -> str:
 async def plan_outline(ctx: SkillCtx, _item: Any) -> dict[str, Any]:
     st = ctx.state
     st.outline, st.queries = await ctx.builder.plan(st.topic)
+    st.national_queries = [
+        q for q in national_queries(st.topic, st.outline.sections) if q not in st.queries
+    ]
     st.corpus = ctx.builder.new_corpus()
     return {
         "title": st.outline.title,
@@ -106,6 +112,8 @@ async def search_web(ctx: SkillCtx, batch: list[str]) -> dict[str, Any]:
     st = ctx.state
     assert st.corpus is not None
     ok = await ctx.builder.search_batch(batch, st.corpus, st.log, round_=len(st.log.pages))
+    if ctx.node.id == "search_national":
+        st.queries.extend(batch)
     if not ok:
         await ctx.emit("search_batch_failed", {"queries": batch})
     return {"ok": ok, "pages": len(st.log.pages)}
@@ -215,14 +223,24 @@ async def repair_report(ctx: SkillCtx, idx: int) -> dict[str, Any]:
     return {"accepted": accepted, "before": before_ratio, "after": after_ratio}
 
 
-def repair_queries(state: RunState, failures_by_section: dict[int, list[Failure]]) -> list[str]:
-    assert state.outline is not None
-    out: list[str] = []
-    for idx in failures_by_section:
-        planned = state.outline.sections[idx]
-        for indicator in planned.indicators[:_REPAIR_QUERIES_PER_SECTION]:
-            out.append(f"{state.topic} {indicator} 全国 官方发布")
+def national_queries(topic: str, sections: list[Any]) -> list[str]:
+    """One official, national-scope search per leading indicator of each section."""
+    out = [
+        f"{topic} {indicator} 全国 官方发布"
+        for planned in sections
+        for indicator in planned.indicators[:_REPAIR_QUERIES_PER_SECTION]
+    ]
     return list(dict.fromkeys(out))
+
+
+def repair_queries(state: RunState, failures_by_section: dict[int, list[Failure]]) -> list[str]:
+    """Searches for the failing sections that have not been run yet (the national ones usually already were)."""
+    assert state.outline is not None
+    wanted = national_queries(
+        state.topic, [state.outline.sections[idx] for idx in failures_by_section]
+    )
+    done = {*state.queries, *state.national_queries}
+    return [q for q in wanted if q not in done]
 
 
 def current_diagnosis(ctx: SkillCtx) -> Diagnosis:
@@ -291,18 +309,18 @@ async def run_gate(
         # section is then rewritten on the enlarged corpus (scope-first), and re-verified inside the same task.
         queries = repair_queries(st, by_section)
         group_id = f"repair#r{round_ + 1}"
-        search_tasks = []
-        if queries:
-            search_tasks.append(
-                ctx.make_task(
-                    f"{group_id}:search",
-                    f"{group_id}:search",
-                    lambda q=queries, r=round_: _repair_search(ctx, q, r),
-                    label="定向补检索（全国口径、官方发布）",
-                    pool="search",
-                    essential=False,
-                )
+        # Always run: besides any official-source queries not searched yet, this step searches again for the claims
+        # that are still disputed or single-source (that depends on the draft, so it cannot be done earlier).
+        search_tasks = [
+            ctx.make_task(
+                f"{group_id}:search",
+                f"{group_id}:search",
+                lambda q=queries, r=round_: _repair_search(ctx, q, r),
+                label="补检索：存疑说法找权威来源",
+                pool="search",
+                essential=False,
             )
+        ]
         search_group = ctx.make_group(f"{group_id}:search", tasks=search_tasks)
         await ctx.run_group(search_group)
         rewrite_tasks = [
@@ -341,7 +359,11 @@ async def run_gate(
 async def _repair_search(ctx: SkillCtx, queries: list[str], round_: int) -> dict[str, Any]:
     st = ctx.state
     assert st.corpus is not None and st.outline is not None
-    ok = await ctx.builder.search_batch(queries[:6], st.corpus, st.log, round_=200 + round_)
+    ok = (
+        await ctx.builder.search_batch(queries[:6], st.corpus, st.log, round_=200 + round_)
+        if queries
+        else True
+    )
     weak_queries = await ctx.builder.corroborate(
         st.outline.sections, st.ordered_sections(), st.corpus, st.log
     )

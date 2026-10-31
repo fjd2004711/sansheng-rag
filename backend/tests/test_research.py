@@ -713,3 +713,30 @@ def test_grade_snippet_only_general_contradiction_does_not_dispute() -> None:
     ).claims[0]
     assert graded.level == "verified"
     assert "不足以构成争议" in graded.reason
+
+
+@pytest.mark.anyio
+async def test_concurrent_page_indexing_never_overlaps_inserts() -> None:
+    import asyncio
+
+    from app.services.research.corpus import WebCorpus
+    from app.services.research.models import WebPage
+
+    active = 0
+    peak = 0
+
+    async def insert_document(collection: str, document: Any) -> None:
+        nonlocal active, peak
+        active += 1
+        peak = max(peak, active)
+        await asyncio.sleep(0.01)
+        active -= 1
+
+    store = type("Store", (), {"insert_document": staticmethod(insert_document)})()
+    corpus = WebCorpus(type("R", (), {"store": store})(), chunk_size=200, chunk_overlap=0)
+    pages = [
+        [WebPage(url=f"https://example.com/{b}/{i}", title="t", domain="example.com", text="正文内容" * 30, fetched_at="") for i in range(3)]
+        for b in range(4)
+    ]
+    await asyncio.gather(*(corpus.add_pages(batch) for batch in pages))
+    assert peak == 1

@@ -88,10 +88,11 @@ nodes:
   - {id: plan, kind: agent, agent: planner, priority: 1}
   - {id: search, kind: map, agent: researcher, depends_on: [plan], map_over: query_batches, pool: search, priority: 2}
   - {id: sections, kind: map, agent: writer, depends_on: [search], map_over: sections, pool: llm, priority: 3}
+  - {id: search_national, kind: map, agent: researcher, depends_on: [search], map_over: national_batches, pool: search, priority: 5, essential: false}
   - {id: verify, kind: map, agent: verifier, depends_on: [sections], map_over: sections, pool: llm, priority: 4}
   - id: gate_sections
     kind: gate
-    depends_on: [verify]
+    depends_on: [verify, search_national]
     on_fail: repair
     max_rounds: 2
     pool: none

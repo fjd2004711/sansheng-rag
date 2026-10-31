@@ -6,6 +6,7 @@ collection that lives only for the run, so web evidence is scored and cited exac
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import uuid
 from typing import Any
@@ -42,6 +43,8 @@ class WebCorpus:
         )
         self._indexed_urls: set[str] = set()
         self._sources: dict[str, WebSource] = {}
+        # Concurrent search tasks index pages into the same collection; its creation must not race (409 Conflict).
+        self._insert_lock = asyncio.Lock()
 
     @property
     def sources(self) -> list[WebSource]:
@@ -60,7 +63,8 @@ class WebCorpus:
             document = _to_document(page, self._splitter.split_text(page.text))
             if not document.chunked_pages:
                 continue
-            await self._retrieval.store.insert_document(self.collection, document)
+            async with self._insert_lock:
+                await self._retrieval.store.insert_document(self.collection, document)
             added += len(document.chunked_pages)
         if added:
             invalidate_bm25_index(self.collection)
