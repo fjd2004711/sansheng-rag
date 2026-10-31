@@ -23,6 +23,7 @@ from app.services.research.audit import (
     audit_claims,
     corroboration_query,
     extract_claims,
+    recheck_support,
 )
 from app.services.research.authorities import with_official_variants
 from app.services.research.corpus import WebCorpus, format_evidence
@@ -318,7 +319,13 @@ class ReportBuilder:
         by_index = {s.index: s for s in corpus.sources}
         texts = [(s.heading, s.body) for s in sections]
         cited = _cited_sources("\n".join(s.body for s in sections), by_index)
-        summary = await write_summary(title, texts, format_evidence(cited))
+        weak = [
+            f"{c.claim}（{LEVEL_LABELS[c.level]}）"
+            for sec in sections
+            for c in sec.claims
+            if c.level in ("disputed", "single_source")
+        ]
+        summary = await write_summary(title, texts, format_evidence(cited), weak=weak)
         return summary, await self.grade(title, summary, _cited_sources(summary, by_index) or cited)
 
     async def synthesis(
@@ -371,6 +378,7 @@ class ReportBuilder:
         except Exception:
             logger.warning("report_claim_extraction_failed", exc_info=True)
             return []
+        extracted = await recheck_support(extracted, sources)
         today = datetime.now(ZoneInfo(settings.TIMEZONE)).date()
         return audit_claims(
             extracted, sources, today=today, stale_days=settings.RESEARCH_STALE_DAYS

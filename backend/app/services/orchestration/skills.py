@@ -22,7 +22,7 @@ from app.services.orchestration.verification import (
     gate_check,
     is_narrow_scope,
 )
-from app.services.research.audit import AuditedClaim, audit_claims, extract_claims
+from app.services.research.audit import AuditedClaim, audit_claims, extract_claims, recheck_support
 from app.services.research.corpus import format_evidence
 from app.services.research.exceptions import WebSearchError
 from app.services.research.report_builder import (
@@ -450,6 +450,7 @@ async def verify_claims(ctx: SkillCtx, _item: Any) -> dict[str, Any]:
         found.extend(await st.corpus.retrieve(claim.claim, limit=4))
     sources = list({s.index: s for s in found}.values()) or st.corpus.sources
     extracted = await extract_claims("请核查这段文字", text, format_evidence(sources))
+    extracted = await recheck_support(extracted, sources)
     today = datetime.now(ZoneInfo(settings.TIMEZONE)).date()
     st.graded = audit_claims(
         extracted, sources, today=today, stale_days=settings.RESEARCH_STALE_DAYS
