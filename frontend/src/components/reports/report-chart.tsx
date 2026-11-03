@@ -42,39 +42,53 @@ export function ReportChart({ chart }: { chart: Chart }) {
           borderColor: grid,
           textStyle: { color: dark ? "#f4f4f5" : "#18181b" },
         },
-        grid: { left: 8, right: 16, top: 64, bottom: 8, containLabel: true },
-        xAxis: {
-          type: "category",
-          data: chart.labels,
-          boundaryGap: chart.kind === "bar",
-          axisLine: { lineStyle: { color: grid } },
-          axisLabel: { color: text, interval: 0, width: 90, overflow: "break" },
-        },
-        yAxis: {
-          type: "value",
-          name: chart.unit,
-          nameTextStyle: { color: text, align: "left" },
-          scale: chart.kind !== "bar", // bars start at zero, or the short ones look far smaller than they are
-          splitLine: { lineStyle: { color: grid } },
-          axisLabel: { color: text },
-        },
-        series: [
-          chart.kind === "bar"
-            ? {
-                type: "bar",
-                data: chart.values,
-                barMaxWidth: 40,
-                itemStyle: { color: accent, borderRadius: [3, 3, 0, 0] },
-                label: { show: true, position: "top", color: text, fontSize: 11 },
-              }
-            : {
-                type: "line",
-                data: chart.values,
-                symbolSize: 6,
-                lineStyle: { width: 2, color: accent },
-                itemStyle: { color: accent },
-                label: { show: true, position: "top", color: text, fontSize: 11 },
+        ...(chart.kind === "pie"
+          ? {}
+          : {
+              grid: { left: 8, right: 16, top: 64, bottom: 8, containLabel: true },
+              xAxis: {
+                type: "category",
+                data: chart.labels,
+                boundaryGap: chart.kind === "bar",
+                axisLine: { lineStyle: { color: grid } },
+                axisLabel: { color: text, interval: 0, width: 90, overflow: "break" },
               },
+              yAxis: {
+                type: "value",
+                name: chart.unit,
+                nameTextStyle: { color: text, align: "left" },
+                scale: chart.kind !== "bar", // bars start at zero, or the short ones look far smaller than they are
+                splitLine: { lineStyle: { color: grid } },
+                axisLabel: { color: text },
+              },
+            }),
+        series: [
+          chart.kind === "pie"
+            ? {
+                type: "pie",
+                radius: ["38%", "66%"],
+                center: ["50%", "56%"],
+                data: chart.labels.map((name, i) => ({ name, value: chart.values[i] })),
+                label: { color: text, formatter: "{b}\n{d}%", fontSize: 11 },
+                itemStyle: { borderColor: dark ? "#18181b" : "#fff", borderWidth: 2 },
+                color: ["#3b82f6", "#64748b", "#94a3b8", "#0ea5e9", "#a1a1aa", "#cbd5e1"],
+              }
+            : chart.kind === "bar"
+              ? {
+                  type: "bar",
+                  data: chart.values,
+                  barMaxWidth: 40,
+                  itemStyle: { color: accent, borderRadius: [3, 3, 0, 0] },
+                  label: { show: true, position: "top", color: text, fontSize: 11 },
+                }
+              : {
+                  type: "line",
+                  data: chart.values,
+                  symbolSize: 6,
+                  lineStyle: { width: 2, color: accent },
+                  itemStyle: { color: accent },
+                  label: { show: true, position: "top", color: text, fontSize: 11 },
+                },
         ],
       });
       const resize = () => instance?.resize();

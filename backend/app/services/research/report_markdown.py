@@ -5,7 +5,8 @@ from __future__ import annotations
 import json
 
 from app.services.research.audit import LEVEL_LABELS, AuditedClaim
-from app.services.research.report_models import ChartSeries, DataTable, ResearchReport
+from app.services.research.report_diagrams import mermaid_of
+from app.services.research.report_models import ChartSeries, DataTable, Diagram, ResearchReport
 from app.services.research.report_text import BASIS_LABELS, SYNTHESIS_NOTE, verification_overview
 
 _ICONS = {"verified": "✅", "single_source": "ℹ️", "disputed": "⚠️", "unverified": "❓"}
@@ -21,6 +22,12 @@ def render_chat_markdown(report: ResearchReport, *, report_id: str | None = None
     if report.summary.strip():
         lines += ["## 核心结论", "", report.summary.strip(), ""]
         lines += _claim_notes(report.summary_claims)
+    if report.diagrams:
+        lines += ["## 图示", ""]
+        for diagram in report.diagrams:
+            lines += [f"**{diagram.title}**", "", _diagram_block(diagram), ""]
+            if diagram.caption:
+                lines += [f"*{diagram.caption}*", ""]
     for section in report.sections:
         lines += [f"## {section.heading}", ""]
         if section.body.strip():
@@ -58,6 +65,14 @@ def render_chat_markdown(report: ResearchReport, *, report_id: str | None = None
             f" · [下载 PDF](/api/v1/reports/{report_id}/download?format=pdf)",
         ]
     return "\n".join(lines).strip()
+
+
+def _diagram_block(diagram: Diagram) -> str:
+    """The framework is a Mermaid flowchart; a timeline is drawn by the chat itself (Mermaid's looks poor)."""
+    if diagram.kind == "timeline":
+        payload = {"events": [e.model_dump() for e in diagram.events]}
+        return "```timeline\n" + json.dumps(payload, ensure_ascii=False) + "\n```"
+    return "```mermaid\n" + mermaid_of(diagram) + "\n```"
 
 
 def _chart_block(chart: ChartSeries) -> str:

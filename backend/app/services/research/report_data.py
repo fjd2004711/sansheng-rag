@@ -119,12 +119,15 @@ def comparison_chart(points: list[DataPoint]) -> ChartSeries | None:
     if best is None or len(best[1]) < _MIN_CHART_POINTS:
         return None
     (unit, period, scope), by_indicator = best
+    values = [_as_float(p.value) or 0.0 for p in by_indicator.values()]
+    # Percentages that add up to a whole are shares: a pie says that better than bars do.
+    is_share = unit.strip() in ("%", "％") and 90.0 <= sum(values) <= 100.5 and min(values) >= 0
     return ChartSeries(
-        kind="bar",
+        kind="pie" if is_share else "bar",
         title=f"{period}{scope}指标对比" if scope else f"{period}指标对比",
         unit=unit,
         labels=list(by_indicator),
-        values=[_as_float(p.value) or 0.0 for p in by_indicator.values()],
+        values=values,
         sources=sorted({p.source for p in by_indicator.values()}),
     )
 

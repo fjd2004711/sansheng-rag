@@ -5,6 +5,8 @@ import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import { ExternalLink } from "lucide-react";
 
+import { MermaidDiagram } from "@/components/reports/mermaid-diagram";
+import { TimelineView } from "@/components/reports/report-diagrams";
 import { ReportChart } from "@/components/reports/report-chart";
 
 import { CopyButton } from "./copy-button";
@@ -47,7 +49,7 @@ function parseChart(raw: string): ChartData | null {
     const { labels, values } = data;
     if (!Array.isArray(labels) || !Array.isArray(values) || labels.length < 2) return null;
     return {
-      kind: data.kind === "bar" ? "bar" : "line",
+      kind: data.kind === "bar" || data.kind === "pie" ? data.kind : "line",
       title: String(data.title ?? ""),
       unit: String(data.unit ?? ""),
       labels: labels.map(String),
@@ -62,7 +64,12 @@ function parseChart(raw: string): ChartData | null {
   }
 }
 
-export function MarkdownContent({ content, onCiteClick, citeTitle, citeStatus }: MarkdownContentProps) {
+export function MarkdownContent({
+  content,
+  onCiteClick,
+  citeTitle,
+  citeStatus,
+}: MarkdownContentProps) {
   const processed = onCiteClick ? preprocessCitations(content) : content;
   return (
     <ReactMarkdown
@@ -77,6 +84,17 @@ export function MarkdownContent({ content, onCiteClick, citeTitle, citeStatus }:
           const codeContent =
             typeof codeElement?.props?.children === "string" ? codeElement.props.children : "";
           const lang = languageLabel(codeElement?.props?.className);
+          if (lang === "mermaid" && codeContent) return <MermaidDiagram code={codeContent} />;
+          if (lang === "timeline") {
+            try {
+              const parsed = JSON.parse(codeContent) as {
+                events?: { period: string; label: string }[];
+              };
+              if (parsed.events?.length) return <TimelineView events={parsed.events} />;
+            } catch {
+              /* still streaming: fall through to the plain block */
+            }
+          }
           if (lang === "chart") {
             const chart = parseChart(codeContent);
             if (chart) return <ReportChart chart={chart} />;
@@ -264,4 +282,3 @@ export function MarkdownContent({ content, onCiteClick, citeTitle, citeStatus }:
     </ReactMarkdown>
   );
 }
-

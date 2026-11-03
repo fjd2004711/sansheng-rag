@@ -20,6 +20,32 @@ def chart_png(series: ChartSeries) -> bytes:
     font = font_manager.FontProperties(fname=path) if path else None
     fig, ax = plt.subplots(figsize=(6.4, 3.2), dpi=150)
     try:
+        if series.kind == "pie":
+            _, texts, autotexts = ax.pie(
+                series.values,
+                labels=series.labels,
+                autopct="%1.1f%%",
+                startangle=90,
+                counterclock=False,
+                wedgeprops={"linewidth": 1, "edgecolor": "white"},
+                textprops={"fontproperties": font, "fontsize": 8},
+            )
+            for t in autotexts:
+                t.set_fontsize(7)
+            ax.set_title(series.title, fontproperties=font, fontsize=11)
+            fig.text(
+                0.99,
+                0.01,
+                "数据来源：" + "".join(f"[{n}]" for n in series.sources),
+                ha="right",
+                fontsize=7,
+                color="#666",
+                fontproperties=font,
+            )
+            fig.tight_layout()
+            buffer = io.BytesIO()
+            fig.savefig(buffer, format="png")
+            return buffer.getvalue()
         positions = list(range(len(series.values)))
         if series.kind == "bar":
             ax.bar(positions, series.values, color="#2563eb", width=0.55)

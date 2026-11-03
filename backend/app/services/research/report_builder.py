@@ -40,6 +40,7 @@ from app.services.research.report_data import (
     unsupported_numbers,
     verify_data_points,
 )
+from app.services.research.report_diagrams import diagrams_for
 from app.services.research.report_llm import (
     extract_data_points,
     plan_outline,
@@ -167,7 +168,7 @@ class ReportBuilder:
         for rec in recommendations:
             rec.basis = _basis(rec.premises, rec.reason)
         sources = corpus.sources
-        return ResearchReport(
+        report = ResearchReport(
             title=outline.title,
             topic=topic,
             generated_at=_now(),
@@ -192,6 +193,8 @@ class ReportBuilder:
             ),
             sources=sources,
         )
+        report.diagrams = diagrams_for(report)
+        return report
 
     def new_corpus(self) -> WebCorpus:
         return self._research.new_corpus()

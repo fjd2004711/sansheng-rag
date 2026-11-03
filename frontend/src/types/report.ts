@@ -54,7 +54,7 @@ export interface ReportSectionData {
   table: { caption: string; columns: string[]; rows: string[][] } | null;
   chart: {
     /** Absent in reports saved before comparison charts existed: a trend line. */
-    kind?: "line" | "bar";
+    kind?: "line" | "bar" | "pie";
     title: string;
     unit: string;
     labels: string[];
@@ -64,12 +64,23 @@ export interface ReportSectionData {
   claims: ReportClaim[];
 }
 
+export interface ReportDiagram {
+  kind: "framework" | "timeline";
+  title: string;
+  caption: string;
+  nodes: { id: string; label: string; tone: "plain" | "good" | "warn" | "bad" }[];
+  edges: string[][];
+  events: { period: string; label: string }[];
+}
+
 export interface ReportDocument {
   title: string;
   topic: string;
   generated_at: string;
   summary: string;
   summary_claims: ReportClaim[];
+  /** Absent in reports generated before figures existed. */
+  diagrams?: ReportDiagram[];
   sections: ReportSectionData[];
   /** Absent in reports generated before the synthesis step existed. */
   audience?: string;
