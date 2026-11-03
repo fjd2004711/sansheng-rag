@@ -175,7 +175,11 @@ class OrchestrationService:
         )
 
     async def delete_run(self, user_id: UUID, run_id: UUID) -> None:
-        await self.get_run(user_id, run_id)
+        run = await self.get_run(user_id, run_id)
+        if run.status in ("queued", "running"):
+            registry.cancel(
+                run_id
+            )  # a deleted run must stop spending tokens, not keep going unseen
         await repo.delete_run(self.db, run_id)
 
     async def export(self, user_id: UUID, run_id: UUID, fmt: str) -> tuple[bytes, str, str]:
