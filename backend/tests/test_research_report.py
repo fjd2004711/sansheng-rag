@@ -744,3 +744,75 @@ async def test_corroboration_regrades_sections_concurrently() -> None:
     with patch.object(builder, "grade", slow_grade):
         await builder.corroborate(planned, sections, corpus, SimpleNamespace())  # type: ignore[arg-type]
     assert peak >= 3
+
+
+def test_chat_markdown_embeds_the_section_chart_as_a_fenced_chart_block() -> None:
+    import json
+
+    from app.services.research import render_chat_markdown
+    from app.services.research.report_models import ChartSeries
+
+    report = _report()
+    report.sections[0].chart = ChartSeries(
+        title="毕业生人数",
+        unit="万人",
+        labels=["2023", "2024"],
+        values=[1158.0, 1179.0],
+        sources=[3],
+    )
+    text = render_chat_markdown(report, report_id="abc")
+    block = text.split("```chart\n", 1)[1].split("\n```", 1)[0]
+    data = json.loads(block)
+    assert data["labels"] == ["2023", "2024"] and data["values"] == [1158.0, 1179.0]
+    assert (
+        data["sources"] == "3"
+    )  # a string: "[3]" in the chat would be rewritten into a citation badge
+
+
+def test_comparison_chart_puts_three_indicators_of_one_unit_and_period_side_by_side() -> None:
+    from app.services.research.report_data import comparison_chart
+
+    def pt(indicator: str, value: str, period: str = "2025年") -> DataPoint:
+        return DataPoint(
+            indicator=indicator,
+            value=value,
+            unit="万辆",
+            period=period,
+            source=2,
+            quote="q",
+            scope="全国",
+        )
+
+    points = [
+        pt("销量", "1649"),
+        pt("产量", "1662.6"),
+        pt("国内销量", "1387.5"),
+        pt("销量", "1649"),
+        pt("出口", "261.5", "2024年"),
+    ]
+    chart = comparison_chart(points)
+    assert chart is not None and chart.kind == "bar"
+    assert chart.labels == [
+        "销量",
+        "产量",
+        "国内销量",
+    ]  # a repeated indicator is one bar; another period is left out
+    assert chart.values == [1649.0, 1662.6, 1387.5]
+    assert comparison_chart(points[:2]) is None  # two bars is not a comparison worth a chart
+
+
+def test_bar_chart_png_renders() -> None:
+    from app.services.research.report_chart import chart_png
+    from app.services.research.report_models import ChartSeries
+
+    png = chart_png(
+        ChartSeries(
+            kind="bar",
+            title="2025年全国指标对比",
+            unit="万辆",
+            labels=["销量", "产量", "国内销量"],
+            values=[1649, 1662.6, 1387.5],
+            sources=[2],
+        )
+    )
+    assert png.startswith(b"\x89PNG")

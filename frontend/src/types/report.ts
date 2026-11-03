@@ -53,6 +53,8 @@ export interface ReportSectionData {
   analysis: string;
   table: { caption: string; columns: string[]; rows: string[][] } | null;
   chart: {
+    /** Absent in reports saved before comparison charts existed: a trend line. */
+    kind?: "line" | "bar";
     title: string;
     unit: string;
     labels: string[];

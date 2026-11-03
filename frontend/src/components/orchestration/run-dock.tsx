@@ -14,7 +14,7 @@ import { Waterfall } from "./waterfall";
 type Tab = "timeline" | "gate" | "events";
 type Size = "min" | "mid" | "max";
 
-const HEIGHT: Record<Size, string> = { min: "h-10", mid: "h-[320px]", max: "h-[62%]" };
+const HEIGHT: Record<Size, string> = { min: "h-10", mid: "h-[232px]", max: "h-[62%]" };
 
 /** The bottom dock (browser-devtools / n8n style): scheduling waterfall, quality gate, raw events. */
 export function RunDock({

@@ -41,6 +41,8 @@ class DataTable(BaseModel):
 
 
 class ChartSeries(BaseModel):
+    # "line": one indicator over periods; "bar": several indicators, one unit, one period, side by side.
+    kind: Literal["line", "bar"] = "line"
     title: str
     unit: str
     labels: list[str]

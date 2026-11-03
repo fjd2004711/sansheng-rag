@@ -32,6 +32,7 @@ from app.services.research.exceptions import WebSearchError
 from app.services.research.facade import ResearchService
 from app.services.research.models import WebSource
 from app.services.research.report_data import (
+    comparison_chart,
     data_table,
     display_value,
     scrub_unsupported_sentences,
@@ -315,7 +316,7 @@ class ReportBuilder:
                 analysis=analysis,
                 data_points=data,
                 table=data_table(planned.heading, data),
-                chart=trend_chart(data),
+                chart=trend_chart(data) or comparison_chart(data),
                 claims=claims,
             ),
             len(data),

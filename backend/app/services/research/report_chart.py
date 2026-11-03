@@ -21,7 +21,10 @@ def chart_png(series: ChartSeries) -> bytes:
     fig, ax = plt.subplots(figsize=(6.4, 3.2), dpi=150)
     try:
         positions = list(range(len(series.values)))
-        ax.plot(positions, series.values, marker="o", color="#2563eb", linewidth=2)
+        if series.kind == "bar":
+            ax.bar(positions, series.values, color="#2563eb", width=0.55)
+        else:
+            ax.plot(positions, series.values, marker="o", color="#2563eb", linewidth=2)
         for x, y in zip(positions, series.values, strict=True):
             ax.annotate(
                 f"{y:g}",
@@ -33,7 +36,10 @@ def chart_png(series: ChartSeries) -> bytes:
                 fontproperties=font,
             )
         ax.set_xticks(positions)
-        ax.set_xticklabels(series.labels, fontproperties=font, fontsize=8)
+        labels = series.labels
+        if series.kind == "bar":  # indicator names are long: wrap them under their bar
+            labels = ["\n".join(name[i : i + 8] for i in range(0, len(name), 8)) for name in labels]
+        ax.set_xticklabels(labels, fontproperties=font, fontsize=8)
         ax.set_title(series.title, fontproperties=font, fontsize=11)
         if series.unit:
             ax.set_ylabel(series.unit, fontproperties=font, fontsize=9)

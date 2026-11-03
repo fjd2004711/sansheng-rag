@@ -5,6 +5,8 @@ import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import { ExternalLink } from "lucide-react";
 
+import { ReportChart } from "@/components/reports/report-chart";
+
 import { CopyButton } from "./copy-button";
 import type { MarkdownContentProps } from "./markdown-content";
 
@@ -25,7 +27,39 @@ function languageLabel(className: string | undefined): string | null {
  * doesn't enter them — in practice agent responses never cite inside code.
  */
 function preprocessCitations(content: string): string {
-  return content.replace(/\[(\d{1,3})\](?![\(:])/g, (_, n) => `[[${n}]](#cite-${n})`);
+  // Fenced blocks (a report's chart data) are left alone: a lone "[3]" in there is data, not a citation.
+  return content
+    .split(/(```[\s\S]*?```)/g)
+    .map((part) =>
+      part.startsWith("```")
+        ? part
+        : part.replace(/\[(\d{1,3})\](?![\(:])/g, (_, n) => `[[${n}]](#cite-${n})`),
+    )
+    .join("");
+}
+
+type ChartData = Parameters<typeof ReportChart>[0]["chart"];
+
+/** The chart block a report answer carries; null when the JSON is incomplete (it is still streaming) or wrong. */
+function parseChart(raw: string): ChartData | null {
+  try {
+    const data = JSON.parse(raw) as Record<string, unknown>;
+    const { labels, values } = data;
+    if (!Array.isArray(labels) || !Array.isArray(values) || labels.length < 2) return null;
+    return {
+      kind: data.kind === "bar" ? "bar" : "line",
+      title: String(data.title ?? ""),
+      unit: String(data.unit ?? ""),
+      labels: labels.map(String),
+      values: values.map(Number),
+      sources: String(data.sources ?? "")
+        .split(",")
+        .map(Number)
+        .filter((n) => Number.isInteger(n) && n > 0),
+    };
+  } catch {
+    return null;
+  }
 }
 
 export function MarkdownContent({ content, onCiteClick, citeTitle, citeStatus }: MarkdownContentProps) {
@@ -43,6 +77,10 @@ export function MarkdownContent({ content, onCiteClick, citeTitle, citeStatus }:
           const codeContent =
             typeof codeElement?.props?.children === "string" ? codeElement.props.children : "";
           const lang = languageLabel(codeElement?.props?.className);
+          if (lang === "chart") {
+            const chart = parseChart(codeContent);
+            if (chart) return <ReportChart chart={chart} />;
+          }
 
           return (
             <div className="group border-border bg-muted my-3 overflow-hidden rounded-xl border">

@@ -41,20 +41,38 @@ function useNow(active: boolean, createdAt: string, lastT: number): number {
   return active ? Math.max(lastT, (Date.now() - new Date(createdAt).getTime()) / 1000) : lastT;
 }
 
-function Chip({ label, value, tone }: { label: string; value: string; tone?: "good" | "bad" }) {
+function Kpi({
+  label,
+  value,
+  unit,
+  tone,
+  accent,
+}: {
+  label: string;
+  value: string;
+  unit?: string;
+  tone?: "good" | "bad";
+  accent?: string;
+}) {
   return (
-    <span className="flex items-baseline gap-1.5 whitespace-nowrap">
-      <span className="text-muted-foreground">{label}</span>
+    <div className="bg-card/70 relative min-w-[118px] overflow-hidden rounded-xl border px-3.5 py-2">
       <span
+        aria-hidden
+        className="absolute inset-y-2 left-0 w-[3px] rounded-r"
+        style={{ background: accent ?? "var(--color-border)" }}
+      />
+      <p className="text-muted-foreground text-[11px]">{label}</p>
+      <p
         className={cn(
-          "font-semibold tabular-nums",
-          tone === "good" && "text-emerald-600 dark:text-emerald-400",
-          tone === "bad" && "text-red-600",
+          "mt-0.5 flex items-baseline gap-1 text-xl leading-none font-semibold tracking-tight tabular-nums",
+          tone === "good" && "text-emerald-500",
+          tone === "bad" && "text-red-500",
         )}
       >
         {value}
-      </span>
-    </span>
+        {unit && <span className="text-muted-foreground text-xs font-normal">{unit}</span>}
+      </p>
+    </div>
   );
 }
 
@@ -71,39 +89,43 @@ function StatsStrip({
 }) {
   const [first, last] = verified;
   return (
-    <div className="text-muted-foreground bg-muted/30 flex h-9 items-center gap-5 overflow-x-auto border-t px-4 text-xs">
-      {active && !metrics && <Chip label="已用时" value={formatDuration(now)} />}
+    <div className="flex items-stretch gap-2.5 overflow-x-auto border-t px-4 py-2.5">
+      {active && !metrics && <Kpi label="已用时" value={formatDuration(now)} accent="#38bdf8" />}
       {metrics && (
         <>
-          <Chip label="总耗时" value={formatDuration(metrics.wall_seconds)} />
-          <Chip
-            label="任务"
-            value={`${metrics.tasks}${metrics.tasks_failed ? `（失败 ${metrics.tasks_failed}）` : ""}`}
+          <Kpi label="总耗时" value={formatDuration(metrics.wall_seconds)} accent="#38bdf8" />
+          <Kpi
+            label={metrics.tasks_failed ? `任务（失败 ${metrics.tasks_failed}）` : "任务"}
+            value={String(metrics.tasks)}
             tone={metrics.tasks_failed ? "bad" : undefined}
+            accent="#a78bfa"
           />
-          <Chip label="并行度" value={`${metrics.parallel_speedup}×`} />
-          <Chip label="自循环" value={`${metrics.repair_rounds} 轮`} />
-          <Chip label="核查员下调" value={`${metrics.verifier_downgrades} 条`} />
-          <Chip
+          <Kpi label="并行加速" value={`${metrics.parallel_speedup}`} unit="×" accent="#34d399" />
+          <Kpi label="自循环" value={String(metrics.repair_rounds)} unit="轮" accent="#fb7185" />
+          <Kpi label="核查员下调" value={String(metrics.verifier_downgrades)} unit="条" accent="#fbbf24" />
+          <Kpi
             label="模型调用"
-            value={`${metrics.llm_calls} 次 · ${Math.round(metrics.tokens / 1000)}k token`}
+            value={String(metrics.llm_calls)}
+            unit={`次 · ${Math.round(metrics.tokens / 1000)}k token`}
+            accent="#38bdf8"
           />
-          <Chip label="模型" value={metrics.model} />
           {metrics.model_switches.length > 0 && (
-            <Chip
-              label="模型降级"
-              value={metrics.model_switches.map((s) => s.to).join(" → ")}
-              tone="bad"
-            />
+            <Kpi label="模型降级" value={metrics.model_switches.map((s) => s.to).join(" → ")} tone="bad" />
           )}
         </>
       )}
       {first !== undefined && last !== undefined && (
-        <Chip
+        <Kpi
           label="已核实比例"
           value={`${Math.round(first * 100)}% → ${Math.round(last * 100)}%`}
           tone={last >= first ? "good" : "bad"}
+          accent="#34d399"
         />
+      )}
+      {metrics && (
+        <span className="text-muted-foreground ml-auto hidden shrink-0 items-end text-[11px] xl:flex">
+          {metrics.model}
+        </span>
       )}
     </div>
   );

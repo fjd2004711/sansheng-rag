@@ -108,6 +108,27 @@ def trend_chart(points: list[DataPoint]) -> ChartSeries | None:
     )
 
 
+def comparison_chart(points: list[DataPoint]) -> ChartSeries | None:
+    """Several indicators of one unit, one period and one scope side by side (≥3), when no trend series exists."""
+    groups: dict[tuple[str, str, str], dict[str, DataPoint]] = {}
+    for point in points:
+        if point.period and point.indicator.strip() and _as_float(point.value) is not None:
+            group = groups.setdefault((point.unit, point.period, point.scope), {})
+            group.setdefault(point.indicator.strip(), point)  # the same indicator twice is one bar
+    best = max(groups.items(), key=lambda item: len(item[1]), default=None)
+    if best is None or len(best[1]) < _MIN_CHART_POINTS:
+        return None
+    (unit, period, scope), by_indicator = best
+    return ChartSeries(
+        kind="bar",
+        title=f"{period}{scope}指标对比" if scope else f"{period}指标对比",
+        unit=unit,
+        labels=list(by_indicator),
+        values=[_as_float(p.value) or 0.0 for p in by_indicator.values()],
+        sources=sorted({p.source for p in by_indicator.values()}),
+    )
+
+
 _YEAR_TOKEN = re.compile(r"(?:19|20)\d{2}")
 # Sentences that leak the writer's own instructions or knowledge from outside the sources.
 _META = re.compile(
