@@ -10,6 +10,7 @@ import type { ReportDocument, ReportSummary } from "@/types/report";
 
 import { ReportAdvice } from "./report-advice";
 import { ReportAppendix } from "./report-appendix";
+import { ReportDiagrams } from "./report-diagrams";
 import { ReportSection, useCitations } from "./report-section";
 
 export function ReportView({ summary }: { summary: ReportSummary }) {
@@ -93,6 +94,7 @@ export function ReportBody({
           <MarkdownContent content={report.summary} {...cite} />
         </div>
       </section>
+      <ReportDiagrams diagrams={report.diagrams} />
       {report.sections.map((section) => (
         <ReportSection key={section.heading} section={section} sources={report.sources} />
       ))}

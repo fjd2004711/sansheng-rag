@@ -11,6 +11,7 @@ from docx.shared import Cm, Pt, RGBColor
 
 from app.services.research.audit import LEVEL_LABELS
 from app.services.research.report_chart import chart_png
+from app.services.research.report_diagrams import diagram_png
 from app.services.research.report_models import DataTable, ResearchReport
 from app.services.research.report_text import (
     BASIS_LABELS,
@@ -39,6 +40,9 @@ def render_docx(report: ResearchReport) -> bytes:
 
     doc.add_heading("一、核心结论", level=1)
     _markdown(doc, report.summary)
+    for diagram in report.diagrams:
+        doc.add_picture(io.BytesIO(diagram_png(diagram)), width=Cm(15))
+        _note(doc, diagram.caption)
     for i, section in enumerate(report.sections, start=2):
         doc.add_heading(f"{_numeral(i)}、{section.heading}", level=1)
         _markdown(doc, section.body)

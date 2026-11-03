@@ -18,6 +18,7 @@ from reportlab.platypus import Image, Paragraph, SimpleDocTemplate, Spacer, Tabl
 
 from app.services.research.audit import LEVEL_LABELS
 from app.services.research.report_chart import chart_png
+from app.services.research.report_diagrams import diagram_png
 from app.services.research.report_fonts import cjk_font_path
 from app.services.research.report_models import DataTable, ResearchReport
 from app.services.research.report_text import (
@@ -98,6 +99,16 @@ def render_pdf(report: ResearchReport) -> bytes:
         Paragraph("一、核心结论", s["h1"]),
         *_markdown(report.summary, s),
     ]
+    for diagram in report.diagrams:
+        story += [
+            Image(
+                io.BytesIO(diagram_png(diagram)),
+                width=15 * cm,
+                height=7.5 * cm,
+                kind="proportional",
+            ),
+            Paragraph(escape(diagram.caption), s["note"]),
+        ]
     for i, section in enumerate(report.sections, start=2):
         story += [
             Paragraph(escape(f"{_numeral(i)}、{section.heading}"), s["h1"]),

@@ -41,13 +41,36 @@ class DataTable(BaseModel):
 
 
 class ChartSeries(BaseModel):
-    # "line": one indicator over periods; "bar": several indicators, one unit, one period, side by side.
-    kind: Literal["line", "bar"] = "line"
+    # "line": one indicator over periods; "bar": several indicators, one unit, one period, side by side;
+    # "pie": the same, when they are percentages that make up a whole.
+    kind: Literal["line", "bar", "pie"] = "line"
     title: str
     unit: str
     labels: list[str]
     values: list[float]
     sources: list[int]
+
+
+class DiagramNode(BaseModel):
+    id: str
+    label: str
+    tone: Literal["plain", "good", "warn", "bad"] = "plain"
+
+
+class DiagramEvent(BaseModel):
+    period: str
+    label: str
+
+
+class Diagram(BaseModel):
+    """A figure drawn from the report itself (its structure and its verified data), never from outside facts."""
+
+    kind: Literal["framework", "timeline"]
+    title: str
+    caption: str = ""
+    nodes: list[DiagramNode] = Field(default_factory=list)
+    edges: list[list[str]] = Field(default_factory=list)
+    events: list[DiagramEvent] = Field(default_factory=list)
 
 
 class ReportSection(BaseModel):
@@ -97,6 +120,7 @@ class ResearchReport(BaseModel):
     insight_claims: list[AuditedClaim] = Field(default_factory=list)
     recommendations: list[Recommendation] = Field(default_factory=list)
     caveats: list[str] = Field(default_factory=list)
+    diagrams: list[Diagram] = Field(default_factory=list)
     method: ReportMethod
     sources: list[WebSource]
 

@@ -6,6 +6,7 @@ import { Download, FileText } from "lucide-react";
 import { MarkdownContent } from "@/components/chat/markdown-content";
 import { ReportAdvice } from "@/components/reports/report-advice";
 import { ReportAppendix } from "@/components/reports/report-appendix";
+import { ReportDiagrams } from "@/components/reports/report-diagrams";
 import { ReportSection, useCitations } from "@/components/reports/report-section";
 import { CLAIM_LEVEL_LABELS, type ClaimLevel } from "@/lib/claims";
 import { cn } from "@/lib/utils";
@@ -149,6 +150,8 @@ export function ReportReader({
               </div>
             </div>
           </section>
+
+          <ReportDiagrams diagrams={report.diagrams} />
 
           {report.sections.map((section, i) => (
             <div key={section.heading} id={`sec-${i}`} className="scroll-mt-6">
