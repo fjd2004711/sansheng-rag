@@ -1,4 +1,4 @@
-# self_correcting_rag — Frontend
+# 三省（Sansheng）— Frontend
 
 Next.js 15 (App Router) + React 19 + TypeScript + Tailwind CSS, with the AI chat
 interface, auth, and dashboard for **self_correcting_rag**.
