@@ -126,17 +126,17 @@ export function FlowCanvas({
         type: "smoothstep",
         animated: live,
         label: repair ? "未达标" : undefined,
-        labelStyle: { fontSize: 11, fill: "#ef4444" },
+        labelStyle: { fontSize: 11, fill: "var(--color-red-500)" },
         labelBgStyle: { fill: "var(--color-card)" },
         style: {
           strokeWidth: 1.5,
-          stroke: repair ? "#ef4444" : live ? "#0ea5e9" : "var(--color-muted-foreground)",
+          stroke: repair ? "var(--color-red-500)" : live ? "var(--color-sky-500)" : "var(--color-muted-foreground)",
           strokeOpacity: repair || live ? 1 : 0.45,
           strokeDasharray: repair ? "6 5" : undefined,
         },
         markerEnd: {
           type: MarkerType.ArrowClosed,
-          color: repair ? "#ef4444" : "var(--color-muted-foreground)",
+          color: repair ? "var(--color-red-500)" : "var(--color-muted-foreground)",
         },
       };
     });

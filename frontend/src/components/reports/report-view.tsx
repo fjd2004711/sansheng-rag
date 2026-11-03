@@ -63,7 +63,7 @@ export function ReportBody({
     .filter(([, n]) => n > 0);
 
   return (
-    <article className="bg-card space-y-6 rounded-xl border p-4 sm:p-8">
+    <article className="book-page reading m-1.5 space-y-6 p-4 sm:p-10">
       <header className="space-y-3 border-b pb-4">
         <h2 className="text-xl font-semibold sm:text-2xl">{report.title}</h2>
         <p className="text-muted-foreground text-xs">

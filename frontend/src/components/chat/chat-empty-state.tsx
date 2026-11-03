@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 
-import { Mascot } from "@/components/brand/mascot";
+import { Seal } from "@/components/brand/seal";
 import { useAuth } from "@/hooks";
 import { useLibrary } from "@/hooks/use-library";
 import { ROUTES } from "@/lib/constants";
@@ -39,12 +39,14 @@ export function ChatEmptyState({ onPick }: ChatEmptyStateProps) {
 
   return (
     <div className="mx-auto flex w-full max-w-xl flex-col items-center px-4 py-12 text-center md:py-16">
-      <Mascot size={104} />
+      <Seal size={72} />
       <h2 className="text-foreground mt-5 text-2xl font-semibold tracking-tight md:text-3xl">
         {greeting(new Date().getHours())}
         {name ? `，${name}` : ""}
       </h2>
-      <p className="text-muted-foreground mt-2 text-sm">问我资料里的事，我查证之后再回答。</p>
+      <p className="text-muted-foreground font-kai mt-2 text-base">
+        问我资料里的事，我查证之后再回答。
+      </p>
 
       {!loading && picks.length > 0 && (
         <div className="mt-7 flex flex-wrap justify-center gap-2">

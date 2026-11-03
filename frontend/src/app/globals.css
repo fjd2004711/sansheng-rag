@@ -14,50 +14,92 @@
      via the in-app picker (/settings/appearance), which writes
      CSS variables on `<html>`.
      ============================================================ */
-  /* Preset: BLUE (Stripe / Vercel — classic SaaS) */
-  --brand-h: 262;
-  --brand-c: 0.19;
-  --brand-l: 58%;
-  --color-brand-foreground: oklch(98% 0 0);
+  /* 三省 is styled after a thread-bound woodblock book: rice paper and ink, vermilion (朱) only for marks
+     that call for attention, and mineral pigments — stone blue (石青), pine green (松绿), ochre (赭) — for states. */
+  --brand-h: 33;
+  --brand-c: 0.15;
+  --brand-l: 50%;
+  --color-brand-foreground: oklch(97% 0.012 85);
 
   --color-brand: oklch(var(--brand-l) var(--brand-c) var(--brand-h));
-  --color-brand-hover: oklch(calc(var(--brand-l) - 8%) var(--brand-c) var(--brand-h));
+  --color-brand-hover: oklch(calc(var(--brand-l) - 6%) var(--brand-c) var(--brand-h));
   --color-brand-muted: oklch(var(--brand-l) calc(var(--brand-c) * 0.4) var(--brand-h));
-  /* Chart strokes/fills — defaults to a darker brand variant so charts stay
-     readable on light backgrounds even when the brand itself is high-lightness
-     (e.g. lime). Dark themes override this to use the bright brand directly. */
-  --color-chart: oklch(55% var(--brand-c) var(--brand-h));
+  --color-seal: oklch(50% 0.15 33);
+  /* Charts are drawn in stone blue, so vermilion stays free for emphasis. */
+  --color-chart: oklch(45% 0.06 230);
 
-  /* Light theme — cream */
-  --color-background: oklch(98.5% 0.002 260);
-  --color-foreground: oklch(15% 0 0);
-  --color-card: oklch(100% 0 0);
-  --color-card-foreground: oklch(15% 0 0);
-  --color-popover: oklch(100% 0 0);
-  --color-popover-foreground: oklch(15% 0 0);
-  --color-primary: oklch(15% 0 0);
-  --color-primary-foreground: oklch(98% 0 0);
-  --color-secondary: oklch(96% 0.003 260);
-  --color-secondary-foreground: oklch(20% 0 0);
-  --color-muted: oklch(96% 0.003 260);
-  --color-muted-foreground: oklch(52% 0.01 260);
-  --color-accent: oklch(96% 0.003 260);
-  --color-accent-foreground: oklch(20% 0 0);
-  --color-destructive: oklch(57.7% 0.245 27.325);
-  --color-destructive-foreground: oklch(98.5% 0 0);
-  --color-border: oklch(92% 0.004 260);
-  --color-input: oklch(92% 0.004 260);
+  /* Light theme — rice paper and ink */
+  --color-background: oklch(95.2% 0.014 85);
+  --color-foreground: oklch(24% 0.012 60);
+  --color-card: oklch(97.6% 0.01 85);
+  --color-card-foreground: oklch(24% 0.012 60);
+  --color-popover: oklch(98% 0.008 85);
+  --color-popover-foreground: oklch(24% 0.012 60);
+  --color-primary: oklch(27% 0.012 60);
+  --color-primary-foreground: oklch(96% 0.012 85);
+  --color-secondary: oklch(92% 0.016 85);
+  --color-secondary-foreground: oklch(26% 0.012 60);
+  --color-muted: oklch(92.4% 0.016 85);
+  --color-muted-foreground: oklch(50% 0.02 70);
+  --color-accent: oklch(91.5% 0.018 85);
+  --color-accent-foreground: oklch(24% 0.012 60);
+  --color-destructive: oklch(50% 0.15 33);
+  --color-destructive-foreground: oklch(97% 0.012 85);
+  --color-border: oklch(85% 0.022 80);
+  --color-input: oklch(85% 0.022 80);
   --color-ring: var(--color-brand);
 
-  /* Radius */
-  --radius: 0.5rem;
-  --radius-card: 0.75rem;
-  --radius-pill: 999px;
+  /* State colours: the utility palettes the components use, re-tinted to mineral pigments. */
+  --color-emerald-400: oklch(68% 0.08 160);
+  --color-emerald-500: oklch(52% 0.07 160);
+  --color-emerald-600: oklch(46% 0.07 160);
+  --color-emerald-700: oklch(40% 0.06 160);
+  --color-amber-400: oklch(76% 0.11 75);
+  --color-amber-500: oklch(64% 0.12 70);
+  --color-amber-600: oklch(55% 0.11 65);
+  --color-amber-700: oklch(48% 0.1 60);
+  --color-sky-400: oklch(70% 0.07 230);
+  --color-sky-500: oklch(52% 0.07 230);
+  --color-sky-600: oklch(45% 0.07 230);
+  --color-sky-700: oklch(40% 0.06 230);
+  --color-red-400: oklch(66% 0.14 33);
+  --color-red-500: oklch(54% 0.16 33);
+  --color-red-600: oklch(50% 0.15 33);
+  --color-red-700: oklch(44% 0.13 33);
+  --color-orange-400: oklch(72% 0.1 55);
+  --color-orange-500: oklch(60% 0.11 52);
+  --color-orange-700: oklch(48% 0.1 50);
+  --color-rose-400: oklch(68% 0.11 15);
+  --color-rose-500: oklch(54% 0.13 15);
+  --color-rose-600: oklch(49% 0.13 15);
+  --color-violet-400: oklch(70% 0.06 300);
+  --color-violet-500: oklch(52% 0.07 300);
+  --color-violet-600: oklch(46% 0.07 300);
+  --color-yellow-50: oklch(95% 0.03 85);
+  --color-yellow-500: oklch(72% 0.12 85);
+  --color-yellow-600: oklch(60% 0.11 80);
+  --color-green-500: oklch(52% 0.07 160);
 
-  /* Typography */
-  --font-display: var(--font-display), "Bricolage Grotesque", system-ui, sans-serif;
-  --font-body: var(--font-body), "Inter", system-ui, sans-serif;
-  --font-accent: var(--font-display), "Bricolage Grotesque", system-ui, sans-serif;
+  /* Radius — book corners are square; only pills stay round */
+  --radius: 0.25rem;
+  --radius-card: 0.375rem;
+  --radius-pill: 999px;
+  --radius-sm: 0.125rem;
+  --radius-md: 0.1875rem;
+  --radius-lg: 0.25rem;
+  --radius-xl: 0.375rem;
+  --radius-2xl: 0.5rem;
+
+  /* Typography — Song (the woodblock face) for titles and reading, Kai for annotations */
+  --font-display:
+    "Songti SC", "STSong", "Source Han Serif SC", "Noto Serif CJK SC", "Noto Serif SC", "SimSun",
+    serif;
+  --font-serif: var(--font-display);
+  --font-kai: "Kaiti SC", "STKaiti", "KaiTi", "Kaiti", var(--font-display);
+  --font-body:
+    var(--font-body), "Inter", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui,
+    sans-serif;
+  --font-accent: var(--font-kai);
   --font-mono: var(--font-mono), "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
 
   /* Motion */
@@ -68,47 +110,55 @@
   --duration-slow: 400ms;
 }
 
-/* Dark theme — softer near-black */
+/* Dark theme — the indigo of a book cover, read by lamplight */
 @media (prefers-color-scheme: dark) {
   :root:not(.light) {
-    --color-background: oklch(14.5% 0.006 260);
-    --color-foreground: oklch(94% 0.004 260);
-    --color-card: oklch(18% 0.006 260);
-    --color-card-foreground: oklch(94% 0.004 260);
-    --color-popover: oklch(20% 0.006 260);
-    --color-popover-foreground: oklch(95% 0.005 90);
-    --color-primary: oklch(95% 0 0);
-    --color-primary-foreground: oklch(8% 0.005 90);
-    --color-secondary: oklch(22% 0.006 260);
-    --color-secondary-foreground: oklch(95% 0 0);
-    --color-muted: oklch(22% 0.006 260);
-    --color-muted-foreground: oklch(67% 0.008 260);
-    --color-accent: oklch(24% 0.006 260);
-    --color-accent-foreground: oklch(95% 0 0);
-    --color-border: oklch(27% 0.006 260);
-    --color-input: oklch(27% 0.006 260);
-    --color-chart: var(--color-brand);
+    --color-background: oklch(21% 0.03 265);
+    --color-foreground: oklch(91% 0.018 85);
+    --color-card: oklch(24.5% 0.032 265);
+    --color-card-foreground: oklch(91% 0.018 85);
+    --color-popover: oklch(26% 0.032 265);
+    --color-popover-foreground: oklch(92% 0.018 85);
+    --color-primary: oklch(90% 0.02 85);
+    --color-primary-foreground: oklch(22% 0.03 265);
+    --color-secondary: oklch(28% 0.03 265);
+    --color-secondary-foreground: oklch(91% 0.018 85);
+    --color-muted: oklch(28% 0.03 265);
+    --color-muted-foreground: oklch(72% 0.02 85);
+    --color-accent: oklch(30% 0.032 265);
+    --color-accent-foreground: oklch(92% 0.018 85);
+    --color-border: oklch(35% 0.03 265);
+    --color-input: oklch(35% 0.03 265);
+    --brand-l: 64%;
+    --brand-c: 0.13;
+    --color-seal: oklch(64% 0.13 33);
+    --color-destructive: oklch(64% 0.13 33);
+    --color-chart: oklch(72% 0.07 230);
   }
 }
 
 :root.dark {
-  --color-background: oklch(14.5% 0.006 260);
-  --color-foreground: oklch(94% 0.004 260);
-  --color-card: oklch(18% 0.006 260);
-  --color-card-foreground: oklch(94% 0.004 260);
-  --color-popover: oklch(20% 0.006 260);
-  --color-popover-foreground: oklch(95% 0.005 90);
-  --color-primary: oklch(95% 0 0);
-  --color-primary-foreground: oklch(8% 0.005 90);
-  --color-secondary: oklch(22% 0.006 260);
-  --color-secondary-foreground: oklch(95% 0 0);
-  --color-muted: oklch(22% 0.006 260);
-  --color-muted-foreground: oklch(67% 0.008 260);
-  --color-accent: oklch(24% 0.006 260);
-  --color-accent-foreground: oklch(95% 0 0);
-  --color-border: oklch(27% 0.006 260);
-  --color-input: oklch(27% 0.006 260);
-  --color-chart: var(--color-brand);
+  --color-background: oklch(21% 0.03 265);
+  --color-foreground: oklch(91% 0.018 85);
+  --color-card: oklch(24.5% 0.032 265);
+  --color-card-foreground: oklch(91% 0.018 85);
+  --color-popover: oklch(26% 0.032 265);
+  --color-popover-foreground: oklch(92% 0.018 85);
+  --color-primary: oklch(90% 0.02 85);
+  --color-primary-foreground: oklch(22% 0.03 265);
+  --color-secondary: oklch(28% 0.03 265);
+  --color-secondary-foreground: oklch(91% 0.018 85);
+  --color-muted: oklch(28% 0.03 265);
+  --color-muted-foreground: oklch(72% 0.02 85);
+  --color-accent: oklch(30% 0.032 265);
+  --color-accent-foreground: oklch(92% 0.018 85);
+  --color-border: oklch(35% 0.03 265);
+  --color-input: oklch(35% 0.03 265);
+  --brand-l: 64%;
+  --brand-c: 0.13;
+  --color-seal: oklch(64% 0.13 33);
+  --color-destructive: oklch(64% 0.13 33);
+  --color-chart: oklch(72% 0.07 230);
 }
 
 /* =========================================================================
@@ -176,6 +226,27 @@
     text-rendering: optimizeLegibility;
     /* Disable iOS tap highlight — focus rings + active states do the job. */
     -webkit-tap-highlight-color: transparent;
+  }
+  /* Rice paper: a faint fibre grain over the paper colour (lamplit indigo in the dark theme). */
+  body {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.27 0 0 0 0 0.15 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+    background-attachment: fixed;
+  }
+  :root.dark body {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.9 0 0 0 0 0.88 0 0 0 0 0.8 0 0 0 0.035 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not(.light) body {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.9 0 0 0 0 0.88 0 0 0 0 0.8 0 0 0 0.035 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+    }
+  }
+  /* Titles are set in Song, as in a printed book. */
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    letter-spacing: 0.02em;
   }
   /* Crafted default: tabular figures so numeric data/labels align cleanly. */
   .font-mono {
@@ -254,9 +325,23 @@
   .font-body {
     font-family: var(--font-body);
   }
+  .font-kai {
+    font-family: var(--font-kai);
+  }
+  /* Long-form reading (answers, reports) in Song, with a little more leading. */
+  .reading {
+    font-family: var(--font-serif);
+    line-height: 1.85;
+  }
+  /* A printed page: a thick outer rule and a thin inner one (四周双边), as round a woodblock page. */
+  .book-page {
+    background: var(--color-card);
+    border: 1px solid oklch(from var(--color-foreground) l c h / 0.55);
+    outline: 2.5px solid oklch(from var(--color-foreground) l c h / 0.75);
+    outline-offset: 4px;
+  }
   .font-accent {
     font-family: var(--font-accent);
-    font-style: italic;
   }
   .font-mono {
     font-family: var(--font-mono);
@@ -1026,88 +1111,18 @@
   }
 }
 
-/* ── 小省 (mascot) animation ─────────────────────────────────────────── */
-.mascot .mascot-body {
-  transform-origin: 50px 88px;
-  animation: mascot-bob 3.4s ease-in-out infinite;
+/* ── seal ───────────────────────────────────────────────────────────── */
+.seal-busy {
+  animation: seal-breathe 1.8s ease-in-out infinite;
 }
-.mascot .mascot-eyes {
-  transition: transform 0.18s ease-out;
-}
-.mascot .mascot-blink {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: mascot-blink 4.6s infinite;
-}
-.mascot-thinking .mascot-body {
-  animation-duration: 1.6s;
-}
-.mascot-happy .mascot-body {
-  animation: mascot-hop 0.9s ease-out 2;
-}
-.mascot .mascot-dots circle {
-  animation: mascot-dot 1.2s ease-in-out infinite;
-}
-.mascot .mascot-dots circle:nth-child(2) {
-  animation-delay: 0.2s;
-}
-.mascot .mascot-dots circle:nth-child(3) {
-  animation-delay: 0.4s;
-}
-.mascot .mascot-lens {
-  animation: mascot-scan 2.2s ease-in-out infinite;
-}
-@keyframes mascot-bob {
-  0%,
-  100% {
-    transform: translateY(0) scale(1, 1);
-  }
+@keyframes seal-breathe {
   50% {
-    transform: translateY(-2px) scale(1.012, 0.99);
-  }
-}
-@keyframes mascot-hop {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  40% {
-    transform: translateY(-7px) scale(0.98, 1.03);
-  }
-}
-@keyframes mascot-blink {
-  0%,
-  94%,
-  100% {
-    transform: scaleY(1);
-  }
-  97% {
-    transform: scaleY(0.1);
-  }
-}
-@keyframes mascot-dot {
-  0%,
-  100% {
-    opacity: 0.25;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-@keyframes mascot-scan {
-  0%,
-  100% {
-    transform: translate(-5px, 1px);
-  }
-  50% {
-    transform: translate(3px, -2px);
+    opacity: 0.45;
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .mascot *,
-  .mascot {
-    animation: none !important;
-    transition: none !important;
+  .seal-busy {
+    animation: none;
   }
 }
 

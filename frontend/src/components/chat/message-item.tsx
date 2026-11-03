@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Mascot, type MascotMood } from "@/components/brand/mascot";
+import { Seal } from "@/components/brand/seal";
 import type { ChatMessage, ChatMessageFile } from "@/types";
 import { progressText } from "@/lib/agent-trace-labels";
 import { deriveVerdict } from "@/lib/answer-verdict";
@@ -75,7 +75,7 @@ function TextBubble({
       {isUser ? (
         <p className="text-sm break-words whitespace-pre-wrap">{text}</p>
       ) : (
-        <div className="prose-sm max-w-none text-sm">
+        <div className="reading prose-sm max-w-none text-[15px]">
           <MarkdownContent content={text} onCiteClick={onCiteClick} citeTitle={citeTitle} citeStatus={citeStatus} />
           {showCursor && (
             <span className="ml-1 inline-block h-4 w-1.5 animate-pulse rounded-full bg-current" />
@@ -144,15 +144,6 @@ export function MessageItem({ message, groupPosition, onRegenerate, onEdit, onSh
   const activeConversationId = useConversationStore((state) => state.currentConversationId) ?? message.conversationId;
   const verdict = !isUser ? deriveVerdict(message.agentTrace, message.content) : null;
   const sources = !isUser ? extractSources(message) : [];
-  // 小省 shows what is going on: reading while checking, thinking while searching, sorry when it found nothing.
-  const lastStep = message.agentTrace?.[message.agentTrace.length - 1]?.step;
-  const avatarMood: MascotMood = message.isStreaming
-    ? lastStep && /verify|evaluate|diagnose/.test(lastStep)
-      ? "checking"
-      : "thinking"
-    : verdict?.kind === "abstained" || verdict?.kind === "partial"
-      ? "sorry"
-      : "idle";
   const hasSources = sources.length > 0 && !message.isStreaming;
   const citeTitle = (n: number): string | undefined => {
     const source = sources.find((item) => item.index === n);
@@ -206,7 +197,7 @@ export function MessageItem({ message, groupPosition, onRegenerate, onEdit, onSh
         ) : isUser ? (
           <User className="h-4 w-4" />
         ) : (
-          <Mascot size={34} mood={avatarMood} lookAtPointer={false} />
+          <Seal size={28} busy={message.isStreaming} />
         )}
       </div>
 

@@ -4,9 +4,10 @@ export const size = { width: 180, height: 180 };
 export const contentType = "image/png";
 export const dynamic = "force-static";
 
+const VERMILION = "#A83A2C";
+
 export default function AppleIcon() {
-  // Latin initial on purpose: a CJK glyph makes the build fetch a font from Google, which hangs on an offline server.
-  const initial = "S";
+  // The seal drawn as shapes: a CJK glyph makes the build fetch a font from Google, which hangs on an offline server.
   return new ImageResponse(
     <div
       style={{
@@ -15,17 +16,27 @@ export default function AppleIcon() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "#0E0E0C",
-        color: "#C5F94A",
-        fontSize: 110,
-        fontWeight: 800,
-        letterSpacing: "-0.04em",
-        fontFamily: "sans-serif",
+        background: "#F3EEE3",
       }}
     >
-      {initial}
+      <div
+        style={{
+          width: 128,
+          height: 128,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 18,
+          border: `9px solid ${VERMILION}`,
+          borderRadius: 6,
+        }}
+      >
+        <div style={{ width: 52, height: 11, background: VERMILION }} />
+        <div style={{ width: 38, height: 11, background: VERMILION }} />
+        <div style={{ width: 70, height: 11, background: VERMILION }} />
+      </div>
     </div>,
     { ...size },
   );
 }
-

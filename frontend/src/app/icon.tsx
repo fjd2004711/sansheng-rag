@@ -1,9 +1,14 @@
 import { ImageResponse } from "next/og";
 
-/** Dynamic favicon — 小省's face: lime square, two eyes. Renders at 32×32. */
+/**
+ * Favicon — the seal: a vermilion frame on paper with the three strokes of 三, drawn as shapes (a CJK glyph would
+ * make the build fetch a font, which hangs on an offline server). Renders at 32×32.
+ */
 export const size = { width: 32, height: 32 };
 export const contentType = "image/png";
 export const dynamic = "force-static";
+
+const VERMILION = "#A83A2C";
 
 export default function Icon() {
   return new ImageResponse(
@@ -12,17 +17,19 @@ export default function Icon() {
         width: "100%",
         height: "100%",
         display: "flex",
+        flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        background: "#C5F94A",
-        borderRadius: "10px",
-        gap: 6,
+        gap: 4,
+        background: "#F3EEE3",
+        border: `3px solid ${VERMILION}`,
+        borderRadius: 3,
       }}
     >
-      <div style={{ width: 5, height: 9, borderRadius: 9999, background: "#1E2410" }} />
-      <div style={{ width: 5, height: 9, borderRadius: 9999, background: "#1E2410" }} />
+      <div style={{ width: 12, height: 3, background: VERMILION }} />
+      <div style={{ width: 9, height: 3, background: VERMILION }} />
+      <div style={{ width: 16, height: 3, background: VERMILION }} />
     </div>,
     { ...size },
   );
 }
-
