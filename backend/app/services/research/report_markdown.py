@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import json
+
 from app.services.research.audit import LEVEL_LABELS, AuditedClaim
-from app.services.research.report_models import DataTable, ResearchReport
+from app.services.research.report_models import ChartSeries, DataTable, ResearchReport
 from app.services.research.report_text import BASIS_LABELS, SYNTHESIS_NOTE, verification_overview
 
 _ICONS = {"verified": "✅", "single_source": "ℹ️", "disputed": "⚠️", "unverified": "❓"}
@@ -26,7 +28,7 @@ def render_chat_markdown(report: ResearchReport, *, report_id: str | None = None
         if section.table:
             lines += [_table(section.table), ""]
         if section.chart:
-            lines += [f"*趋势图（{section.chart.title}）见完整报告或下载的文件。*", ""]
+            lines += [_chart_block(section.chart), ""]
         if section.analysis.strip():
             lines += ["**分析**", "", section.analysis.strip(), ""]
         lines += _claim_notes(section.claims)
@@ -56,6 +58,22 @@ def render_chat_markdown(report: ResearchReport, *, report_id: str | None = None
             f" · [下载 PDF](/api/v1/reports/{report_id}/download?format=pdf)",
         ]
     return "\n".join(lines).strip()
+
+
+def _chart_block(chart: ChartSeries) -> str:
+    """A fenced ``chart`` block the chat window draws as a real chart (the text stays readable without it).
+
+    Sources are a plain string, not a list, so the chat's citation rewriting never mistakes ``[3]`` for a citation.
+    """
+    payload = {
+        "kind": chart.kind,
+        "title": chart.title,
+        "unit": chart.unit,
+        "labels": chart.labels,
+        "values": chart.values,
+        "sources": ",".join(str(n) for n in chart.sources),
+    }
+    return "```chart\n" + json.dumps(payload, ensure_ascii=False) + "\n```"
 
 
 def _claim_notes(claims: list[AuditedClaim]) -> list[str]:
