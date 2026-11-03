@@ -111,7 +111,7 @@ export function FlowCanvas({
       return {
         id: node.id,
         type: "card",
-        position: { x: col * 236, y: row * 108 },
+        position: { x: col * 226, y: row * 108 },
         data: { node, progress: progress?.[node.id], selected: selected === node.id },
         draggable: false,
       };
