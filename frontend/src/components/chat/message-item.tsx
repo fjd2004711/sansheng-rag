@@ -144,7 +144,7 @@ export function MessageItem({ message, groupPosition, onRegenerate, onEdit, onSh
   const activeConversationId = useConversationStore((state) => state.currentConversationId) ?? message.conversationId;
   const verdict = !isUser ? deriveVerdict(message.agentTrace, message.content) : null;
   const sources = !isUser ? extractSources(message) : [];
-  // 小证 shows what is going on: reading while checking, thinking while searching, sorry when it found nothing.
+  // 小省 shows what is going on: reading while checking, thinking while searching, sorry when it found nothing.
   const lastStep = message.agentTrace?.[message.agentTrace.length - 1]?.step;
   const avatarMood: MascotMood = message.isStreaming
     ? lastStep && /verify|evaluate|diagnose/.test(lastStep)

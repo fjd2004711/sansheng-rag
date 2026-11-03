@@ -17,7 +17,7 @@ interface MascotProps {
 const MAX_LOOK = 3.2;
 
 /**
- * 小证 — the app's little checker. A round bean with a check-mark antenna.
+ * 小省 — the app's little checker. A round bean with a check-mark antenna.
  * Moods: idle (blinks), thinking (looks up, dots), checking (magnifier), happy (^ ^), sorry (drooping).
  */
 export function Mascot({ mood = "idle", size = 96, lookAtPointer = true, className }: MascotProps) {
@@ -60,7 +60,7 @@ export function Mascot({ mood = "idle", size = 96, lookAtPointer = true, classNa
       width={size}
       height={size}
       role="img"
-      aria-label="小证"
+      aria-label="小省"
       className={cn("mascot shrink-0", `mascot-${mood}`, className)}
     >
       <defs>

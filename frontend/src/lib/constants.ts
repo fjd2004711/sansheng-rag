@@ -1,4 +1,6 @@
-export const APP_NAME = "查证";
+export const APP_NAME = "三省";
+/** Short tagline that goes with the name: who drafts, who reviews, who executes. */
+export const APP_TAGLINE = "起草、审核、执行，各司其职";
 export const APP_DESCRIPTION = "可解释、能自我纠错的知识库问答";
 
 export const API_ROUTES = {

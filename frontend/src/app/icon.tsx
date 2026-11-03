@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-/** Dynamic favicon — 小证's face: lime square, two eyes. Renders at 32×32. */
+/** Dynamic favicon — 小省's face: lime square, two eyes. Renders at 32×32. */
 export const size = { width: 32, height: 32 };
 export const contentType = "image/png";
 export const dynamic = "force-static";
