@@ -113,8 +113,8 @@ export function OrchestrationShell() {
         open={dialog}
         onOpenChange={setDialog}
         specs={specs.specs}
-        onStart={async (spec, topic) => {
-          const created = await runs.create(spec, topic);
+        onStart={async (spec, topic, models) => {
+          const created = await runs.create(spec, topic, models);
           setRunId(created.id);
           setTab("runs");
           toast.success("已开始运行，可以实时看到调度过程");

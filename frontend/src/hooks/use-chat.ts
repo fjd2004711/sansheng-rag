@@ -15,7 +15,7 @@ import type {
   AgentTraceEvent,
   WSEvent,
 } from "@/types";
-import { WS_URL } from "@/lib/constants";
+import { resolveWsUrl } from "@/lib/constants";
 import { apiClient } from "@/lib/api-client";
 import { setUrlParam } from "@/lib/utils";
 import { useConversationStore } from "@/stores";
@@ -381,7 +381,7 @@ export function useChat(options: UseChatOptions = {}) {
   // string so it does not end up in access logs or Referer headers.
   const accessToken = useAuthStore((state) => state.accessToken);
 
-  const wsUrl = `${WS_URL}/api/v1/ws/agent`;
+  const wsUrl = `${resolveWsUrl()}/api/v1/ws/agent`;
   const wsProtocols = useMemo(
     () => (accessToken ? [`access_token.${accessToken}`, "chat"] : undefined),
     [accessToken],

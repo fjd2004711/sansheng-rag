@@ -142,11 +142,12 @@ class _Run:
     def _wrap(
         self, agent_name: str, fn: Callable[[], Awaitable[Any]]
     ) -> Callable[[], Awaitable[Any]]:
-        tier = self.bundle.agents[agent_name].model_tier
+        agent = self.bundle.agents[agent_name]
+        tier, agent_model = agent.model_tier, agent.model
 
         async def run() -> Any:
             # The runtime is resolved when the task starts, so a model switched in the meantime is honoured.
-            with use_llm(self.models.runtime(tier)), use_meter(self.meter):
+            with use_llm(self.models.runtime(tier, agent_model)), use_meter(self.meter):
                 return await fn()
 
         return run
@@ -303,6 +304,7 @@ class _Run:
             "repairs": self.state.repairs,
             "verifier_downgrades": self.state.overturned,
             "model": self.models.current,
+            "agent_models": {a.name: a.model for a in self.bundle.agents.values() if a.model},
             "model_switches": self.models.switches,
         }
         return Outcome(

@@ -22,7 +22,9 @@ interface UseWebSocketOptions {
 // before it even reaches the server). A dropped connection (1006) or an
 // internal server error (1011+) is worth retrying; an auth close (4001) or a
 // normal close (1000) is not.
-const NO_RETRY_CLOSE_CODES = new Set([1000, 1001, 1005, 1008, 4001, 4401, 4403]);
+// 1000/1001/1005 are NOT here: a server restart or a proxy dropping an idle socket closes that way, and the chat must
+// come back by itself.
+const NO_RETRY_CLOSE_CODES = new Set([1008, 4001, 4401, 4403]);
 
 const sigOf = (url: string, protocols?: string[]) =>
   JSON.stringify({ url, protocols: protocols ?? null });
@@ -50,7 +52,7 @@ export function useWebSocket({
   onError,
   reconnect = true,
   reconnectInterval = 1500,
-  maxReconnectAttempts = 8,
+  maxReconnectAttempts = Number.POSITIVE_INFINITY,
 }: UseWebSocketOptions) {
   const [isConnected, setIsConnected] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
@@ -193,6 +195,24 @@ export function useWebSocket({
       disconnect();
     };
   }, [disconnect]);
+
+  // Back online or back on the tab: do not wait out the backoff, reconnect now.
+  useEffect(() => {
+    const retryNow = () => {
+      if (document.visibilityState === "hidden") return;
+      const ws = wsRef.current;
+      if (!shouldReconnectRef.current || (ws && ws.readyState <= WebSocket.OPEN)) return;
+      if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
+      reconnectAttemptsRef.current = 0;
+      connect();
+    };
+    window.addEventListener("online", retryNow);
+    document.addEventListener("visibilitychange", retryNow);
+    return () => {
+      window.removeEventListener("online", retryNow);
+      document.removeEventListener("visibilitychange", retryNow);
+    };
+  }, [connect]);
 
   return {
     isConnected,

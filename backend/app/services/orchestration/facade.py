@@ -118,7 +118,7 @@ class OrchestrationService:
     # ---- runs --------------------------------------------------------------------------------------
 
     async def create_run(self, user_id: UUID, data: RunCreate) -> OrchRun:
-        bundle = await self.resolve_bundle(user_id, data.spec)
+        bundle = self._with_models(await self.resolve_bundle(user_id, data.spec), data)
         if await repo.count_active(self.db, user_id=user_id) > 0:
             await self._expire_stale(user_id)
             if await repo.count_active(self.db, user_id=user_id) > 0:
@@ -136,6 +136,23 @@ class OrchestrationService:
             self.db, user_id=user_id, spec_name=data.spec, topic=data.topic[:2000],
             run_input=run_input, bundle=bundle.model_dump(mode="json"),
         )  # fmt: skip
+
+    @staticmethod
+    def _with_models(bundle: Bundle, data: RunCreate) -> Bundle:
+        """This run's model choices written into its own copy of the definition (the saved one is untouched)."""
+        if not data.model and not data.agent_models:
+            return bundle
+        bundle = bundle.model_copy(deep=True)
+        if data.model:
+            bundle.workflow.policy.model = data.model
+        for name, model in data.agent_models.items():
+            agent = bundle.agents.get(name)
+            if agent is None:
+                raise BadRequestError(message=f"没有名为 {name} 的 agent", details={"agent": name})
+            if not re.fullmatch(r"[\w.\-:/]{1,120}", model):
+                raise BadRequestError(message="模型名称格式不正确", details={"model": model})
+            agent.model = model
+        return bundle
 
     async def list_runs(self, user_id: UUID, *, skip: int, limit: int) -> tuple[list[OrchRun], int]:
         await self._expire_stale(user_id)
