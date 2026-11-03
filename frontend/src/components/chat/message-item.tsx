@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Seal } from "@/components/brand/seal";
+import { Fishtail } from "@/components/brand/fishtail";
 import type { ChatMessage, ChatMessageFile } from "@/types";
 import { progressText } from "@/lib/agent-trace-labels";
 import { deriveVerdict } from "@/lib/answer-verdict";
@@ -197,7 +197,7 @@ export function MessageItem({ message, groupPosition, onRegenerate, onEdit, onSh
         ) : isUser ? (
           <User className="h-4 w-4" />
         ) : (
-          <Seal size={28} busy={message.isStreaming} />
+          <Fishtail size={28} busy={message.isStreaming} />
         )}
       </div>
 

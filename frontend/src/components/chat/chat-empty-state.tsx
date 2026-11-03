@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 
-import { Seal } from "@/components/brand/seal";
+import { Fishtail } from "@/components/brand/fishtail";
 import { useAuth } from "@/hooks";
 import { useLibrary } from "@/hooks/use-library";
 import { ROUTES } from "@/lib/constants";
@@ -39,7 +39,7 @@ export function ChatEmptyState({ onPick }: ChatEmptyStateProps) {
 
   return (
     <div className="mx-auto flex w-full max-w-xl flex-col items-center px-4 py-12 text-center md:py-16">
-      <Seal size={72} />
+      <Fishtail size={72} />
       <h2 className="text-foreground mt-5 text-2xl font-semibold tracking-tight md:text-3xl">
         {greeting(new Date().getHours())}
         {name ? `，${name}` : ""}

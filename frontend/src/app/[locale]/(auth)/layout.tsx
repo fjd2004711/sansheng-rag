@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { Seal } from "@/components/brand/seal";
+import { Fishtail } from "@/components/brand/fishtail";
 import { AboutSansheng } from "@/components/brand/about-sansheng";
 import { APP_NAME, APP_TAGLINE, ROUTES } from "@/lib/constants";
 
@@ -15,7 +15,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <main id="main" className="flex flex-1 items-center justify-center px-6 pb-16">
         <div className="w-full max-w-sm">
           <div className="mb-6 flex flex-col items-center text-center">
-            <Seal size={72} />
+            <Fishtail size={72} />
             <p className="font-display mt-4 text-2xl font-bold tracking-[0.3em]">{APP_NAME}</p>
             <p className="text-muted-foreground mt-1 flex items-center gap-1 text-sm">
               {APP_TAGLINE}

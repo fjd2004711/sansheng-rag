@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ChartNoAxesCombined, Database, FileText, LogOut, MessageSquare, Network, ShieldCheck } from "lucide-react";
 
 import { AboutSansheng } from "@/components/brand/about-sansheng";
-import { Seal } from "@/components/brand/seal";
+import { Fishtail } from "@/components/brand/fishtail";
 import { useTranslations } from "next-intl";
 
 import { ThemeToggle } from "@/components/theme";
@@ -33,7 +33,7 @@ export function Header() {
       <div className="flex h-14 items-center justify-between gap-2 px-3 sm:px-6">
         <div className="flex items-center gap-2 sm:gap-4">
           <Link href={ROUTES.HOME} className="flex items-center gap-2">
-            <Seal size={28} />
+            <Fishtail size={28} />
             <span className="font-display hidden text-lg font-bold tracking-[0.2em] sm:inline">{APP_NAME}</span>
           </Link>
           <AboutSansheng className="text-muted-foreground hover:text-foreground -ml-1 hidden rounded-md p-1 sm:inline-flex" />
