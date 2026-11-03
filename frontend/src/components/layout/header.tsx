@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChartNoAxesCombined, Database, FileText, LogOut, MessageSquare, Network, ShieldCheck } from "lucide-react";
+import { LogOut } from "lucide-react";
 
 import { AboutSansheng } from "@/components/brand/about-sansheng";
 import { Fishtail } from "@/components/brand/fishtail";
@@ -14,14 +14,8 @@ import { useActiveRoute } from "@/lib/active-route";
 import { APP_NAME, ROUTES } from "@/lib/constants";
 import { cn, isAppAdmin } from "@/lib/utils";
 
-const NAV = [
-  { key: "chat", href: ROUTES.CHAT, icon: MessageSquare },
-  { key: "knowledge", href: ROUTES.RAG, icon: Database },
-  { key: "reports", href: ROUTES.REPORTS, icon: FileText },
-  { key: "orchestration", href: ROUTES.ORCHESTRATION, icon: Network },
-  { key: "evaluation", href: ROUTES.EVALUATION, icon: ChartNoAxesCombined },
-  { key: "admin", href: ROUTES.ADMIN, icon: ShieldCheck, adminOnly: true },
-] as const;
+import { NAV } from "./nav";
+
 
 export function Header() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -29,7 +23,7 @@ export function Header() {
   const t = useTranslations("nav");
 
   return (
-    <header className="bg-background/95 supports-[backdrop-filter]:bg-background/80 border-foreground/55 sticky top-0 z-40 w-full border-b-[3px] border-double backdrop-blur">
+    <header className="bg-background/95 supports-[backdrop-filter]:bg-background/80 border-foreground/55 sticky top-0 z-40 w-full border-b-[3px] border-double backdrop-blur md:hidden">
       <div className="flex h-14 items-center justify-between gap-2 px-3 sm:px-6">
         <div className="flex items-center gap-2 sm:gap-4">
           <Link href={ROUTES.HOME} className="flex items-center gap-2">

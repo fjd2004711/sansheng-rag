@@ -6,6 +6,8 @@ import { formatDuration, timeAgo } from "@/lib/orchestration";
 import { cn } from "@/lib/utils";
 import type { RunSummary, Spec } from "@/types/orchestration";
 
+import { PageTitle } from "@/components/layout";
+
 import { StatusDot } from "./meta";
 
 export type Tab = "runs" | "specs" | "insights";
@@ -42,16 +44,17 @@ export function Sidebar({
 }) {
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="space-y-3 p-3">
+      <div className="space-y-4 px-4 pt-5 pb-3">
+        <PageTitle juan="卷四" title="编排平台" />
         <button
           type="button"
           onClick={onNewRun}
-          className="bg-foreground text-background flex w-full items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium shadow-sm transition-opacity hover:opacity-90"
+          className="bg-foreground text-background flex w-full items-center justify-center gap-2 rounded-sm py-2 text-sm font-medium tracking-wide transition-opacity hover:opacity-90"
         >
           <Plus className="h-4 w-4" />
           新建运行
         </button>
-        <nav className="space-y-0.5" aria-label="平台分区">
+        <nav className="border-foreground/40 divide-foreground/12 divide-y border-t-[3px] border-double" aria-label="平台分区">
           {NAV.map(([key, label, Icon]) => (
             <button
               key={key}
@@ -59,13 +62,13 @@ export function Sidebar({
               onClick={() => onTab(key)}
               aria-current={tab === key ? "page" : undefined}
               className={cn(
-                "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
+                "flex w-full items-center gap-2.5 px-1 py-2.5 text-sm transition-colors",
                 tab === key
-                  ? "bg-foreground/8 text-foreground font-medium"
-                  : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground",
+                  ? "text-foreground font-medium"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
-              <Icon className="h-4 w-4" />
+              <Icon className={cn("h-4 w-4", tab === key && "text-brand")} />
               {label}
               {key === "runs" && runs.length > 0 && (
                 <span className="text-muted-foreground ml-auto text-xs tabular-nums">
@@ -81,10 +84,10 @@ export function Sidebar({
           ))}
         </nav>
       </div>
-      <div className="min-h-0 flex-1 overflow-y-auto border-t px-2 py-2">
+      <div className="min-h-0 flex-1 overflow-y-auto px-2 py-2">
         {tab === "runs" && (
           <>
-            <p className="text-muted-foreground px-2 pt-1 pb-2 text-[11px] font-medium tracking-wide">
+            <p className="font-kai text-muted-foreground px-2 pt-1 pb-2 text-sm tracking-[0.15em]">
               历史运行
             </p>
             {runs.length === 0 && (
@@ -99,14 +102,14 @@ export function Sidebar({
                     type="button"
                     onClick={() => onSelectRun(run.id)}
                     className={cn(
-                      "w-full rounded-lg px-2.5 py-2 text-left transition-colors",
-                      run.id === selectedRun ? "bg-foreground/8" : "hover:bg-foreground/5",
+                      "w-full rounded-sm px-2.5 py-2 text-left transition-colors",
+                      run.id === selectedRun ? "bg-accent" : "hover:bg-accent/60",
                     )}
                   >
                     <div className="flex items-start gap-2">
                       <StatusDot status={run.status} className="mt-1.5" />
                       <div className="min-w-0 flex-1">
-                        <p className="line-clamp-2 text-[13px] leading-snug font-medium">
+                        <p className="font-display line-clamp-2 text-[14px] leading-snug font-bold">
                           {run.topic}
                         </p>
                         <p className="text-muted-foreground mt-0.5 truncate text-[11px]">

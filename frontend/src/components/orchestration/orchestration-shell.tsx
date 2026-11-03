@@ -55,8 +55,8 @@ export function OrchestrationShell() {
   );
 
   return (
-    <div className="bg-background flex h-[calc(100vh-3.5rem)] min-h-0 w-full">
-      <aside className="bg-card/60 hidden w-60 shrink-0 border-r lg:block">{sidebar}</aside>
+    <div className="flex h-[calc(100vh-3.5rem)] min-h-0 w-full md:h-screen">
+      <aside className="hidden w-64 shrink-0 border-r lg:block">{sidebar}</aside>
       <Sheet open={drawer} onOpenChange={setDrawer}>
         <SheetContent side="left" className="w-80 max-w-[85vw] p-0">
           {sidebar}

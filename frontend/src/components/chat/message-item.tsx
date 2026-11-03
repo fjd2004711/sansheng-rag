@@ -1,13 +1,13 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Fishtail } from "@/components/brand/fishtail";
 import type { ChatMessage, ChatMessageFile } from "@/types";
 import { progressText } from "@/lib/agent-trace-labels";
 import { deriveVerdict } from "@/lib/answer-verdict";
 import { AnswerVerdictBar } from "./answer-verdict";
 import { isAppAdmin } from "@/lib/utils";
 import { useTraceDetailStore } from "@/stores/trace-detail-store";
+import { useAuthStore } from "@/stores";
 import { useConversationStore } from "@/stores/conversation-store";
 import { FeedbackBar } from "./feedback-bar";
 import { ToolCallCard } from "./tool-call-card";
@@ -15,10 +15,9 @@ import { MarkdownContent } from "./markdown-content";
 import { CopyButton } from "./copy-button";
 import { useFilePreviewStore } from "@/stores";
 import { useSourcesPanelStore } from "@/stores/sources-panel-store";
-import { FileText, Globe, Paperclip, Pencil, RefreshCw, User } from "lucide-react";
+import { FileText, Globe, Paperclip, Pencil, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import Image from "next/image";
-import { useAuthStore } from "@/stores";
 import { getFileUrl } from "@/lib/file-api";
 import { extractSources } from "@/lib/chat-sources";
 import { citationStatus, finalClaims } from "@/lib/claims";
@@ -64,16 +63,11 @@ function TextBubble({
   citeStatus?: (index: number) => "ok" | "bad" | undefined;
 }) {
   return (
-    <div
-      className={cn(
-        "relative rounded-2xl px-3 py-2 sm:px-4 sm:py-2.5",
-        isUser
-          ? "bg-foreground text-background rounded-tr-sm"
-          : "bg-muted rounded-tl-sm",
-      )}
-    >
+    <div className="relative">
       {isUser ? (
-        <p className="text-sm break-words whitespace-pre-wrap">{text}</p>
+        <p className="font-kai text-foreground pt-0.5 text-[17px] leading-relaxed break-words whitespace-pre-wrap">
+          {text}
+        </p>
       ) : (
         <div className="reading prose-sm max-w-none text-[15px]">
           <MarkdownContent content={text} onCiteClick={onCiteClick} citeTitle={citeTitle} citeStatus={citeStatus} />
@@ -137,7 +131,7 @@ export function MessageItem({ message, groupPosition, onRegenerate, onEdit, onSh
   const [draftText, setDraftText] = useState(message.content);
   const openPreview = useFilePreviewStore((s) => s.open);
   const openSources = useSourcesPanelStore((s) => s.open);
-  const { user: authUser, avatarVersion } = useAuthStore();
+  const authUser = useAuthStore((state) => state.user);
   const isGrouped = groupPosition && groupPosition !== "single";
 
   const openTraceDetail = useTraceDetailStore((state) => state.open);
@@ -161,13 +155,13 @@ export function MessageItem({ message, groupPosition, onRegenerate, onEdit, onSh
   return (
     <div
       className={cn(
-        "group relative flex gap-2 overflow-visible sm:gap-4",
+        "group relative flex gap-3 overflow-visible sm:gap-5",
         isGrouped ? "py-2 sm:py-3" : "py-3 sm:py-4",
-        isUser && "flex-row-reverse",
+        isUser && "border-foreground/12 mt-3 border-t pt-6 sm:pt-7",
       )}
     >      {isGrouped && !isUser && (
         <div
-          className="absolute left-[15px] w-0.5 bg-border sm:left-[17px]"
+          className="bg-border absolute left-[13px] w-px"
           style={
             groupPosition === "first"
               ? { top: "24px", bottom: "0" }
@@ -178,33 +172,22 @@ export function MessageItem({ message, groupPosition, onRegenerate, onEdit, onSh
         />
       )}
 
+      {/* 问 / 答 — the question-and-answer form of a classical text (设问), marked like a seal. */}
       <div
         className={cn(
-          "z-10 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full sm:h-9 sm:w-9",
-          isUser ? "bg-foreground text-background overflow-hidden" : "text-foreground",
-          isGrouped && !isUser && "ring-background ring-2",
+          "font-display z-10 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-[2px] text-sm font-bold",
+          isUser
+            ? "border-brand text-brand border-[1.5px]"
+            : cn("bg-foreground text-background", message.isStreaming && "brand-busy"),
         )}
+        aria-hidden
       >
-        {isUser && authUser?.avatar_url ? (
-          <Image
-            src={`/api/users/avatar/${authUser.id}?v=${avatarVersion}`}
-            alt=""
-            width={36}
-            height={36}
-            className="h-full w-full object-cover"
-            unoptimized
-          />
-        ) : isUser ? (
-          <User className="h-4 w-4" />
-        ) : (
-          <Fishtail size={28} busy={message.isStreaming} />
-        )}
+        {isUser ? "问" : "答"}
       </div>
 
       <div
         className={cn(
-          "max-w-[88%] flex-1 space-y-2 overflow-hidden sm:max-w-[85%]",
-          isUser && "flex flex-col items-end",
+          "min-w-0 flex-1 space-y-2 overflow-hidden",
         )}
       >
         {isUser &&
@@ -271,7 +254,7 @@ export function MessageItem({ message, groupPosition, onRegenerate, onEdit, onSh
             <>
               {showPlaceholder && (
                 <div
-                  className="bg-muted flex items-center gap-2 rounded-2xl rounded-tl-sm px-4 py-2.5"
+                  className="flex items-center gap-2 py-1.5"
                   role="status"
                   aria-live="polite"
                 >

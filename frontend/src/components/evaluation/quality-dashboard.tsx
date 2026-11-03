@@ -10,6 +10,8 @@ import { formatTokens } from "@/lib/format-tokens";
 import { TRACE_FAILURE_LABELS } from "@/lib/agent-trace-labels";
 import { cn, isAppAdmin } from "@/lib/utils";
 
+import { PageTitle } from "@/components/layout";
+
 import { BenchmarkDashboard } from "./evaluation-dashboard";
 
 type Verdict = "verified" | "corrected" | "partial" | "abstained" | "unchecked";
@@ -81,9 +83,9 @@ export function QualityDashboard() {
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 sm:px-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
+      <header className="border-foreground/40 flex flex-wrap items-end justify-between gap-3 border-b-[3px] border-double pb-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">回答质量</h1>
+          <PageTitle juan="卷五" title="回答质量" />
           <p className="text-muted-foreground mt-1 text-sm">
             根据{scope === "all" ? "所有用户" : "你"}实际的提问统计：每条回答都经过检索、核对，这里汇总结果。
           </p>
