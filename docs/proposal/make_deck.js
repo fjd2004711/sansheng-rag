@@ -1,349 +1,384 @@
-// 三省 初赛方案讲解 PPT（参照中国国际大学生创新大赛获奖路演稿的做法：深色科技底、结论式标题、
-// 满幅封面、实物截图为证据、关键数字金色放大、底部结论条）。
-// 数字均来自仓库内的实测产物（artifacts/ 与方案书）；图片由 make_deck_assets.py 生成。
+// 三省 初赛方案讲解 PPT：以线装古籍为式样——靛蓝书衣与题签、宣纸内页、四周双边版框、版心鱼尾与汉字页码，
+// 宋体正文、楷体批注，朱色只用于圈点与按语；学术体例：卷次、图表编号、三线表、算法框、参考文献。
+// 数字均来自仓库内的实测产物（artifacts/ 与方案书），截图来自本地真实运行。
 // 用法：python docs/proposal/make_deck_assets.py && NODE_PATH=<含 pptxgenjs 的 node_modules> node docs/proposal/make_deck.js
 const path = require("path");
 const pptxgen = require("pptxgenjs");
 
-const ASSETS = path.join(__dirname, "deck_assets");
+const A = (f) => path.join(__dirname, "deck_assets", f);
 const OUT = process.env.DECK_OUT || path.join(__dirname, "三省-方案讲解.pptx");
-const GOLD = "F2B632", CYAN = "5BC0FF", CARD = "0E2552", CARDLINE = "2B58A6", TXT = "E6EEFB", MUTED = "9DB2D8", BANNER = "17428F";
-const ZHONG = "3B82F6", MEN = "E5533F", SHANG = "34A874", WHITE = "FFFFFF";
-const FONT = process.env.DECK_FONT || "Microsoft YaHei";
+const SONG = "Songti SC", KAI = "Kaiti SC";
+const INK = "231F1A", VERM = "A83A2C", STONE = "2F5D73", PINE = "3E6B50", OCHRE = "9A6B1F";
+const BROWN = "6B6257", RULE = "A39886", DEEP = "E7DFCD", SLIP = "F2ECDF", LIGHT = "E8E2D2";
+const TOTAL = 15;
 
 const pres = new pptxgen();
 pres.layout = "LAYOUT_16x9"; // 10 x 5.625 in
 pres.title = "三省：可验证的多智能体编排调度平台";
 pres.author = "三省项目组";
 
-let n = 0;
-const T = (s, text, o) => s.addText(text, { fontFace: FONT, margin: 0, isTextBox: true, ...o });
-const img = (f) => path.join(ASSETS, f);
-const shadow = () => ({ type: "outer", color: "000000", opacity: 0.4, blur: 8, offset: 2, angle: 90 });
-// "文字{金色强调}文字" -> 带强调色的文字片段
-const runs = (str, base = {}, hi = GOLD) =>
-  str.split(/(\{[^}]*\})/).filter(Boolean).map((p) =>
-    p.startsWith("{") ? { text: p.slice(1, -1), options: { ...base, color: hi, bold: true } } : { text: p, options: base });
-
-function page(tag, title, banner) {
-  const s = pres.addSlide();
-  n += 1;
-  s.background = { path: img("bg.png") };
-  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 0.5, y: 0.26, w: 1.35, h: 0.28, fill: { color: GOLD, transparency: 85 }, line: { color: GOLD, width: 1 }, rectRadius: 0.05 });
-  T(s, tag, { x: 0.5, y: 0.26, w: 1.35, h: 0.28, fontSize: 11, bold: true, color: GOLD, align: "center", valign: "middle" });
-  T(s, title, { x: 0.5, y: 0.6, w: 8.2, h: 0.68, fontSize: 20, bold: true, color: WHITE, valign: "middle" });
-  s.addImage({ path: img("logo.png"), x: 9.0, y: 0.25, w: 0.5, h: 0.5 });
-  if (banner) {
-    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 0.5, y: 4.72, w: 9, h: 0.5, fill: { color: BANNER }, line: { color: CYAN, width: 0.75 }, rectRadius: 0.06 });
-    T(s, runs(banner, { bold: true, color: WHITE }), { x: 0.7, y: 4.72, w: 8.6, h: 0.5, fontSize: 14, align: "center", valign: "middle" });
-  }
-  T(s, String(n), { x: 9.0, y: 5.3, w: 0.5, h: 0.2, fontSize: 9, color: MUTED, align: "right", valign: "middle" });
-  return s;
-}
-const shot = (s, file, x, y, w) => {
-  const h = w / 1.69; // 截图已裁去顶部导航栏
-  s.addShape(pres.shapes.RECTANGLE, { x: x - 0.03, y: y - 0.03, w: w + 0.06, h: h + 0.06, fill: { color: WHITE }, line: { color: CYAN, width: 1 }, shadow: shadow() });
-  s.addImage({ path: path.join(ASSETS, "shots", file), x, y, w, h });
-  return y + h;
-};
-const cap = (s, text, x, y, w) => {
-  s.addShape(pres.shapes.RECTANGLE, { x, y, w, h: 0.3, fill: { color: BANNER }, line: { color: BANNER, width: 0 } });
-  T(s, text, { x, y, w, h: 0.3, fontSize: 11, bold: true, color: WHITE, align: "center", valign: "middle" });
-};
-const card = (s, x, y, w, h) =>
-  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y, w, h, fill: { color: CARD }, line: { color: CARDLINE, width: 1 }, rectRadius: 0.06, shadow: shadow() });
-const head = (s, x, y, w, text, color = BANNER) => {
-  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y, w, h: 0.42, fill: { color }, line: { color, width: 0 }, rectRadius: 0.06 });
-  T(s, text, { x, y, w, h: 0.42, fontSize: 14, bold: true, color: WHITE, align: "center", valign: "middle" });
-};
-const num = (s, x, y, d, label, fill = ZHONG) => {
-  s.addShape(pres.shapes.OVAL, { x, y, w: d, h: d, fill: { color: fill }, line: { color: CYAN, width: 1 } });
-  T(s, label, { x, y, w: d, h: d, fontSize: d > 0.5 ? 18 : 13, bold: true, color: WHITE, align: "center", valign: "middle" });
-};
-const box = (s, x, y, w, h, text, color, size = 13) => {
-  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y, w, h, fill: { color }, line: { color: WHITE, width: 0.5 }, rectRadius: 0.06 });
-  T(s, text, { x, y, w, h, fontSize: size, bold: true, color: WHITE, align: "center", valign: "middle" });
-};
-const arrow = (s, x1, y1, x2, y2, color = CYAN) =>
+const CN = ["", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十", "十一", "十二", "十三", "十四", "十五"];
+let n = 0, figNo = 0, tabNo = 0;
+const T = (s, text, o) => s.addText(text, { fontFace: SONG, color: INK, margin: 0, isTextBox: true, ...o });
+const vert = (s, str, o) => T(s, [...str].join("\n"), { align: "center", valign: "top", lineSpacingMultiple: 1.0, ...o });
+const line = (s, x1, y1, x2, y2, o = {}) =>
+  s.addShape(pres.shapes.LINE, { x: x1, y: y1, w: x2 - x1, h: y2 - y1, line: { color: INK, width: 0.75, ...o } });
+const rect = (s, x, y, w, h, o = {}) =>
+  s.addShape(pres.shapes.RECTANGLE, { x, y, w, h, fill: o.fill ? { color: o.fill } : { type: "none" }, line: { color: o.color || INK, width: o.width ?? 0.75, dashType: o.dash || "solid" } });
+const arrow = (s, x1, y1, x2, y2, color = BROWN) =>
   s.addShape(pres.shapes.LINE, {
     x: Math.min(x1, x2), y: Math.min(y1, y2), w: Math.abs(x2 - x1), h: Math.abs(y2 - y1),
-    flipH: x2 < x1, flipV: y2 < y1, line: { color, width: 1.75, endArrowType: "triangle" },
+    flipH: x2 < x1, flipV: y2 < y1, line: { color, width: 1, endArrowType: "triangle" },
   });
-const bullets = (items, base = {}) => items.map((t, i) => ({ text: t, options: { bullet: true, breakLine: i < items.length - 1, color: TXT, ...base } }));
-const big = (s, x, y, w, value, label, color = GOLD) => {
-  T(s, value, { x, y, w, h: 0.7, fontSize: 30, bold: true, color, valign: "middle" });
-  T(s, label, { x, y: y + 0.7, w, h: 0.45, fontSize: 11, color: MUTED, valign: "top" });
+// "文字{朱色强调}文字"
+const runs = (str, base = {}) =>
+  str.split(/(\{[^}]*\})/).filter(Boolean).map((p) =>
+    p.startsWith("{") ? { text: p.slice(1, -1), options: { ...base, color: VERM, bold: true } } : { text: p, options: base });
+
+// 内页：宣纸、四周双边、右侧版心（鱼尾、书名、卷名、页码）
+function page(juan, title, note) {
+  const s = pres.addSlide();
+  n += 1;
+  s.background = { path: A("paper.png") };
+  rect(s, 0.22, 0.22, 9.56, 5.185, { width: 2.25 });
+  rect(s, 0.3, 0.3, 9.4, 5.025, { width: 0.6 });
+  line(s, 9.05, 0.3, 9.05, 5.325, { width: 0.6 });
+  s.addImage({ path: A("fishtail.png"), x: 9.195, y: 0.48, w: 0.36, h: 0.225 });
+  vert(s, "三省", { x: 9.2, y: 0.82, w: 0.35, h: 0.62, fontSize: 13, bold: true });
+  if (juan) vert(s, juan.replace(/\s/g, ""), { x: 9.24, y: 1.58, w: 0.27, h: 1.9, fontSize: 10, color: BROWN });
+  vert(s, CN[n], { x: 9.24, y: 4.55, w: 0.27, h: 0.62, fontSize: 11, color: BROWN });
+  if (juan) T(s, juan, { x: 0.6, y: 0.44, w: 4, h: 0.28, fontFace: KAI, fontSize: 12, color: VERM, valign: "middle" });
+  if (title) T(s, title, { x: 0.6, y: 0.72, w: 8.25, h: 0.5, fontSize: 21, bold: true, valign: "middle" });
+  if (note) T(s, [{ text: "按　", options: { fontFace: KAI, color: VERM, bold: true } }, ...runs(note, { fontFace: KAI })],
+    { x: 0.6, y: 4.74, w: 8.25, h: 0.36, fontSize: 13, valign: "middle" });
+  return s;
+}
+const figure = (s, file, x, y, w, ratio, caption) => {
+  const h = w / ratio;
+  rect(s, x - 0.04, y - 0.04, w + 0.08, h + 0.08, { color: RULE, width: 0.75 });
+  s.addImage({ path: A(`fig/${file}.png`), x, y, w, h });
+  figNo += 1;
+  T(s, `图${CN[figNo]}　${caption}`, { x: x - 0.4, y: y + h + 0.06, w: w + 0.8, h: 0.24, fontFace: KAI, fontSize: 11, color: BROWN, align: "center", valign: "middle" });
+  return y + h;
+};
+// 三线表：表题在上，顶线与底线粗、栏目线细，无竖线
+function table(s, caption, rows, x, y, colW, o = {}) {
+  tabNo += 1;
+  const w = colW.reduce((a, b) => a + b, 0);
+  T(s, `表${CN[tabNo]}　${caption}`, { x, y, w, h: 0.26, fontFace: KAI, fontSize: 11, color: BROWN, align: "center", valign: "middle" });
+  const none = { type: "none" };
+  const thick = { type: "solid", pt: 1.5, color: INK }, thin = { type: "solid", pt: 0.6, color: INK };
+  const data = rows.map((row, r) => row.map((cell, c) => {
+    const base = typeof cell === "string" ? { text: cell } : cell;
+    const top = r === 0 ? thick : none;
+    const bottom = r === 0 ? thin : r === rows.length - 1 ? thick : none;
+    return {
+      text: base.text,
+      options: {
+        fontFace: SONG, fontSize: o.size || 11.5, color: base.color || INK, bold: r === 0 || base.bold,
+        align: c === 0 || o.left?.includes(c) ? "left" : "center", valign: "middle", border: [top, none, bottom, none],
+        margin: [0, 0.06, 0, 0.06],
+      },
+    };
+  }));
+  s.addTable(data, { x, y: y + 0.3, w, colW, rowH: o.rowH || 0.38 });
+}
+const ring = (s, x, y, d, label, color = VERM) => {
+  s.addShape(pres.shapes.OVAL, { x, y, w: d, h: d, fill: { type: "none" }, line: { color, width: 1 } });
+  T(s, label, { x, y, w: d, h: d, fontSize: 13, bold: true, color, align: "center", valign: "middle" });
+};
+const node = (s, x, y, w, h, text, color, size = 13) => {
+  rect(s, x, y, w, h, { fill: DEEP, color, width: 1.25 });
+  T(s, text, { x, y, w, h, fontSize: size, bold: true, color, align: "center", valign: "middle" });
 };
 
-// 1 封面
+// 一　封面（书衣与题签）
 {
   const s = pres.addSlide();
   n += 1;
-  s.background = { path: img("cover.png") };
-  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 0.6, y: 0.45, w: 4.6, h: 0.34, fill: { color: GOLD, transparency: 85 }, line: { color: GOLD, width: 1 }, rectRadius: 0.05 });
-  T(s, "赛题：大模型 Agent 工具编排调度平台 · 初赛", { x: 0.6, y: 0.45, w: 4.6, h: 0.34, fontSize: 12, bold: true, color: GOLD, align: "center", valign: "middle" });
-  T(s, "可验证的多智能体编排调度平台", { x: 0.7, y: 3.45, w: 5.8, h: 0.55, fontSize: 24, bold: true, color: WHITE, valign: "middle" });
-  T(s, runs("起草、审核、执行各司其职，{写的人不审，审的人不写}", { color: TXT }), { x: 0.7, y: 4.05, w: 5.8, h: 0.4, fontSize: 14, valign: "middle" });
-  ["声明式定义", "动态调度", "独立核查", "有界自循环", "反馈优化"].forEach((t, i) => {
-    const x = 0.7 + i * 1.2;
-    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y: 4.75, w: 1.08, h: 0.36, fill: { color: BANNER }, line: { color: CYAN, width: 0.75 }, rectRadius: 0.05 });
-    T(s, t, { x, y: 4.75, w: 1.08, h: 0.36, fontSize: 11, bold: true, color: WHITE, align: "center", valign: "middle" });
-  });
-  s.addNotes("各位评委好。我们的系统叫三省，名字来自唐代的三省制：中书省起草，门下省审核，尚书省执行，谁写的谁不审。右边三个圆就是这三个角色，它们也是我们系统里的三类 Agent。接下来我用十几分钟讲清楚我们做了什么、怎么做的、效果如何。");
+  s.background = { path: A("cover.png") };
+  rect(s, 1.25, 0.5, 1.55, 4.0, { fill: SLIP, width: 1 });
+  rect(s, 1.32, 0.57, 1.41, 3.86, { width: 0.5 });
+  vert(s, "三省", { x: 1.98, y: 0.78, w: 0.7, h: 1.65, fontSize: 46, bold: true });
+  vert(s, "可验证的多智能体编排调度平台", { x: 1.47, y: 0.9, w: 0.36, h: 3.4, fontSize: 12, lineSpacingMultiple: 0.98 });
+  s.addImage({ path: A("seal.png"), x: 2.04, y: 3.68, w: 0.56, h: 0.56 });
+  T(s, "取唐代三省制之意：中书起草，门下审核，尚书执行", { x: 4.2, y: 4.25, w: 5.3, h: 0.34, fontFace: KAI, fontSize: 14, color: LIGHT, align: "right", valign: "middle" });
+  T(s, "写的人不审，审的人不写", { x: 4.2, y: 4.6, w: 5.3, h: 0.3, fontFace: KAI, fontSize: 12, color: "C9C3B3", align: "right", valign: "middle" });
+  T(s, "大模型 Agent 工具编排调度平台赛题 · 初赛方案讲解", { x: 4.2, y: 4.95, w: 5.3, h: 0.26, fontSize: 10.5, color: "A9A495", align: "right", valign: "middle" });
+  s.addNotes("各位评委好。我们的系统叫三省，名字取自唐代的三省制：中书省起草，门下省审核，觉得不妥可以封驳退回，尚书省执行。写的人不审，审的人不写，这是我们整个平台的设计主线。下面用十几分钟，讲清楚我们做了什么、怎么做、效果如何。");
 }
 
-// 2 一页讲清
+// 二　卷目（竖排，自右向左）
 {
-  const s = page("项目概览", "三省：让多智能体既跑得快，又让人信得过", "{写的人不审，审的人不写}：起草、审核、执行各司其职");
-  const cols = [
-    ["痛点", ["同一个模型既写又审，错误一起放过", "检索、阅读、核查串行，动辄十几分钟", "某一步出错，整体崩溃或带错继续"], MEN],
-    ["做法", ["独立核查：核查者看不到起草者的推理", "流水线并行：读完一条就核查一条", "有界自循环：先诊断再修复，变好才采纳"], ZHONG],
+  const s = page(null, null, null);
+  vert(s, "汇报卷目", { x: 8.15, y: 0.6, w: 0.55, h: 2.2, fontSize: 22, bold: true });
+  line(s, 7.95, 0.5, 7.95, 5.1, { color: RULE, width: 0.5 });
+  const items = [
+    ["卷一", "研究背景", "谁来判定完成"],
+    ["卷二", "总体设计", "三省分权与技术路线"],
+    ["卷三", "关键技术", "编排调度核查自循环"],
+    ["卷四", "实现与实验", "真实界面与实测数据"],
+    ["卷五", "创新与展望", "创新不足与下一步"],
   ];
-  cols.forEach(([h, items, c], i) => {
-    const x = 0.5 + i * 3.1;
-    card(s, x, 1.4, 2.9, 3.1);
-    head(s, x + 0.15, 1.55, 2.6, h, c);
-    T(s, bullets(items, { fontSize: 13 }), { x: x + 0.2, y: 2.15, w: 2.5, h: 2.25, fontSize: 13, valign: "top", paraSpaceAfter: 8 });
-    if (i === 0) arrow(s, 3.42, 2.95, 3.58, 2.95);
+  items.forEach(([juan, title, desc], i) => {
+    const x = 6.45 - i * 1.5;
+    T(s, juan, { x, y: 0.6, w: 1.5, h: 0.3, fontFace: KAI, fontSize: 13, color: VERM, align: "center", valign: "middle" });
+    vert(s, title, { x: x + 0.78, y: 1.05, w: 0.48, h: 2.2, fontSize: 20, bold: true });
+    vert(s, desc, { x: x + 0.3, y: 1.3, w: 0.32, h: 2.4, fontFace: KAI, fontSize: 12, color: BROWN });
+    if (i < 4) line(s, x, 0.5, x, 5.1, { color: RULE, width: 0.5 });
   });
-  arrow(s, 6.52, 2.95, 6.68, 2.95);
-  card(s, 6.7, 1.4, 2.8, 3.1);
-  head(s, 6.85, 1.55, 2.5, "成果（实测）", SHANG);
-  [["3.48×", "最高并行加速比（实测 2.95–3.48）"], ["0", "误放行：合成 0/46，真实 0/15"], ["34→51%", "新能源题修复后质量门通过率"]].forEach(([v, l], i) => {
-    const y = 2.05 + i * 0.8;
-    T(s, v, { x: 6.9, y, w: 2.4, h: 0.42, fontSize: 24, bold: true, color: GOLD, valign: "middle" });
-    T(s, l, { x: 6.9, y: y + 0.42, w: 2.45, h: 0.3, fontSize: 10.5, color: MUTED, valign: "top" });
-  });
-  s.addNotes("这一页讲清楚三件事。左边是三个痛点：同一个模型既写又审，流程串行，出错就整体失败或带错继续。中间是我们的三项做法：独立核查、流水线并行、有界自循环。右边是实测成果：并行加速比最高三点四八倍；核查误放行在合成集和真实网页上都是零；新能源题经一轮修复，质量门通过率从百分之三十四提高到五十一。");
+  s.addNotes("汇报分五卷：研究背景、总体设计、关键技术、实现与实验、创新与展望。");
 }
 
-// 3 三省定位
+// 三　卷一 研究背景
 {
-  const s = page("总体设计", "借三省制立规矩：起草、审核、执行各司其职", "核查者{看不到起草者的推理}，只凭证据判断");
-  const cols = [
-    ["中书省 · 起草", "规划、检索、阅读、撰写 Agent：拆解题目，生成各章节与结论", ZHONG],
-    ["门下省 · 审核封驳", "独立核查 Agent 与质量门：逐条对证据，不合格则封驳", MEN],
-    ["尚书省 · 执行调度", "调度器：并行、重试、预算、降级、插入修复任务", SHANG],
-  ];
-  cols.forEach(([h, body, c], i) => {
-    const x = 0.5 + i * 3.075;
-    card(s, x, 1.4, 2.6, 2.0);
-    head(s, x + 0.12, 1.52, 2.36, h, c);
-    T(s, body, { x: x + 0.2, y: 2.1, w: 2.2, h: 1.2, fontSize: 13, color: TXT, valign: "top" });
-    if (i < 2) arrow(s, x + 2.65, 2.4, x + 3.05, 2.4);
+  const s = page("卷一　研究背景", "多智能体流水线里，“完成”由谁来判定", "研究问题——如何在{可控的时间与成本}内，交付{经独立核验}的结果");
+  [
+    ["自评偏差", "模型倾向于给自己的输出打高分，仅靠自我纠错难以发现错误〔1,2〕。"],
+    ["串行低效", "检索、阅读、核查环环相扣，一份调研报告动辄十几分钟以上。"],
+    ["失败失控", "出错后要么整体中断，要么带错继续；无界重试越改越差，成本失控。"],
+  ].forEach(([head, body], i) => {
+    const y = 1.45 + i * 0.95;
+    ring(s, 0.6, y, 0.42, CN[i + 1]);
+    T(s, head, { x: 1.2, y: y - 0.02, w: 3.9, h: 0.32, fontSize: 15, bold: true, valign: "middle" });
+    T(s, body, { x: 1.2, y: y + 0.33, w: 3.9, h: 0.5, fontSize: 12.5, color: INK, valign: "top" });
   });
-  T(s, "对应赛题的五项能力", { x: 0.5, y: 3.6, w: 4, h: 0.3, fontSize: 14, bold: true, color: GOLD, valign: "middle" });
-  ["声明式定义", "动态调度", "独立核查", "有界自循环", "反馈优化"].forEach((t, i) => box(s, 0.5 + i * 1.82, 4.0, 1.65, 0.5, t, BANNER, 13));
-  s.addNotes("三省制里，中书省起草，门下省审核并可以封驳，尚书省负责执行。我们把它对应到系统：规划与撰写的 Agent、独立核查的 Agent，以及负责调度的执行层。核查者看不到起草者的推理，只凭证据判断，这才是真正的审核。下面五项，对应赛题要的编排平台能力。");
+  const steps = ["规划员", "检索员", "撰稿员", "交付成果"];
+  steps.forEach((t, i) => {
+    const y = 1.45 + i * 0.68;
+    node(s, 5.95, y, 1.7, 0.42, t, i === 3 ? VERM : INK, 12.5);
+    T(s, i === 3 ? "无人核查" : "自报通过", { x: 7.78, y, w: 1.0, h: 0.42, fontFace: KAI, fontSize: 12, color: i === 3 ? VERM : BROWN, valign: "middle" });
+    if (i < 3) arrow(s, 6.8, y + 0.42, 6.8, y + 0.68);
+  });
+  T(s, `图${CN[++figNo]}　传统流水线：各环节自报通过`, { x: 5.4, y: 4.12, w: 3.4, h: 0.24, fontFace: KAI, fontSize: 11, color: BROWN, align: "center", valign: "middle" });
+  T(s, "〔1〕Huang J, et al. Large Language Models Cannot Self-Correct Reasoning Yet. ICLR, 2024.　〔2〕Panickssery A, et al. LLM Evaluators Recognize and Favor Their Own Generations. NeurIPS, 2024.",
+    { x: 0.6, y: 4.44, w: 8.25, h: 0.28, fontSize: 8, color: BROWN, valign: "middle" });
+  s.addNotes("先说问题。让一组大模型分工协作已经很常见，但最让人不踏实的是最后那句“完成”可不可信。第一，模型倾向于给自己的输出打高分，已有研究表明仅靠自我纠错难以发现推理错误。第二，检索、阅读、核查串行，一份报告动辄十几分钟。第三，出错后要么整体中断，要么带错继续，无界重试还会越改越差。右图就是传统流水线：每一环都自报通过，最后交付的东西没有人真正检查过。所以我们的研究问题是：如何在可控的时间与成本内，交付经独立核验的结果。");
 }
 
-// 4 总体架构
+// 四　卷二 三省分权
 {
-  const s = page("总体设计", "一套引擎、两个应用：声明式编排加自研调度器", "问答与调研报告共用同一套引擎，{运行过程在编排页实时可见}");
+  const s = page("卷二　总体设计", "借三省制分权：起草、审核、执行各司其职", "核查员{看不到起草者的推理}，只凭证据判断；不达标即“封驳”退回重做");
+  figure(s, "about", 0.65, 1.42, 3.4, 777 / 612, "系统内“三省的由来”说明（真实界面）");
+  table(s, "三省与系统角色对应", [
+    ["三省", "职掌", "系统角色"],
+    [{ text: "中书省", color: STONE, bold: true }, "起草", "规划师、撰稿人、分析师"],
+    [{ text: "门下省", color: VERM, bold: true }, "审核 · 封驳", "独立核查员、质量门"],
+    [{ text: "尚书省", color: PINE, bold: true }, "执行", "调度器、检索员、修复员、主编"],
+  ], 4.4, 1.4, [0.85, 1.0, 2.6], { rowH: 0.5, size: 12 });
+  T(s, "这是帮助理解分工的类比，而非对古代制度的复刻：门下省封驳整份诏令，核查员逐条说法地审。",
+    { x: 4.4, y: 3.85, w: 4.45, h: 0.55, fontFace: KAI, fontSize: 11.5, color: BROWN, valign: "top" });
+  s.addNotes("我们借用三省制来分权。中书省起草，对应规划师、撰稿人和分析师，只管写不管批；门下省审核，觉得不妥可以封驳退回，对应独立核查员和质量门；尚书省执行，对应调度器、检索员、修复员和主编。左图是系统里真实的说明界面，用户点名字旁的图标就能看到。需要说明这是一个类比：门下省封驳的是整份诏令，我们的核查员是逐条说法地审。");
+}
+
+// 五　卷二 总体架构
+{
+  const s = page("卷二　总体设计", "系统总体架构：一套编排引擎，支撑两个应用", "两个应用共用一套编排引擎，运行全程{可在编排页回放}");
   const layers = [
-    ["应用层", [["问答 · LangGraph", "检索纠错 · 生成纠错 · 有界循环"], ["调研报告 · 编排流水线", "规划 → 检索 → 阅读 → 核查 → 统稿"]], ZHONG],
-    ["编排层", [["声明式定义（YAML）", "知识库 · Agent · 团队 · 工作流 · 策略，运行前先校验"]], "6D5BD0"],
-    ["调度层", [["asyncio 自研调度器", "就绪集 · 优先级 · 资源池 · 重试 · 超时 · 预算 · 模型降级 · 运行时插入任务"]], SHANG],
-    ["基础设施", [["FastAPI", ""], ["PostgreSQL", ""], ["Qdrant", ""], ["Next.js 15", ""]], "5B6B8C"],
+    ["应用层", [["问答 · LangGraph", "检索纠错、生成纠错、有界循环"], ["调研报告 · 编排流水线", "规划、检索、阅读、核查、统稿"]], STONE],
+    ["编排层", [["声明式定义（YAML）", "知识库、Agent、团队、工作流、策略，导入时校验"]], VERM],
+    ["调度层", [["asyncio 自研调度器", "就绪集、优先级、资源池、重试、超时、预算、模型降级、运行时插入任务"]], PINE],
+    ["基础设施", [["FastAPI", ""], ["PostgreSQL", ""], ["Qdrant", ""], ["Next.js 15", ""]], BROWN],
   ];
   layers.forEach(([name, parts, c], i) => {
-    const y = 1.35 + i * 0.83;
-    box(s, 0.5, y, 1.3, 0.66, name, c, 14);
-    const w = (7.5 - (parts.length - 1) * 0.15) / parts.length;
+    const y = 1.42 + i * 0.7;
+    rect(s, 0.6, y, 1.1, 0.54, { fill: DEEP, color: INK });
+    T(s, name, { x: 0.6, y, w: 1.1, h: 0.54, fontSize: 13, bold: true, align: "center", valign: "middle" });
+    const w = (6.95 - (parts.length - 1) * 0.15) / parts.length;
     parts.forEach(([a, b], j) => {
-      const x = 2.0 + j * (w + 0.15);
-      s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y, w, h: 0.66, fill: { color: CARD }, line: { color: c, width: 1.25 }, rectRadius: 0.06 });
-      T(s, a, { x: x + 0.1, y: y + (b ? 0.04 : 0), w: w - 0.2, h: b ? 0.28 : 0.66, fontSize: 13, bold: true, color: WHITE, align: "center", valign: "middle" });
-      if (b) T(s, b, { x: x + 0.1, y: y + 0.32, w: w - 0.2, h: 0.32, fontSize: 10.5, color: MUTED, align: "center", valign: "middle" });
+      const x = 1.9 + j * (w + 0.15);
+      rect(s, x, y, w, 0.54, { color: c, width: 1.1 });
+      T(s, a, { x, y: y + (b ? 0.04 : 0), w, h: b ? 0.26 : 0.54, fontSize: 12.5, bold: true, color: c, align: "center", valign: "middle" });
+      if (b) T(s, b, { x, y: y + 0.29, w, h: 0.22, fontSize: 10.5, color: BROWN, align: "center", valign: "middle" });
     });
-    if (i < 3) arrow(s, 5.75, y + 0.66, 5.75, y + 0.83);
+    if (i < 3) arrow(s, 5.37, y + 0.54, 5.37, y + 0.7);
   });
-  s.addNotes("架构分四层。最上面是两个应用：问答用 LangGraph 做有界纠错；调研报告走我们的编排流水线。第二层是声明式的编排层，工作流用 YAML 描述，运行前先校验。第三层是自研的调度器，基于 asyncio，负责并行、重试、预算和降级。最下面是数据与基础设施。");
+  T(s, `图${CN[++figNo]}　系统分层架构`, { x: 0.6, y: 4.3, w: 8.25, h: 0.24, fontFace: KAI, fontSize: 11, color: BROWN, align: "center", valign: "middle" });
+  s.addNotes("架构分四层。应用层有两个应用：问答用 LangGraph 做有界纠错，调研报告走编排流水线。编排层是声明式定义，用 YAML 描述知识库、Agent、团队、工作流和策略，导入时就做校验。调度层是我们自己写的 asyncio 调度器，负责就绪集、资源池、重试、超时、预算和模型降级，还能在运行时插入任务。最下面是基础设施。");
 }
 
-// 5 技术路线
+// 六　卷二 技术路线
 {
-  const s = page("总体设计", "技术路线：起草、审核、修复、统稿", "质量门未通过才进入修复，{修复结果不比之前差才采纳}");
-  const nodes = [["规划", ZHONG], ["检索", ZHONG], ["阅读", ZHONG], ["逐项核查", MEN], ["质量门", MEN], ["统稿披露", SHANG]];
-  const w = 1.35, gap = 0.18;
+  const s = page("卷二　总体设计", "技术路线：起草—审核—修复—统稿的有界流程", "质量门未达标才进入修复，{修复结果不劣于原稿才采纳}");
+  const nodes = [["规划", STONE], ["检索", PINE], ["阅读撰写", STONE], ["逐项核查", VERM], ["质量门", VERM], ["统稿披露", PINE]];
+  const w = 1.15, gap = 0.27;
   nodes.forEach(([t, c], i) => {
-    const x = 0.5 + i * (w + gap);
-    box(s, x, 1.4, w, 0.65, t, c, 14);
-    if (i < 5) arrow(s, x + w, 1.72, x + w + gap, 1.72);
+    const x = 0.6 + i * (w + gap);
+    node(s, x, 1.45, w, 0.52, t, c, 13);
+    if (i < 5) arrow(s, x + w, 1.71, x + w + gap, 1.71);
   });
-  const gateX = 0.5 + 4 * (w + gap) + w / 2, mergeX = 0.5 + 5 * (w + gap) + w / 2;
-  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 0.5, y: 2.65, w: 9, h: 1.45, fill: { color: CARD }, line: { color: CYAN, width: 1, dashType: "dash" }, rectRadius: 0.08 });
-  T(s, "有界自循环（不达标时触发）", { x: 0.7, y: 2.7, w: 4, h: 0.3, fontSize: 13, bold: true, color: GOLD, valign: "middle" });
-  [["诊断失败类型", MEN], ["定向修复", ZHONG], ["复核对比", MEN], ["不差才采纳", SHANG]].forEach(([t, c], i) => {
-    const x = 0.8 + i * 2.1;
-    box(s, x, 3.2, 1.7, 0.6, t, c, 13);
-    if (i < 3) arrow(s, x + 1.7, 3.5, x + 2.1, 3.5);
+  const gx = 0.6 + 4 * (w + gap) + w / 2, mx = 0.6 + 5 * (w + gap) + w / 2;
+  rect(s, 0.6, 2.5, 8.25, 1.25, { color: RULE, dash: "dash", width: 0.75 });
+  T(s, "有界自循环", { x: 0.75, y: 2.56, w: 3, h: 0.28, fontFace: KAI, fontSize: 12, color: VERM, valign: "middle" });
+  [["诊断失败类型", VERM], ["按类型修复", STONE], ["独立复核", VERM], ["不劣才采纳", PINE]].forEach(([t, c], i) => {
+    const x = 0.95 + i * 1.95;
+    node(s, x, 3.02, 1.55, 0.48, t, c, 12.5);
+    if (i < 3) arrow(s, x + 1.55, 3.26, x + 1.95, 3.26);
   });
-  arrow(s, gateX, 2.05, gateX, 2.65, MEN);
-  arrow(s, mergeX, 2.65, mergeX, 2.05, SHANG);
-  T(s, "未达标", { x: gateX - 1.1, y: 2.25, w: 1.0, h: 0.3, fontSize: 11, bold: true, color: MEN, align: "right", valign: "middle" });
-  T(s, "达标", { x: mergeX + 0.1, y: 2.25, w: 0.8, h: 0.3, fontSize: 11, bold: true, color: SHANG, valign: "middle" });
-  s.addNotes("这是一次运行的技术路线。蓝色是中书省：规划、检索、阅读。红色是门下省：逐项核查和质量门。绿色是尚书省：统稿和披露。质量门没通过，就进入下面的有界自循环：诊断失败类型、定向修复、复核对比，只有结果不比修复前差才采纳。通过之后进入统稿，并把不确定的地方如实披露。");
-}
-
-// 6 编排与调度
-{
-  const s = page("关键技术", "流程是数据，运行时可调：声明式编排与动态调度", "依赖成环、引用缺失在启动前拦下；{额度耗尽自动换模型}，不占重试次数");
-  const y1 = shot(s, "spec-yaml.png", 0.73, 1.4, 3.9);
-  const y2 = shot(s, "orch-live.png", 5.38, 1.4, 3.9);
-  cap(s, "声明式编排：五类对象，YAML 定义", 0.73, y1 + 0.08, 3.9);
-  cap(s, "动态调度：运行中的任务与时间线", 5.38, y2 + 0.08, 3.9);
-  T(s, bullets(["Agent、工作流、策略分开声明", "每个 Agent 可单独指定模型"], { fontSize: 12 }), { x: 0.5, y: y1 + 0.45, w: 4.35, h: 0.5, fontSize: 12, valign: "top" });
-  T(s, bullets(["检索池与模型池分别限流，失败重试、超时终止", "预算软硬两道线，运行中可插入修复任务"], { fontSize: 12 }), { x: 5.15, y: y2 + 0.45, w: 4.35, h: 0.5, fontSize: 12, valign: "top" });
-  s.addNotes("左边是声明式编排。流程在我们这里是数据，五类对象用 YAML 声明，运行前先校验，依赖成环、引用不存在这类问题在启动之前就会被拦下，每个 Agent 也能单独指定模型。右边是动态调度：依赖满足就启动，检索和模型调用各有并发池，失败重试，超时终止，预算分软硬两道线，额度用完自动换模型，运行中还能向调度器插入新任务，修复循环就是这样实现的。");
-}
-
-// 7 流水线并行
-{
-  const s = page("关键技术", "流水线并行：读完一条就核查一条，加速比达 3.48 倍", "三次真实运行并行加速比 {2.95–3.48 倍}；上游某项失败，对应下游项明确标为失败");
-  s.addChart(pres.charts.BAR, [{ name: "并行加速比", labels: ["就业", "收入", "新能源"], values: [3.29, 2.95, 3.48] }], {
-    x: 0.5, y: 1.4, w: 3.9, h: 3.1, barDir: "col", chartColors: [GOLD],
-    showTitle: true, title: "并行加速比（倍）", titleFontFace: FONT, titleFontSize: 12, titleColor: WHITE,
-    showValue: true, dataLabelFontFace: FONT, dataLabelFontSize: 12, dataLabelColor: WHITE, dataLabelFormatCode: "0.00",
-    catAxisLabelFontFace: FONT, catAxisLabelFontSize: 12, catAxisLabelColor: TXT,
-    valAxisLabelFontFace: FONT, valAxisLabelFontSize: 11, valAxisLabelColor: MUTED, valAxisMinVal: 0, valAxisMaxVal: 4,
-    valGridLine: { color: "27437A", size: 0.5 }, catGridLine: { style: "none" }, showLegend: false, barGapWidthPct: 70,
+  arrow(s, gx, 1.97, gx, 2.5, VERM);
+  arrow(s, mx, 2.5, mx, 1.97, PINE);
+  T(s, "未达标", { x: gx - 0.95, y: 2.1, w: 0.85, h: 0.26, fontFace: KAI, fontSize: 11, color: VERM, align: "right", valign: "middle" });
+  T(s, "达标", { x: mx + 0.08, y: 2.1, w: 0.6, h: 0.26, fontFace: KAI, fontSize: 11, color: PINE, valign: "middle" });
+  [["中书 · 起草", STONE], ["门下 · 审核", VERM], ["尚书 · 执行", PINE]].forEach(([t, c], i) => {
+    const x = 2.3 + i * 1.9;
+    rect(s, x, 3.95, 0.16, 0.16, { fill: c, color: c });
+    T(s, t, { x: x + 0.25, y: 3.89, w: 1.5, h: 0.28, fontFace: KAI, fontSize: 11.5, color: BROWN, valign: "middle" });
   });
-  const y = shot(s, "orch-waterfall.png", 4.9, 1.4, 4.6);
-  cap(s, "真实运行的任务时间线：检索与阅读并行，核查紧随其后", 4.9, y + 0.08, 4.6);
-  s.addNotes("这是我们重点优化的地方。以前阅读完才统一核查，现在每读完一条就立刻核查，下游每一项只等它对应的上游那一项。左边是三次真实运行的并行加速比，就业、收入、新能源分别是三点二九、二点九五、三点四八倍；右边是真实运行的时间线，可以看到检索和阅读并行铺开、核查紧随其后。上游某项失败时，对应的下游项会被明确标为失败，不会悄悄当作成功。");
+  T(s, `图${CN[++figNo]}　报告生成的技术路线`, { x: 0.6, y: 4.3, w: 8.25, h: 0.24, fontFace: KAI, fontSize: 11, color: BROWN, align: "center", valign: "middle" });
+  s.addNotes("这是一次报告运行的技术路线。石青色是中书省的起草环节，朱色是门下省的核查与质量门，松绿是尚书省的执行与统稿。质量门达标就进入统稿，并把不确定之处如实披露；未达标则进入下方的有界自循环：先诊断失败类型，再按类型修复，独立复核后只有不劣于原稿才采纳。");
 }
 
-// 8 独立核查
+// 七　卷三 声明式编排
 {
-  const s = page("关键技术", "核查者看不到起草者的推理：逐条对证据，分四级如实披露", "合成集误放行 {0/46}，真实网页误放行 {0/15}（改进前 3/17）");
-  const y = shot(s, "orch-gate.png", 0.5, 1.4, 4.6);
-  cap(s, "质量门的判定与披露（真实界面）", 0.5, y + 0.08, 4.6);
-  T(s, "断言分四级", { x: 5.85, y: 1.38, w: 3.6, h: 0.32, fontSize: 14, bold: true, color: GOLD, valign: "middle" });
-  [["已核实", SHANG, "多个独立来源一致"], ["单一来源", ZHONG, "仅一处出处"], ["存在争议", "D99A1E", "来源之间矛盾"], ["未核实", "5B6B8C", "找不到支撑"]].forEach(([a, c, b], i) => {
-    const yy = 1.8 + i * 0.5;
-    box(s, 5.85, yy, 1.15, 0.4, a, c, 12);
-    T(s, b, { x: 7.15, y: yy, w: 2.35, h: 0.4, fontSize: 12, color: TXT, valign: "middle" });
+  const s = page("卷三　关键技术", "关键技术一：声明式编排——流程是可校验的数据", "导入即校验：{依赖成环、引用缺失、模型名非法}，一律在运行前拒绝");
+  figure(s, "spec-yaml", 0.65, 1.42, 4.05, 1799 / 1264, "工作流定义的画布与 YAML 视图（真实界面）");
+  table(s, "五类声明对象", [
+    ["对象", "声明内容"],
+    ["知识库", "检索来源、优先站点、检索策略"],
+    ["Agent", "角色、技能、模型档位与工具"],
+    ["团队", "成员与主管"],
+    ["工作流", "节点、依赖、按数据扇出、质量门"],
+    ["策略", "并发、预算、修复轮次、模型"],
+  ], 5.15, 1.4, [1.0, 2.7], { rowH: 0.42, left: [1] });
+  s.addNotes("关键技术一是声明式编排。流程在我们这里是数据而不是代码：知识库、Agent、团队、工作流、策略五类对象都用 YAML 声明，画布和 YAML 是同一份定义的两种视图。导入时就做校验，依赖成环、引用缺失、模型名非法，一律在运行前拒绝。每个 Agent 还可以单独指定模型。");
+}
+
+// 八　卷三 动态调度与流水线
+{
+  const s = page("卷三　关键技术", "关键技术二：动态调度与逐项流水线并行", "新能源题 {545 秒}内完成 27 个任务、430 次模型调用，并行加速比 {3.48}");
+  figure(s, "live", 0.65, 1.42, 4.05, 1799 / 1264, "就业题运行中：画布与调度时间线实时更新");
+  const base = 3.05;
+  line(s, 5.35, base, 8.7, base, { width: 0.75 });
+  [["就业", 3.29], ["收入", 2.95], ["新能源", 3.48]].forEach(([k, v], i) => {
+    const x = 5.65 + i * 1.08, h = v * 0.42;
+    const c = i === 2 ? VERM : STONE;
+    rect(s, x, base - h, 0.62, h, { fill: c, color: c, width: 0.5 });
+    T(s, v.toFixed(2), { x: x - 0.2, y: base - h - 0.28, w: 1.02, h: 0.26, fontSize: 12, bold: true, color: c, align: "center", valign: "middle" });
+    T(s, k, { x: x - 0.2, y: base + 0.05, w: 1.02, h: 0.24, fontSize: 11.5, align: "center", valign: "middle" });
   });
-  T(s, bullets(["被两次驳回才定为不成立，避免误杀", "数据点必须能在原文逐字找到"], { fontSize: 12 }), { x: 5.85, y: 3.9, w: 3.65, h: 0.7, fontSize: 12, valign: "top", paraSpaceAfter: 4 });
-  s.addNotes("这是门下省的部分。核查者能看到的内容里不包含起草者的推理，只看证据。每条断言单独复核，被驳回两次才定为不成立，避免一次误判就推翻。断言最后分成四级：已核实、单一来源、存在争议、未核实，报告里如实披露。所有数据点必须能在原文里逐字找到。");
+  T(s, `图${CN[++figNo]}　三次真实运行的并行加速比（倍）`, { x: 5.0, y: 3.38, w: 4.05, h: 0.24, fontFace: KAI, fontSize: 11, color: BROWN, align: "center", valign: "middle" });
+  T(s, [
+    { text: "资源池分别限流：检索 3 路、模型 6 路；", options: { bullet: { code: "25CB" }, breakLine: true } },
+    { text: "下游逐项只等上游对应项，上游失败则对应项明确标为失败。", options: { bullet: { code: "25CB" } } },
+  ], { x: 5.25, y: 3.72, w: 3.6, h: 0.85, fontSize: 11.5, valign: "top", paraSpaceAfter: 4 });
+  s.addNotes("关键技术二是动态调度。依赖满足就启动，检索和模型调用各有资源池，失败重试、超时终止，预算分软硬两道线，模型额度耗尽时自动换备用模型。这一轮我们做了逐项流水线：每读完一条就核查一条，下游每一项只等它对应的上游那一项。左图是就业题运行中的真实画面，核查节点正在逐项并行，画布和时间线实时更新；右图是三次真实运行的并行加速比，分别是三点二九、二点九五和三点四八倍。");
 }
 
-// 9 有界自循环
+// 九　卷三 独立核查
 {
-  const s = page("关键技术", "有界自循环：先诊断再修复，只在确实变好时才采纳", "停止条件：没有进展、达到最大轮次、用掉 {60%} 预算，任一即停");
-  const bx = [[0.7, 1.45], [2.9, 1.45], [2.9, 3.25], [0.7, 3.25]];
-  [["质量门", MEN], ["诊断失败类型", MEN], ["定向修复", ZHONG], ["复核对比", MEN]].forEach(([t, c], i) => box(s, bx[i][0], bx[i][1], 1.8, 0.8, t, c, 14));
-  arrow(s, 2.5, 1.85, 2.9, 1.85);
-  arrow(s, 3.8, 2.25, 3.8, 3.25);
-  arrow(s, 2.9, 3.65, 2.5, 3.65);
-  arrow(s, 1.6, 3.25, 1.6, 2.25);
-  T(s, "最多若干轮", { x: 1.55, y: 2.5, w: 2.3, h: 0.4, fontSize: 12, color: MUTED, align: "center", valign: "middle" });
-  [["34%→51%", "新能源题质量门通过率，一轮修复后"], ["5 次改写", "4 次被驳回，1 次被采纳"], ["0 轮修复", "就业、收入两题首轮即达标，不白花调用"]].forEach(([b, lab], i) => {
-    const yy = 1.4 + i * 1.07;
-    card(s, 5.4, yy, 4.1, 0.95);
-    T(s, b, { x: 5.6, y: yy, w: 1.8, h: 0.95, fontSize: 22, bold: true, color: GOLD, valign: "middle" });
-    T(s, lab, { x: 7.45, y: yy, w: 1.95, h: 0.95, fontSize: 12, color: TXT, valign: "middle" });
-  });
-  s.addNotes("自纠错必须有界。质量门不过关，先诊断失败类型，再做定向修复，复核后只有结果不比之前差才采纳。停止条件有三个：没有进展、达到最大轮次、预算用到六成。真实运行里，新能源这一题通过率从百分之三十四提高到五十一，五次改写里四次被驳回、一次被采纳。就业和收入两题首轮就达标，系统不会白白多花调用。");
+  const s = page("卷三　关键技术", "关键技术三：独立核查——核查员看不到起草者的推理", "合成集误放行 {0/46}，真实网页误放行 {0/15}（改进前为 3/17）");
+  table(s, "说法的四级判定", [
+    ["等级", "判定依据"],
+    [{ text: "已核实", color: PINE, bold: true }, "权威来源原文支持，或两个以上独立来源一致"],
+    [{ text: "单一来源", color: STONE, bold: true }, "仅一个独立来源（转载计为同一来源）"],
+    [{ text: "有争议", color: OCHRE, bold: true }, "有来源支持，另有可信来源说法不同"],
+    [{ text: "未能核实", color: BROWN, bold: true }, "没有资料明确支持"],
+  ], 0.6, 1.4, [1.1, 4.0], { rowH: 0.42, left: [1] });
+  T(s, [{ text: "另有两条硬规则：", options: { bold: true } }, { text: "说法被驳回两次才判为不成立；数据点须在来源原文中逐字找到。" }],
+    { x: 0.6, y: 3.95, w: 5.1, h: 0.55, fontSize: 12, valign: "top" });
+  figure(s, "inspector", 6.35, 1.42, 2.25, 520 / 650, "核查员节点");
+  s.addNotes("关键技术三是独立核查，也就是门下省。核查员能看到的内容里不包含起草者的推理，它自己重新取证，右图是核查员节点的真实配置。每条说法分四级：权威来源原文支持或两个以上独立来源一致才算已核实；只有一个独立来源算单一来源；有可信来源说法不同算有争议；找不到支持算未能核实。另有两条硬规则：被驳回两次才判为不成立；数据点必须能在原文里逐字找到。");
 }
 
-// 10 问答
+// 十　卷三 有界自循环
 {
-  const s = page("应用展示", "问答：每个结论都能追溯到证据与来源", "完整方案在 13 个场景上召回@5 为 {1.0}，纠错基线为 {0.8}");
-  const y = shot(s, "chat-answer.png", 0.5, 1.4, 4.6);
-  cap(s, "回答带引用，点开即见证据与来源（真实界面）", 0.5, y + 0.08, 4.6);
-  [["检索", "Dense + BM25 + RRF + 重排"], ["纠错", "先诊断失败类型，再纠错，轮次有上限"], ["追溯", "结论 → 证据 → 来源，逐层可点开"]].forEach(([a, b], i) => {
-    const yy = 1.4 + i * 1.07;
-    card(s, 5.85, yy, 3.65, 0.95);
-    num(s, 6.0, yy + 0.2, 0.55, String(i + 1), i === 1 ? MEN : ZHONG);
-    T(s, a, { x: 6.7, y: yy + 0.08, w: 2.7, h: 0.35, fontSize: 14, bold: true, color: GOLD, valign: "middle" });
-    T(s, b, { x: 6.7, y: yy + 0.43, w: 2.7, h: 0.45, fontSize: 11.5, color: TXT, valign: "top" });
-  });
-  s.addNotes("问答模块用 LangGraph 做状态和条件路由。检索用稠密加关键词加融合再加重排。回答不是一段文字，而是结论到证据到来源可以逐层追溯。纠错过程可以在界面里展开，轮次有上限。P5 评测里，完整方案在十三个场景上召回为一，只做纠错的基线是零点八。");
-}
-
-// 11 调研报告
-{
-  const s = page("应用展示", "调研报告：图表、框架图与时间线由数据生成，随文导出", "同一引擎产出成稿，{PDF / Word 导出}，图随正文走");
-  const y1 = shot(s, "report-diagrams.png", 0.73, 1.4, 3.9);
-  const y2 = shot(s, "report-chart.png", 5.38, 1.4, 3.9);
-  cap(s, "框架图与关键时间线", 0.73, y1 + 0.08, 3.9);
-  cap(s, "数据图表与逐条引用", 5.38, y2 + 0.08, 3.9);
-  T(s, bullets(["折线、柱状、饼图由数据生成，不是编的", "运行过程同步显示在编排页"], { fontSize: 12 }), { x: 0.5, y: y1 + 0.45, w: 9, h: 0.5, fontSize: 12, valign: "top" });
-  s.addNotes("调研报告模块跑的是同一套引擎。图表由数据生成，不是编的：折线、柱状、饼图，加上自动绘制的框架图和时间线。左边是框架图和关键时间线，右边是数据图表和逐条引用。报告可以导出 PDF 和 Word，图随正文一起走，运行过程同步显示在编排页。");
-}
-
-// 12 实验
-{
-  const s = page("实验结果", "实测数据说话：核查误放行为零，487 项后端测试通过", "指标由评测脚本生成；{样本量有限}，置信区间已在方案书中给出");
-  const H = (t) => ({ text: t, options: { bold: true, color: WHITE, fill: { color: BANNER }, fontFace: FONT, fontSize: 12, align: "center", valign: "middle" } });
-  const C = (t, o = {}) => ({ text: t, options: { fontFace: FONT, fontSize: 12, color: TXT, fill: { color: CARD }, align: "center", valign: "middle", ...o } });
-  const G = (t) => C(t, { color: GOLD, bold: true });
-  s.addTable([
-    [H("核查评测"), H("样本"), H("等级准确率"), H("误放行"), H("抽取召回")],
-    [C("合成集", { align: "left", bold: true }), C("48 例 / 100 断言"), G("97.7%"), G("0 / 46"), C("88%")],
-    [C("真实网页", { align: "left", bold: true }), C("28 例 / 60 断言"), G("100%（n=46）"), G("0 / 15"), C("76.7%")],
-  ], { x: 0.5, y: 1.4, w: 9, colW: [1.8, 2.1, 1.9, 1.5, 1.7], rowH: 0.42, border: { type: "solid", pt: 0.5, color: CARDLINE } });
-  [["487", "后端测试通过\n（另有 4 项跳过）"], ["18", "端到端界面\n测试用例"], ["3 / 17", "真实网页上改进前\n的误放行"], ["13 场景", "P5：完整方案召回 1.0\n纠错基线 0.8"]].forEach(([b, lab], i) => {
-    const x = 0.5 + i * 2.28;
-    card(s, x, 2.9, 2.1, 1.6);
-    T(s, b, { x: x + 0.1, y: 3.0, w: 1.9, h: 0.7, fontSize: 26, bold: true, color: GOLD, align: "center", valign: "middle" });
-    T(s, lab, { x: x + 0.1, y: 3.7, w: 1.9, h: 0.7, fontSize: 11, color: MUTED, align: "center", valign: "top" });
-  });
-  s.addNotes("评测数据全部由脚本生成。核查评测分合成集和真实网页两组：合成集一百条断言，等级准确率百分之九十七点七，误放行零；真实网页六十条断言，误放行零，改进之前这一项是十七条里放过三条。抽取召回在七十七到八十八之间，这是我们承认的短板。另外，后端四百八十七项测试通过，十八个界面端到端用例，P5 的十三个场景里，完整方案召回为一，纠错基线为零点八。");
-}
-
-// 13 创新点
-{
-  const s = page("创新与展望", "四项创新：分权、并行、有界、可回放", "把可信做成{平台的内建能力}，而不是事后检查");
-  [
-    ["起草与审核分权", "核查者看不到起草者的推理，只凭证据判断：写的人不审，审的人不写。"],
-    ["流水线逐项并行", "每读完一条就核查一条，三次真实运行并行加速比 2.95 至 3.48 倍。"],
-    ["有界自循环", "先诊断再修复，只在结果不比之前差时采纳，设有三重停止条件。"],
-    ["声明式且可回放", "流程用 YAML 声明、运行前校验，每一步事件可回放、可度量。"],
-  ].forEach(([h, body], i) => {
-    const x = 0.5 + (i % 2) * 4.6, y = 1.4 + Math.floor(i / 2) * 1.67;
-    card(s, x, y, 4.4, 1.5);
-    num(s, x + 0.2, y + 0.25, 0.65, String(i + 1), i % 2 ? ZHONG : MEN);
-    T(s, h, { x: x + 1.05, y: y + 0.15, w: 3.2, h: 0.4, fontSize: 16, bold: true, color: GOLD, valign: "middle" });
-    T(s, body, { x: x + 1.05, y: y + 0.6, w: 3.2, h: 0.8, fontSize: 12, color: TXT, valign: "top" });
-  });
-  s.addNotes("总结四个创新点。一，起草与审核分权，核查者看不到起草者的推理。二，流水线逐项并行，加速比接近三倍。三，有界自循环，先诊断再修复，只在变好时采纳。四，声明式定义加运行回放，每一步都可度量。");
-}
-
-// 14 不足与展望
-{
-  const s = page("创新与展望", "如实面对不足，逐项推进", "不足已写入方案书局限章节，{不回避、不夸大}");
-  const rows = [
-    ["样本量有限，置信区间较宽", "扩大真实网页评测集"],
-    ["只接入单一模型", "接入更多模型并横向对比"],
-    ["没有断点续跑", "运行断点续跑"],
-    ["没有拖拽式编排器", "拖拽式流程搭建"],
-    ["反馈优化目前只给建议", "从建议走向自动调参"],
+  const s = page("卷三　关键技术", "关键技术四：有界自循环——只在确实变好时才采纳", "新能源题五次改写中{四次被驳回、一次被采纳}；门槛为已核实说法占比不低于 50%");
+  const code = [
+    "输入：草稿 D，最大轮次 R，预算 B",
+    "1　s ← 质量门(D)",
+    "2　for r ← 1 … R do",
+    "3　　if s 达标 或 已用预算 ≥ 0.6B then break",
+    "4　　F ← 诊断失败类型(D)",
+    "5　　E ← 按类型修复(D, F)　▷ 只改失败章节",
+    "6　　t ← 独立复核(E)",
+    "7　　if t 不劣于 s then D, s ← E, t",
+    "8　　else if 无进展 then break",
+    "9　return D, s",
   ];
-  T(s, "目前的不足", { x: 0.5, y: 1.35, w: 4.2, h: 0.3, fontSize: 14, bold: true, color: MEN, valign: "middle" });
-  T(s, "下一步", { x: 5.3, y: 1.35, w: 4.2, h: 0.3, fontSize: 14, bold: true, color: SHANG, valign: "middle" });
-  rows.forEach(([a, b], i) => {
-    const y = 1.75 + i * 0.58;
-    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 0.5, y, w: 4.2, h: 0.46, fill: { color: "3A1A24" }, line: { color: MEN, width: 1 }, rectRadius: 0.05 });
-    T(s, a, { x: 0.5, y, w: 4.2, h: 0.46, fontSize: 12, bold: true, color: WHITE, align: "center", valign: "middle" });
-    arrow(s, 4.75, y + 0.23, 5.25, y + 0.23);
-    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 5.3, y, w: 4.2, h: 0.46, fill: { color: "123A2E" }, line: { color: SHANG, width: 1 }, rectRadius: 0.05 });
-    T(s, b, { x: 5.3, y, w: 4.2, h: 0.46, fontSize: 12, bold: true, color: WHITE, align: "center", valign: "middle" });
-  });
-  s.addNotes("我们不回避不足。样本量有限、只接入了一个模型、没有断点续跑、也没有拖拽式编排器，反馈优化目前只给建议，抽取召回也还不够高。这些都写进了方案书的局限章节，下一步我们按右边这张清单逐项推进。");
+  line(s, 0.6, 1.42, 5.0, 1.42, { width: 1.5 });
+  T(s, "算法一　有界自循环（在质量门内执行）", { x: 0.6, y: 1.45, w: 4.4, h: 0.3, fontSize: 12, bold: true, valign: "middle" });
+  line(s, 0.6, 1.78, 5.0, 1.78, { width: 0.6 });
+  T(s, code.map((t, i) => ({ text: t, options: { breakLine: i < code.length - 1 } })), { x: 0.65, y: 1.86, w: 4.35, h: 2.5, fontSize: 11.5, valign: "top", lineSpacingMultiple: 1.08 });
+  line(s, 0.6, 4.45, 5.0, 4.45, { width: 1.5 });
+  figure(s, "gate", 5.3, 1.42, 3.5, 1799 / 486, "新能源题质量门：首次 34%，修复后 51%");
+  table(s, "三次真实运行的自循环", [
+    ["题目", "首轮已核实", "修复轮次", "终稿已核实"],
+    ["就业", "95%", "0", "95%"],
+    ["收入", "72%", "0", "72%"],
+    ["新能源", "34%", "1", { text: "51%", color: VERM, bold: true }],
+  ], 5.3, 2.75, [0.9, 0.9, 0.8, 0.9], { rowH: 0.34 });
+  s.addNotes("关键技术四是有界自循环。算法一给出了流程：质量门不达标，先诊断失败类型，再只修复失败的章节，然后独立复核；只有结果不劣于原稿才采纳。停止条件有三个：达标、预算用到六成、没有进展，再加最大轮次。真实运行里，就业和收入两题首轮就达标，没有多花一次修复；新能源题首轮只有百分之三十四，修复一轮后到百分之五十一，五次改写里四次被驳回、一次被采纳。");
 }
 
-// 15 致谢
+// 十一　卷四 资料问答
+{
+  const s = page("卷四　实现与实验", "系统实现（一）：资料问答——结论可追溯到证据与来源", "完整方案在 13 个场景上召回@5 为 {1.0}，仅纠错的基线为 0.8");
+  figure(s, "chat-answer", 0.65, 1.42, 4.6, 1.6, "回答附引用，逐条核对说法（真实界面）");
+  figure(s, "chat-trace", 5.95, 1.42, 2.15, 1010 / 1350, "详细运作过程");
+  s.addNotes("下面看实现。问答模块用 LangGraph 管理状态与条件路由，检索是稠密向量加关键词再融合重排。左图是一次真实问答：跨两份文档的问题，回答里每个结论都带引用，并逐条核对说法；右图是展开的运作过程，检索了什么、判断资料够不够、核对回答，每一步都可见。离线评测里，完整方案在十三个场景上召回为一，仅纠错的基线为零点八。");
+}
+
+// 十二　卷四 调研报告
+{
+  const s = page("卷四　实现与实验", "系统实现（二）：调研报告——逐条分级，图表由数据生成", "每章标注已核实说法数；图表随正文{导出 PDF 与 Word}");
+  figure(s, "report-top", 0.65, 1.42, 4.1, 1799 / 1264, "报告首页：核实分级与核心结论");
+  figure(s, "report-diagrams", 5.4, 1.42, 2.6, 1080 / 1190, "报告结构与证据核实图");
+  s.addNotes("调研报告跑的是同一套编排引擎。左图是新能源报告的首页，顶部是这次运行的耗时、任务数、并行度和核实比例，标题下是已核实、单一来源、有争议的数量。右图是由数据自动生成的报告结构与证据核实图，每一章标出已核实的说法数。报告可以导出 PDF 和 Word，图随正文一起走。");
+}
+
+// 十三　卷四 实验结果
+{
+  const s = page("卷四　实现与实验", "实验结果：核查零误放行，三次真实运行加速 2.95–3.48 倍", "后端测试 487 项通过（4 项跳过），端到端界面用例 18 个；样本量有限，置信区间见方案书");
+  table(s, "核查评测", [
+    ["数据集", "样本", "等级准确率", "误放行", "抽取召回"],
+    ["合成集", "48 例 / 100 条说法", "97.7%", { text: "0 / 46", color: VERM, bold: true }, "88%"],
+    ["真实网页", "28 例 / 60 条说法", "100%（n=46）", { text: "0 / 15", color: VERM, bold: true }, "76.7%"],
+  ], 0.6, 1.38, [1.3, 2.2, 1.65, 1.4, 1.7], { rowH: 0.36 });
+  table(s, "三次真实运行", [
+    ["题目", "耗时", "任务", "模型调用", "token", "并行加速比"],
+    ["2025 届高校毕业生就业", "379 秒", "23", "244", "427,689", "3.29"],
+    ["2025 年居民人均可支配收入", "436 秒", "21", "265", "559,151", "2.95"],
+    ["2025 年新能源汽车销量", "545 秒", "27", "430", "778,209", { text: "3.48", color: VERM, bold: true }],
+  ], 0.6, 2.9, [2.75, 1.0, 0.8, 1.1, 1.3, 1.3], { rowH: 0.33 });
+  s.addNotes("实验结果全部由评测脚本生成。表五是核查评测：合成集一百条说法，等级准确率百分之九十七点七，误放行为零；真实网页六十条说法，误放行也为零，改进前是十七条里放过三条。抽取召回在七十七到八十八之间，是我们承认的短板。表六是三次真实运行的耗时、任务数、模型调用和并行加速比。另外后端四百八十七项测试通过，端到端界面用例十八个。");
+}
+
+// 十四　卷五 创新与不足
+{
+  const s = page("卷五　创新与展望", "创新点与不足", "可信不靠事后检查，而是{平台的默认行为}");
+  [
+    ["起草与审核分权", "核查员看不到起草推理，只凭证据判断。"],
+    ["逐项流水线并行", "读完一条核查一条，加速 2.95–3.48 倍。"],
+    ["有界自循环", "先诊断再修复，不劣才采纳，三重停止条件。"],
+    ["声明式且可回放", "YAML 定义、导入即校验，全程事件可回放。"],
+  ].forEach(([head, body], i) => {
+    const y = 1.42 + i * 0.78;
+    ring(s, 0.6, y + 0.02, 0.42, CN[i + 1]);
+    T(s, head, { x: 1.2, y, w: 3.4, h: 0.3, fontSize: 14, bold: true, valign: "middle" });
+    T(s, body, { x: 1.2, y: y + 0.32, w: 3.4, h: 0.3, fontSize: 12, color: BROWN, valign: "middle" });
+  });
+  table(s, "不足与改进方向", [
+    ["不足", "改进方向"],
+    ["样本量有限，置信区间较宽", "扩大真实网页评测集"],
+    ["仅接入单一模型", "接入多模型并横向对比"],
+    ["无断点续跑", "运行断点续跑"],
+    ["无拖拽式编排器", "拖拽式流程搭建"],
+    ["反馈优化仅给建议", "从建议走向自动调参"],
+  ], 4.85, 1.38, [2.1, 1.9], { rowH: 0.42, left: [1] });
+  s.addNotes("最后是创新与不足。四个创新点：起草与审核分权；逐项流水线并行；有界自循环，只在不劣时采纳；声明式定义加全程可回放。不足我们也如实列出：样本量有限、只接入了一个模型、没有断点续跑、没有拖拽式编排器、反馈优化目前只给建议。右栏是对应的改进方向。");
+}
+
+// 十五　封底
 {
   const s = pres.addSlide();
   n += 1;
-  s.background = { path: img("thanks.png") };
-  T(s, "感谢聆听", { x: 0.7, y: 1.6, w: 5.8, h: 1.1, fontSize: 52, bold: true, color: GOLD, valign: "middle" });
-  T(s, "恳请各位评委批评指正", { x: 0.7, y: 2.8, w: 5.8, h: 0.5, fontSize: 20, color: WHITE, valign: "middle" });
-  T(s, "三省 · 写的人不审，审的人不写", { x: 0.7, y: 4.6, w: 5.8, h: 0.4, fontSize: 14, color: MUTED, valign: "middle" });
-  s.addNotes("我的汇报就到这里。三省的核心就一句话：写的人不审，审的人不写。谢谢各位评委，恳请批评指正。");
+  s.background = { path: A("cover.png") };
+  rect(s, 1.25, 0.5, 1.0, 4.0, { fill: SLIP, width: 1 });
+  rect(s, 1.32, 0.57, 0.86, 3.86, { width: 0.5 });
+  vert(s, "敬请批评指正", { x: 1.5, y: 0.8, w: 0.5, h: 2.9, fontSize: 24, bold: true });
+  s.addImage({ path: A("seal.png"), x: 1.48, y: 3.72, w: 0.54, h: 0.54 });
+  T(s, "三省　写的人不审，审的人不写", { x: 4.2, y: 4.6, w: 5.3, h: 0.34, fontFace: KAI, fontSize: 14, color: LIGHT, align: "right", valign: "middle" });
+  s.addNotes("汇报到此结束。三省的核心只有一句话：写的人不审，审的人不写。敬请各位评委批评指正，谢谢。");
 }
 
 pres.writeFile({ fileName: OUT }).then((f) => console.log("written", f));
