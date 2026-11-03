@@ -1111,17 +1111,17 @@
   }
 }
 
-/* ── seal ───────────────────────────────────────────────────────────── */
-.seal-busy {
-  animation: seal-breathe 1.8s ease-in-out infinite;
+/* ── brand mark ───────────────────────────────────────────────────────────── */
+.brand-busy {
+  animation: brand-breathe 1.8s ease-in-out infinite;
 }
-@keyframes seal-breathe {
+@keyframes brand-breathe {
   50% {
     opacity: 0.45;
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .seal-busy {
+  .brand-busy {
     animation: none;
   }
 }
