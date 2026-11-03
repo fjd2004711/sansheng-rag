@@ -1026,7 +1026,7 @@
   }
 }
 
-/* ── 小证 (mascot) animation ─────────────────────────────────────────── */
+/* ── 小省 (mascot) animation ─────────────────────────────────────────── */
 .mascot .mascot-body {
   transform-origin: 50px 88px;
   animation: mascot-bob 3.4s ease-in-out infinite;

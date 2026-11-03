@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ChartNoAxesCombined, Database, FileText, LogOut, MessageSquare, Network, ShieldCheck } from "lucide-react";
 
+import { AboutSansheng } from "@/components/brand/about-sansheng";
 import { Mascot } from "@/components/brand/mascot";
 import { useTranslations } from "next-intl";
 
@@ -35,6 +36,7 @@ export function Header() {
             <Mascot size={28} lookAtPointer={false} />
             <span className="hidden sm:inline">{APP_NAME}</span>
           </Link>
+          <AboutSansheng className="text-muted-foreground hover:text-foreground -ml-1 hidden rounded-md p-1 sm:inline-flex" />
 
           <nav className="flex items-center gap-0.5" aria-label="主导航">
             {NAV.filter((item) => !("adminOnly" in item) || isAppAdmin(user)).map((item) => (

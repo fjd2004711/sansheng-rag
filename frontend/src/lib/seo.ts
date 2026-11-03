@@ -16,10 +16,10 @@ import { defaultLocale, locales } from "@/i18n";
 export const SITE = {
   name: APP_NAME,
   /** Tagline used in title templates + OG defaults. */
-  tagline: "查过资料再回答",
+  tagline: "起草、审核、执行，各司其职",
   /** One-paragraph default description (≤160 chars for SERP truncation). */
   description:
-    "Dense + BM25 + RRF + Reranker 混合检索，先诊断失败类型再有界纠错，回答可追溯到 claim → evidence → source。",
+    "三省：写的人不审，审的人不写。多智能体编排与自纠错，每个说法可追溯到证据和来源，不达标先诊断再有界修复。",
   /** Canonical absolute origin. NO trailing slash. */
   url:
     (process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") as string | undefined) ??
