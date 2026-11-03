@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Background,
+  BackgroundVariant,
   Controls,
   Handle,
   Position,
@@ -16,6 +17,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import { Activity, Check, CircleAlert, Search, ShieldCheck, WandSparkles, X } from "lucide-react";
 import type { AgentTraceEvent } from "@/types";
+import { StatusMark } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { formatSeconds, stepSeconds } from "@/lib/step-timing";
 import { ResizeHandle } from "@/components/ui";
@@ -95,34 +97,36 @@ function TraceNode({ data, selected }: NodeProps<Node<{ event: AgentTraceEvent; 
   return (
     <div
       className={cn(
-        "w-64 cursor-pointer rounded-xl border bg-card px-3 py-2.5 shadow-sm transition-shadow hover:shadow-md",
-        selected && "ring-2 ring-primary/60",
-        pass && "border-emerald-500/30",
-        fail && "border-amber-500/40",
-        !pass && !fail && "border-border",
+        "slip w-64 cursor-pointer px-3.5 py-3 transition-colors",
+        selected && "outline-brand outline-2 outline-offset-2",
+        fail && "border-amber-500/60",
       )}
     >
-      <Handle type="target" position={Position.Top} className="!bg-border" />
+      <Handle type="target" position={Position.Top} className="!bg-foreground/40 !h-1.5 !w-1.5 !border-0" />
       <div className="flex items-center gap-2">
-        <span className={cn("rounded-md p-1.5", pass ? "bg-emerald-500/10 text-emerald-600" : fail ? "bg-amber-500/10 text-amber-600" : "bg-muted text-muted-foreground")}>
+        <span className={cn(pass ? "text-emerald-600" : fail ? "text-amber-600" : "text-muted-foreground")}>
           {fail ? <CircleAlert className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold">{LABELS[event.step] ?? event.step}</p>
-          <p className="text-muted-foreground text-[11px]">
+          <p className="font-display truncate text-[15px] font-bold tracking-wide">{LABELS[event.step] ?? event.step}</p>
+          <p className="text-muted-foreground font-kai text-[12px]">
             第 {event.round} 轮 · {STATUS_LABELS[event.status] ?? event.status}
             {typeof data.seconds === "number" && ` · ${formatSeconds(data.seconds)}`}
           </p>
         </div>
-        {pass && <Check className="h-4 w-4 text-emerald-600" />}
+        <StatusMark status={pass ? "done" : fail ? "warn" : "running"} />
       </div>
-      {explanation && <p className="text-muted-foreground mt-2 line-clamp-3 text-xs leading-relaxed">{explanation}</p>}
+      {explanation && (
+        <p className="border-foreground/12 text-foreground/75 mt-2.5 line-clamp-3 border-t pt-2 text-xs leading-relaxed">
+          {explanation}
+        </p>
+      )}
       {typeof detail.groundedness === "number" && (
         <p className="text-muted-foreground mt-1.5 text-xs">
           有据可查 {Math.round(detail.groundedness * 100)}% · 引用覆盖 {Math.round(Number(detail.citation_coverage ?? 0) * 100)}%
         </p>
       )}
-      <Handle type="source" position={Position.Bottom} className="!bg-border" />
+      <Handle type="source" position={Position.Bottom} className="!bg-foreground/40 !h-1.5 !w-1.5 !border-0" />
     </div>
   );
 }
@@ -201,7 +205,7 @@ export function AgentTracePanel({
       trace.map((event, index) => ({
         id: String(index),
         type: "trace",
-        position: { x: 18, y: 16 + index * 128 },
+        position: { x: 18, y: 16 + index * 168 },
         draggable: false,
         selected: index === selected,
         data: { event, seconds: stepSeconds(trace, index) },
@@ -244,21 +248,21 @@ export function AgentTracePanel({
       )}
       <div className="border-b px-4 py-3">
         <div className="flex items-center gap-2">
-          <Activity className="h-4 w-4" />
-          <h2 className="text-sm font-semibold">运作流程</h2>
+          <Activity className="text-brand h-4 w-4" />
+          <h2 className="font-display text-base font-bold tracking-[0.12em]">运作流程</h2>
         </div>
-        <p className="text-muted-foreground mt-0.5 text-xs">滚轮缩放、拖动画布；点击卡片查看这一步的详情</p>
+        <p className="text-muted-foreground font-kai mt-0.5 text-[13px]">滚轮缩放、拖动画布；点击卡片查看这一步的详情</p>
         {messageId && trace.length > 0 && (
           <button
             type="button"
             onClick={() => openDetail(messageId)}
-            className="border-foreground/20 hover:bg-foreground/5 mt-2 w-full rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors"
+            className="border-foreground/25 hover:border-foreground/45 hover:bg-accent bg-card mt-2.5 w-full rounded-sm border px-3 py-1.5 text-xs font-medium tracking-wide transition-colors"
           >
             展开详细过程：搜了什么、为什么
           </button>
         )}
         {title && (
-          <p className="bg-muted mt-2 line-clamp-2 rounded-md px-2 py-1.5 text-xs leading-relaxed" title={title}>
+          <p className="border-foreground/15 font-kai mt-2.5 line-clamp-2 border-y px-0.5 py-1.5 text-[13px] leading-relaxed" title={title}>
             针对：{title}
           </p>
         )}
@@ -269,7 +273,7 @@ export function AgentTracePanel({
           <ol className="space-y-2.5">
             {HOW_IT_WORKS.map(({ icon: StepIcon, title, text }, index) => (
               <li key={title} className="flex gap-3">
-                <span className="bg-muted text-muted-foreground flex h-7 w-7 shrink-0 items-center justify-center rounded-full">
+                <span className="border-foreground/30 text-muted-foreground flex h-7 w-7 shrink-0 items-center justify-center border">
                   <StepIcon className="h-3.5 w-3.5" />
                 </span>
                 <span className="leading-relaxed">
@@ -305,7 +309,7 @@ export function AgentTracePanel({
               onPaneClick={() => setSelected(null)}
               proOptions={{ hideAttribution: true }}
             >
-              <Background gap={16} size={1} />
+              <Background variant={BackgroundVariant.Lines} gap={28} lineWidth={1} color="oklch(from var(--color-foreground) l c h / 0.05)" />
               <Controls showInteractive={false} position="top-right" />
               <RefitOnGrow count={trace.length} />
             </ReactFlow>

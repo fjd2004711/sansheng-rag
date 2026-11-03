@@ -16,10 +16,20 @@ interface AnswerVerdictBarProps {
 }
 
 const TONES = {
-  good: "border-emerald-500/30 bg-emerald-500/5 text-emerald-700 dark:text-emerald-400",
-  warn: "border-amber-500/40 bg-amber-500/5 text-amber-700 dark:text-amber-400",
-  muted: "border-border bg-muted/40 text-muted-foreground",
+  good: "text-emerald-700 dark:text-emerald-400",
+  warn: "text-amber-700 dark:text-amber-400",
+  muted: "text-muted-foreground",
 } as const;
+
+/** The one-character stamp an editor would put in the margin. */
+const STAMP: Record<AnswerVerdict["kind"], string> = {
+  verified: "核",
+  corrected: "正",
+  partial: "缺",
+  cross_checked: "核",
+  abstained: "阙",
+  unchecked: "未",
+};
 
 function headline(verdict: AnswerVerdict): { tone: keyof typeof TONES; icon: typeof CircleCheck; title: string; detail: string } {
   switch (verdict.kind) {
@@ -71,15 +81,26 @@ function headline(verdict: AnswerVerdict): { tone: keyof typeof TONES; icon: typ
 }
 
 export function AnswerVerdictBar({ verdict, isAdmin, selected, onShowTrace, onShowDetail }: AnswerVerdictBarProps) {
-  const { tone, icon: Icon, title, detail } = headline(verdict);
+  const { tone, title, detail } = headline(verdict);
+  const stamp = tone === "warn" && verdict.kind === "cross_checked" ? "疑" : STAMP[verdict.kind];
   return (
     <div className="space-y-2">
-      <div className={cn("flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-xl border px-3 py-2 text-xs", TONES[tone])}>
-        <span className="flex min-w-0 flex-1 items-start gap-2">
-          <Icon className="mt-0.5 h-4 w-4 shrink-0" />
+      <div
+        className={cn(
+          "border-foreground/20 flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-dashed pt-3 text-xs",
+          TONES[tone],
+        )}
+      >
+        <span className="flex min-w-0 flex-1 items-start gap-2.5">
+          <span
+            className="font-display inline-flex h-6 w-6 shrink-0 -rotate-3 items-center justify-center border-[1.5px] border-current text-[13px] font-bold"
+            aria-hidden
+          >
+            {stamp}
+          </span>
           <span className="leading-relaxed">
-            <span className="font-semibold">{title}</span>
-            <span className="text-foreground/65"> · {detail}</span>
+            <span className="font-display text-[14px] font-bold">{title}</span>
+            <span className="font-kai text-foreground/70 text-[13px]"> · {detail}</span>
           </span>
         </span>
         {onShowDetail && (
@@ -90,7 +111,7 @@ export function AnswerVerdictBar({ verdict, isAdmin, selected, onShowTrace, onSh
               onShowDetail();
             }}
             aria-pressed={selected}
-            className="inline-flex shrink-0 items-center gap-1 rounded-full border border-current/30 px-2.5 py-1 font-medium transition-colors hover:bg-foreground/5"
+            className="text-foreground/75 hover:text-foreground decoration-foreground/30 hover:decoration-brand inline-flex shrink-0 items-center gap-1 text-[12px] underline decoration-dashed underline-offset-4 transition-colors"
           >
             <Workflow className="h-3 w-3" />
             搜了什么、为什么
@@ -99,7 +120,7 @@ export function AnswerVerdictBar({ verdict, isAdmin, selected, onShowTrace, onSh
       </div>
 
       {verdict.kind === "abstained" && (
-        <div className="border-border bg-card space-y-2 rounded-xl border p-3 text-sm">
+        <div className="slip space-y-2 p-3 text-sm">
           {verdict.reason && (
             <p className="leading-relaxed">
               <span className="font-medium">为什么没有回答：</span>

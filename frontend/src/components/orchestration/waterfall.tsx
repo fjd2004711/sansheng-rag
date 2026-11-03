@@ -107,7 +107,7 @@ export function Waterfall({
                     <ChevronRight className="h-3.5 w-3.5" />
                   )}
                 </button>
-                <KindIcon kind={node.kind} className="h-5 w-5 rounded-md [&_svg]:h-3 [&_svg]:w-3" />
+                <KindIcon kind={node.kind} plain className="[&_svg]:h-3.5 [&_svg]:w-3.5" />
                 <span className="truncate font-medium">{node.id}</span>
                 <span className="text-muted-foreground ml-auto shrink-0 tabular-nums">
                   {rows.length > 1 ? `${rows.length} · ` : ""}

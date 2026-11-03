@@ -51,15 +51,15 @@ export function ClaimChecklist({ claims, sources }: { claims: Claim[]; sources: 
     ));
 
   return (
-    <details className="border-border group w-full rounded-xl border text-sm">
-      <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 select-none">
-        <span className={cn("flex h-5 w-5 items-center justify-center rounded-full", allGood ? "bg-emerald-500/15 text-emerald-600" : "bg-amber-500/15 text-amber-600")}>
+    <details className="border-foreground/30 group w-full border-y text-sm">
+      <summary className="flex cursor-pointer list-none items-center gap-2.5 px-1 py-2 select-none">
+        <span className={cn("flex h-5 w-5 items-center justify-center border-[1.5px]", allGood ? "border-emerald-600/70 text-emerald-600" : "border-amber-600/70 text-amber-600")}>
           {allGood ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}
         </span>
-        <span className="font-medium">{summaryText(claims)}</span>
+        <span className="font-display text-[14px] font-bold">{summaryText(claims)}</span>
         <ChevronDown className="text-muted-foreground ml-auto h-4 w-4 transition-transform group-open:rotate-180" />
       </summary>
-      <ul className="space-y-2 border-t px-3 py-2.5">
+      <ul className="border-foreground/15 space-y-2.5 border-t px-1 py-3">
         {claims.map((claim, index) => {
           const style = claim.level ? LEVEL_STYLE[claim.level] : claim.supported ? LEVEL_STYLE.verified : LEVEL_STYLE.unverified;
           const Icon = style.icon;

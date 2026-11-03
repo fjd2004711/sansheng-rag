@@ -1133,6 +1133,23 @@
   }
 }
 
+/* ── slips ─────────────────────────────────────────────────────────── */
+/* A card on a canvas, cut like a book slip: paper, a hairline edge and a second rule just inside it. */
+.slip {
+  background: var(--color-card);
+  border: 1px solid oklch(from var(--color-foreground) l c h / 0.38);
+  box-shadow:
+    inset 0 0 0 3px var(--color-card),
+    inset 0 0 0 4px oklch(from var(--color-foreground) l c h / 0.12);
+}
+.slip:hover {
+  border-color: oklch(from var(--color-foreground) l c h / 0.6);
+}
+.slip-running {
+  border-color: var(--color-sky-500);
+  outline: 3px solid oklch(from var(--color-sky-500) l c h / 0.18);
+}
+
 /* ── scheduling timeline ─────────────────────────────────────────────── */
 /* A task bar is an unrolled hand scroll: ink rollers at both ends and a fine paper line just inside the edge. */
 .scroll-bar {
