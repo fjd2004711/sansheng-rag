@@ -1,15 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque, Geist_Mono, Inter } from "next/font/google";
+import { Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { defaultLocale } from "@/i18n";
 import { SITE } from "@/lib/seo";
-
-const display = Bricolage_Grotesque({
-  subsets: ["latin"],
-  variable: "--font-display",
-  weight: ["700", "800"],
-  display: "swap",
-});
 
 const body = Inter({
   subsets: ["latin"],
@@ -89,7 +82,7 @@ export default function RootLayout({
     <html
       lang={defaultLocale}
       suppressHydrationWarning
-      className={`${display.variable} ${body.variable} ${mono.variable}`}
+      className={`${body.variable} ${mono.variable}`}
     >
       <body className="font-body">{children}</body>
     </html>

@@ -103,7 +103,7 @@ export function ReportReader({
         </ul>
       </nav>
       <div ref={scroller} className="min-w-0 flex-1 overflow-y-auto scroll-smooth">
-        <article className="mx-auto max-w-3xl space-y-10 px-6 py-10 sm:px-10">
+        <article className="book-page reading mx-auto my-8 max-w-3xl space-y-10 px-6 py-10 sm:mx-auto sm:px-12">
           <header className="space-y-4">
             <div className="text-muted-foreground flex items-center gap-1.5 text-xs font-medium tracking-wide">
               <FileText className="h-3.5 w-3.5" />

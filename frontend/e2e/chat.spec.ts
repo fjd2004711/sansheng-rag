@@ -3,9 +3,9 @@ import { test, expect } from "@playwright/test";
 const VERDICT = /已核对|纠错后通过|仅部分有依据|没有找到答案/;
 
 test.describe("对话", () => {
-  test("空状态：问候、小省、按资料生成的建议、回答依据开关", async ({ page }) => {
+  test("空状态：问候、印章、按资料生成的建议、回答依据开关", async ({ page }) => {
     await page.goto("/chat");
-    await expect(page.getByRole("img", { name: "小省" }).first()).toBeVisible();
+    await expect(page.getByRole("img", { name: "三省" }).first()).toBeVisible();
     await expect(page.getByText(/早上好|中午好|下午好|晚上好|夜深了/)).toBeVisible();
     await expect(page.getByText(/讲了什么|还没有可用的资料/).first()).toBeVisible({ timeout: 20_000 });
     await expect(page.getByRole("radio", { name: /共享库/ })).toBeVisible();

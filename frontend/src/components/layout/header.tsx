@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ChartNoAxesCombined, Database, FileText, LogOut, MessageSquare, Network, ShieldCheck } from "lucide-react";
 
 import { AboutSansheng } from "@/components/brand/about-sansheng";
-import { Mascot } from "@/components/brand/mascot";
+import { Seal } from "@/components/brand/seal";
 import { useTranslations } from "next-intl";
 
 import { ThemeToggle } from "@/components/theme";
@@ -29,12 +29,12 @@ export function Header() {
   const t = useTranslations("nav");
 
   return (
-    <header className="bg-background/95 supports-[backdrop-filter]:bg-background/70 sticky top-0 z-40 w-full border-b backdrop-blur">
+    <header className="bg-background/95 supports-[backdrop-filter]:bg-background/80 border-foreground/55 sticky top-0 z-40 w-full border-b-[3px] border-double backdrop-blur">
       <div className="flex h-14 items-center justify-between gap-2 px-3 sm:px-6">
         <div className="flex items-center gap-2 sm:gap-4">
-          <Link href={ROUTES.HOME} className="flex items-center gap-2 text-sm font-bold sm:text-base">
-            <Mascot size={28} lookAtPointer={false} />
-            <span className="hidden sm:inline">{APP_NAME}</span>
+          <Link href={ROUTES.HOME} className="flex items-center gap-2">
+            <Seal size={28} />
+            <span className="font-display hidden text-lg font-bold tracking-[0.2em] sm:inline">{APP_NAME}</span>
           </Link>
           <AboutSansheng className="text-muted-foreground hover:text-foreground -ml-1 hidden rounded-md p-1 sm:inline-flex" />
 
@@ -47,10 +47,10 @@ export function Header() {
                 aria-label={t(item.key)}
                 title={t(item.key)}
                 className={cn(
-                  "inline-flex items-center gap-1.5 rounded-md p-2 text-sm font-medium transition-colors sm:px-3 sm:py-1.5",
+                  "inline-flex items-center gap-1.5 rounded-none p-2 text-sm font-medium transition-colors sm:px-3 sm:py-1.5",
                   isActive(item.href)
-                    ? "bg-foreground/5 text-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-foreground/5",
+                    ? "text-foreground shadow-[inset_0_-2px_0_var(--color-brand)]"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 <item.icon className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
