@@ -1,13 +1,12 @@
 import { ImageResponse } from "next/og";
 
-import { SITE } from "@/lib/seo";
-
 export const size = { width: 180, height: 180 };
 export const contentType = "image/png";
 export const dynamic = "force-static";
 
 export default function AppleIcon() {
-  const initial = SITE.name.charAt(0).toUpperCase();
+  // Latin initial on purpose: a CJK glyph makes the build fetch a font from Google, which hangs on an offline server.
+  const initial = "S";
   return new ImageResponse(
     <div
       style={{

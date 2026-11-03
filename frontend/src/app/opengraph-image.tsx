@@ -7,7 +7,9 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export const dynamic = "force-static";
 
-/** Default Open Graph image. Black background, oversized brand title with a lime
+/** Default Open Graph image. Latin text only: satori fetches CJK fonts from Google at build time, which hangs on an
+ *  offline server and fails the whole build.
+ * Black background, oversized brand title with a lime
  *  highlight on a key word, plus eyebrow + tagline. Mirrors the hero treatment. */
 export default function OpengraphImage() {
   return new ImageResponse(
@@ -37,7 +39,7 @@ export default function OpengraphImage() {
             }}
           />
           <span style={{ fontSize: 26, fontWeight: 700, letterSpacing: "-0.01em" }}>
-            {SITE.name}
+            Sansheng
           </span>
         </div>
         <span
@@ -49,7 +51,7 @@ export default function OpengraphImage() {
             letterSpacing: "0.1em",
           }}
         >
-          {SITE.tagline}
+          Draft · Review · Execute
         </span>
       </div>
 
@@ -64,7 +66,7 @@ export default function OpengraphImage() {
             flexWrap: "wrap",
           }}
         >
-          <span>AI&nbsp;that&nbsp;</span>
+          <span>Written&nbsp;by&nbsp;one,&nbsp;</span>
           <span
             style={{
               background:
@@ -73,15 +75,15 @@ export default function OpengraphImage() {
               paddingRight: 8,
             }}
           >
-            knows
+            checked
           </span>
-          <span>&nbsp;your work.</span>
+          <span>&nbsp;by&nbsp;another.</span>
         </div>
       </div>
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <span style={{ fontSize: 28, opacity: 0.7, maxWidth: 720, lineHeight: 1.4 }}>
-          {SITE.description}
+          Multi-agent orchestration with independent verification and bounded self-correction.
         </span>
         <div
           style={{
