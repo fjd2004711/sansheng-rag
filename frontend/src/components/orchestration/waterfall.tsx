@@ -12,10 +12,13 @@ import { KindIcon, StatusIcon } from "./meta";
 const POOL_BAR: Record<string, string> = {
   llm: "bg-sky-500",
   search: "bg-emerald-500",
-  none: "bg-slate-400",
+  none: "bg-amber-600",
 };
 
-/** A trace waterfall (LangSmith style): tasks grouped by workflow node; bars that overlap ran in parallel. */
+/**
+ * A trace waterfall: tasks grouped by workflow node; bars that overlap ran in parallel. Each task is drawn as an
+ * unrolled hand scroll (rollers at both ends), each node's span as a ruled bracket, on dashed column rules.
+ */
 export function Waterfall({
   tasks,
   graph,
@@ -55,15 +58,17 @@ export function Waterfall({
   return (
     <div className="min-w-[640px] text-xs">
       <div className="bg-card/95 sticky top-0 z-10 flex border-b backdrop-blur">
-        <div className="w-[260px] shrink-0 px-3 py-1.5 font-medium">节点 / 任务</div>
+        <div className="font-display w-[260px] shrink-0 px-3 py-1.5 font-bold tracking-wide">
+          节点 / 任务
+        </div>
         <div className="relative h-7 flex-1">
           {ticks.map((t) => (
             <span
               key={t}
-              className="text-muted-foreground absolute top-1.5 -translate-x-1/2 text-[10px] tabular-nums"
+              className="font-display text-muted-foreground absolute top-1.5 -translate-x-1/2 text-[11px] tabular-nums"
               style={{ left: `${(t / horizon) * 100}%` }}
             >
-              {t}s
+              {t} 秒
             </span>
           ))}
         </div>
@@ -111,10 +116,7 @@ export function Waterfall({
               </div>
               <div className="relative h-5 flex-1">
                 <div
-                  className={cn(
-                    "absolute top-1.5 h-2 rounded-full opacity-35",
-                    running ? "bg-sky-500" : "bg-foreground",
-                  )}
+                  className={cn("span-rule top-2.5", running && "text-sky-500")}
                   style={{
                     left: `${(start / horizon) * 100}%`,
                     width: `${Math.max(((end - start) / horizon) * 100, 0.6)}%`,
@@ -131,7 +133,7 @@ export function Waterfall({
                   task.status === "failed"
                     ? "bg-red-500"
                     : task.status === "skipped"
-                      ? "bg-slate-300 dark:bg-slate-600"
+                      ? "scroll-bar-blank"
                       : (POOL_BAR[task.pool] ?? POOL_BAR.none);
                 return (
                   <div
@@ -153,21 +155,21 @@ export function Waterfall({
                       {ticks.map((t) => (
                         <span
                           key={t}
-                          className="bg-border/60 absolute top-0 h-full w-px"
+                          className="border-foreground/12 absolute top-0 h-full border-l border-dashed"
                           style={{ left: `${(t / horizon) * 100}%` }}
                         />
                       ))}
                       <div
                         className={cn(
-                          "absolute top-1.5 h-3 rounded-sm",
+                          "scroll-bar top-1.5 h-3",
                           color,
                           task.status === "running" && "animate-pulse",
                         )}
                         style={{ left: `${left}%`, width: `${width}%` }}
                       />
                       <span
-                        className="text-muted-foreground absolute top-1 text-[10px] tabular-nums"
-                        style={{ left: `calc(${left + width}% + 4px)` }}
+                        className="font-kai text-muted-foreground absolute top-0.5 text-[12px] tabular-nums"
+                        style={{ left: `calc(${left + width}% + 7px)` }}
                       >
                         {formatDuration(e - task.start)}
                       </span>
@@ -178,16 +180,16 @@ export function Waterfall({
           </div>
         );
       })}
-      <div className="text-muted-foreground flex flex-wrap gap-4 px-3 py-2 text-[10px]">
+      <div className="text-muted-foreground flex flex-wrap gap-5 px-4 py-2.5">
         {[
           ["bg-sky-500", "模型任务"],
           ["bg-emerald-500", "搜索任务"],
-          ["bg-slate-400", "其他"],
+          ["bg-amber-600", "其他"],
           ["bg-red-500", "失败"],
-          ["bg-slate-300", "被跳过"],
+          ["scroll-bar-blank", "被跳过"],
         ].map(([c, t]) => (
-          <span key={t} className="flex items-center gap-1">
-            <span className={cn("inline-block h-2 w-3 rounded-sm", c)} />
+          <span key={t} className="font-kai flex items-center gap-2 text-[12px]">
+            <span className={cn("scroll-bar relative! inline-block h-2.5 w-5", c)} />
             {t}
           </span>
         ))}
