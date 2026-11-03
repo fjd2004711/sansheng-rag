@@ -13,6 +13,7 @@ import { Button, Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/u
 import { useAuth } from "@/hooks";
 import { ROUTES } from "@/lib/constants";
 import { isAppAdmin } from "@/lib/utils";
+import { PageTitle } from "@/components/layout";
 
 export default function AdminPage() {
   const { user } = useAuth();
@@ -31,8 +32,8 @@ export default function AdminPage() {
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 sm:px-6">
-      <header>
-        <h1 className="text-2xl font-semibold tracking-tight">管理</h1>
+      <header className="border-foreground/40 border-b-[3px] border-double pb-4">
+        <PageTitle juan="卷六" title="管理" />
         <p className="text-muted-foreground mt-1 text-sm">管理账号，查看用户反馈、知识缺口和 token 用量。</p>
       </header>
       <Tabs defaultValue="feedback">

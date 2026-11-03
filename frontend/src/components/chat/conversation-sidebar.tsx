@@ -430,7 +430,7 @@ export function ConversationSidebar({ className }: ConversationSidebarProps) {
       >
         <ResizeHandle edge="right" label="调整会话列表宽度" dragging={resize.dragging} aria={resize.aria} {...resize.handleProps} />
         <div className="flex h-12 items-center justify-between border-b px-4 py-3">
-          <h2 className="text-sm font-semibold">{t("conversations")}</h2>
+          <h2 className="font-display text-base font-bold tracking-[0.12em]">{t("conversations")}</h2>
           <Button
             variant="ghost"
             size="sm"

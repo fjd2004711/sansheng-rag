@@ -30,15 +30,16 @@ export function ReportList({ items, loading, selectedId, onSelect, onDelete }: R
 
   return (
     <>
-      <ul className="space-y-2">
+      <ul className="border-foreground/40 divide-foreground/12 divide-y border-t-[3px] border-double">
         {items.map((item) => {
           const status = STATUS[item.status];
           return (
             <li key={item.id}>
               <div
                 className={cn(
-                  "bg-card hover:border-foreground/30 group flex w-full items-start gap-2 rounded-xl border p-3 text-left transition-colors",
-                  item.id === selectedId && "border-primary/60 ring-primary/20 ring-2",
+                  "hover:bg-accent/60 group relative flex w-full items-start gap-2 py-3 pr-1 pl-4 text-left transition-colors",
+                  item.id === selectedId &&
+                    "bg-accent/70 before:bg-brand before:absolute before:top-4.5 before:left-1 before:h-1.5 before:w-1.5 before:rounded-full",
                 )}
               >
                 <button
@@ -46,7 +47,7 @@ export function ReportList({ items, loading, selectedId, onSelect, onDelete }: R
                   onClick={() => onSelect(item.id)}
                   className="min-w-0 flex-1 text-left"
                 >
-                  <p className="truncate text-sm font-medium">{item.title || item.topic}</p>
+                  <p className="font-display truncate text-[15px] font-bold">{item.title || item.topic}</p>
                   <p className="text-muted-foreground mt-0.5 text-xs">
                     <span className={status.className}>{status.label}</span> ·{" "}
                     {new Date(item.created_at).toLocaleString("zh-CN")}

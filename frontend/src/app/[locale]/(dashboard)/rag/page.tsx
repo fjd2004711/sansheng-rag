@@ -10,6 +10,7 @@ import { Button, Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/u
 import { useAuth } from "@/hooks";
 import { ROUTES } from "@/lib/constants";
 import { isAppAdmin } from "@/lib/utils";
+import { PageTitle } from "@/components/layout";
 
 export default function KnowledgeBasePage() {
   const { user } = useAuth();
@@ -17,9 +18,9 @@ export default function KnowledgeBasePage() {
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 sm:px-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
+      <header className="border-foreground/40 flex flex-wrap items-end justify-between gap-3 border-b-[3px] border-double pb-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">知识库</h1>
+          <PageTitle juan="卷二" title="知识库" />
           <p className="text-muted-foreground mt-1 text-sm">
             系统只根据资料回答问题：<b>共享资料</b>人人可用，<b>我的资料</b>只有你自己能用。
           </p>

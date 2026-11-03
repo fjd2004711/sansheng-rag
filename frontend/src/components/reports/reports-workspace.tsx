@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { PageTitle } from "@/components/layout";
 import { Button, Input } from "@/components/ui";
 import { useReports } from "@/hooks/use-reports";
 import { getErrorMessage } from "@/lib/utils";
@@ -45,9 +46,9 @@ export function ReportsWorkspace() {
   return (
     <div className="mx-auto grid w-full max-w-7xl gap-4 p-3 sm:p-6 lg:grid-cols-[320px_minmax(0,1fr)]">
       <aside className="space-y-4">
-        <form onSubmit={submit} className="bg-card space-y-3 rounded-xl border p-4">
+        <form onSubmit={submit} className="space-y-3">
           <div>
-            <h1 className="text-base font-semibold">调研报告</h1>
+            <PageTitle juan="卷三" title="调研报告" />
             <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
               输入主题，系统会优先查找政府、统计部门和研究机构的公开数据，逐条核对后生成带数据表、趋势图和分析的报告，可下载
               Word 或 PDF。
@@ -65,7 +66,7 @@ export function ReportsWorkspace() {
                 key={example}
                 type="button"
                 onClick={() => setTopic(example)}
-                className="bg-muted hover:bg-muted/70 rounded-full px-2 py-0.5 text-xs"
+                className="border-foreground/20 hover:border-foreground/45 rounded-sm border px-2 py-0.5 text-xs"
               >
                 {example}
               </button>
