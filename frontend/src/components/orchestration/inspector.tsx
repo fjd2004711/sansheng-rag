@@ -82,6 +82,20 @@ function NodeDetail({
         />
         <Row label="模型档位" value={agent ? (agent.model_tier === "fast" ? "轻量" : "强") : "—"} />
         <Row
+          label="使用模型"
+          value={
+            agent?.model ? (
+              <code className="bg-muted rounded px-1 text-[11px]">{agent.model}</code>
+            ) : typeof graph.policy.model === "string" && graph.policy.model ? (
+              <span>
+                <code className="bg-muted rounded px-1 text-[11px]">{graph.policy.model}</code>（统一）
+              </span>
+            ) : (
+              "系统默认"
+            )
+          }
+        />
+        <Row
           label="资源池"
           value={node.pool === "none" ? "无" : node.pool === "search" ? "搜索" : "模型"}
         />

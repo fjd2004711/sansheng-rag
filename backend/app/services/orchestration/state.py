@@ -19,13 +19,19 @@ class ModelController:
 
     def __init__(self, base: LLMRuntime, policy: PolicySpec) -> None:
         self._base = base
-        names = [base.model, *[m for m in policy.fallback_models if m != base.model]]
+        primary = policy.model or base.model
+        names = [primary, *[m for m in policy.fallback_models if m != primary]]
+        self._dropped: set[str] = set()
         self._models = names
         self._fast = policy.fast_model
         self.switches: list[dict[str, str]] = []
 
-    def runtime(self, tier: ModelTier = "strong") -> LLMRuntime:
-        model = self._fast if tier == "fast" and self._fast else self._models[0]
+    def runtime(self, tier: ModelTier = "strong", agent_model: str | None = None) -> LLMRuntime:
+        """An agent's own model wins; then the light-task model for the fast tier; then the run's primary model."""
+        if agent_model and agent_model not in self._dropped:
+            model = agent_model
+        else:
+            model = self._fast if tier == "fast" and self._fast else self._models[0]
         return LLMRuntime(
             base_url=self._base.base_url,
             api_key=self._base.api_key,
@@ -42,6 +48,7 @@ class ModelController:
         if len(self._models) <= 1:
             return False
         dropped = self._models.pop(0)
+        self._dropped.add(dropped)
         self.switches.append({"from": dropped, "to": self._models[0], "reason": reason[:120]})
         return True
 

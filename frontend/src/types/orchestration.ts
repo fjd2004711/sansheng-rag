@@ -27,7 +27,14 @@ export interface SpecGraph {
   edges: GraphEdge[];
   policy: Record<string, unknown>;
   team: { name: string; members: string[]; supervisor: string | null };
-  agents: { name: string; role: string; skill: string; model_tier: string; independent: boolean }[];
+  agents: {
+    name: string;
+    role: string;
+    skill: string;
+    model_tier: string;
+    model?: string | null;
+    independent: boolean;
+  }[];
 }
 
 export interface Spec {
@@ -59,6 +66,8 @@ export interface RunMetrics {
   repairs: { round: number; sections: string[]; types: string[] }[];
   verifier_downgrades: number;
   model: string;
+  /** Agents that ran on a model of their own. */
+  agent_models?: Record<string, string>;
   model_switches: { from: string; to: string; reason: string }[];
 }
 

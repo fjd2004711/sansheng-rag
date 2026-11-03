@@ -63,6 +63,12 @@ class SpecValidation(BaseSchema):
 class RunCreate(BaseSchema):
     spec: str = Field(min_length=1, max_length=120, description="定义名称")
     topic: str = Field(min_length=2, max_length=2000, description="调研主题，或要核查的文字")
+    model: str | None = Field(
+        default=None, max_length=120, pattern=r"^[\w.\-:/]+$", description="本次运行统一使用的模型"
+    )
+    agent_models: dict[str, str] = Field(
+        default_factory=dict, description="按 agent 名称单独指定的模型"
+    )
 
 
 class RunSummary(BaseSchema, TimestampSchema):

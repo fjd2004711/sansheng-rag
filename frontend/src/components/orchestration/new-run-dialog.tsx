@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ChevronDown, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -12,7 +12,9 @@ import {
   DialogTitle,
   Textarea,
 } from "@/components/ui";
+import { apiClient } from "@/lib/api-client";
 import { cn, getErrorMessage } from "@/lib/utils";
+import type { RunModels } from "@/hooks/use-orchestration";
 import type { Spec } from "@/types/orchestration";
 
 const EXAMPLES: Record<string, string[]> = {
@@ -36,19 +38,41 @@ export function NewRunDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   specs: Spec[];
-  onStart: (spec: string, topic: string) => Promise<void>;
+  onStart: (spec: string, topic: string, models?: RunModels) => Promise<void>;
 }) {
   const [specName, setSpecName] = useState("verified-report");
   const [topic, setTopic] = useState("");
   const [busy, setBusy] = useState(false);
+  const [available, setAvailable] = useState<string[]>([]);
+  const [fallback, setFallback] = useState("");
+  const [model, setModel] = useState("");
+  const [agentModels, setAgentModels] = useState<Record<string, string>>({});
+  const [showAgents, setShowAgents] = useState(false);
+
+  useEffect(() => {
+    if (!open || available.length) return;
+    apiClient
+      .get<{ default: string; models: string[] }>("/v1/agent/models")
+      .then((r) => {
+        setAvailable(r.models);
+        setFallback(r.default);
+      })
+      .catch(() => undefined);
+  }, [open, available.length]);
   const spec = specs.find((s) => s.name === specName) ?? specs[0];
   const isText = spec?.input === "text";
+  const agents = spec?.graph.agents ?? [];
+  const choices = Array.from(new Set([fallback, ...available].filter(Boolean)));
+  const customized = Object.values(agentModels).filter(Boolean).length;
 
   const submit = async () => {
     if (topic.trim().length < 2 || !spec) return;
     setBusy(true);
     try {
-      await onStart(spec.name, topic.trim());
+      const chosen = Object.fromEntries(
+        Object.entries(agentModels).filter(([name, m]) => m && agents.some((a) => a.name === name)),
+      );
+      await onStart(spec.name, topic.trim(), { model: model || undefined, agent_models: chosen });
       setTopic("");
       onOpenChange(false);
     } catch (error) {
@@ -117,6 +141,65 @@ export function NewRunDialog({
               </button>
             ))}
           </div>
+        </div>
+        <div className="space-y-2 rounded-lg border p-3">
+          <div className="flex items-center justify-between gap-3">
+            <label className="text-sm font-medium" htmlFor="run-model">
+              模型
+            </label>
+            <select
+              id="run-model"
+              value={model}
+              onChange={(e) => setModel(e.target.value)}
+              className="border-input bg-background h-8 max-w-[60%] rounded-md border px-2 text-sm"
+            >
+              <option value="">系统默认{fallback ? `（${fallback}）` : ""}</option>
+              {choices.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+            </select>
+          </div>
+          <p className="text-muted-foreground text-xs">所有 agent 默认都用这一个模型。</p>
+          <button
+            type="button"
+            onClick={() => setShowAgents((v) => !v)}
+            className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-xs"
+            aria-expanded={showAgents}
+          >
+            <ChevronDown
+              className={cn("h-3.5 w-3.5 transition-transform", showAgents && "rotate-180")}
+            />
+            按 agent 单独指定{customized ? `（已指定 ${customized} 个）` : ""}
+          </button>
+          {showAgents && (
+            <ul className="divide-y rounded-md border">
+              {agents.map((a) => (
+                <li key={a.name} className="flex items-center justify-between gap-3 px-2.5 py-1.5">
+                  <span className="min-w-0 text-sm">
+                    <span className="font-medium">{a.name}</span>
+                    <span className="text-muted-foreground ml-1.5 text-xs">{a.role}</span>
+                  </span>
+                  <select
+                    aria-label={`${a.name} 使用的模型`}
+                    value={agentModels[a.name] ?? ""}
+                    onChange={(e) =>
+                      setAgentModels((cur) => ({ ...cur, [a.name]: e.target.value }))
+                    }
+                    className="border-input bg-background h-8 max-w-[55%] rounded-md border px-2 text-xs"
+                  >
+                    <option value="">跟随统一模型</option>
+                    {choices.map((m) => (
+                      <option key={m} value={m}>
+                        {m}
+                      </option>
+                    ))}
+                  </select>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground text-xs">⌘ / Ctrl + Enter 开始</span>

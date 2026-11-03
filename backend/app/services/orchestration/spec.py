@@ -33,6 +33,8 @@ class AgentSpec(BaseModel):
     role: str
     skill: str  # key in the skill registry: what this agent actually does
     model_tier: ModelTier = "strong"
+    # A specific model for this agent (same endpoint and key); None = follow the workflow's model.
+    model: str | None = Field(default=None, max_length=120, pattern=r"^[\w.\-:/]+$")
     tools: list[str] = Field(default_factory=list)
     knowledge: list[str] = Field(default_factory=list)
     # What the agent may read. "draft" = the text under review; a verifier must never see the writer's reasoning.
@@ -84,6 +86,8 @@ class PolicySpec(BaseModel):
     max_repair_rounds: int = Field(default=2, ge=0, le=4)
     search_concurrency: int = Field(default=2, ge=1, le=8)
     llm_concurrency: int = Field(default=4, ge=1, le=16)
+    # One model for the whole run (same endpoint and key); None = the user's / server's default.
+    model: str | None = Field(default=None, max_length=120, pattern=r"^[\w.\-:/]+$")
     fallback_models: list[str] = Field(
         default_factory=list
     )  # tried in order when the primary model fails

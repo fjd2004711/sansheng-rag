@@ -7,6 +7,12 @@ import type { Insights, RunDetail, RunSummary, Spec, SpecValidation } from "@/ty
 
 const POLL_MS = 2500;
 
+/** Which model a run uses: one for everything, and/or one per agent (by agent name). */
+export interface RunModels {
+  model?: string;
+  agent_models?: Record<string, string>;
+}
+
 export function useSpecs() {
   const [specs, setSpecs] = useState<Spec[]>([]);
   const [loading, setLoading] = useState(true);
@@ -67,8 +73,15 @@ export function useRuns() {
   }, [active, refresh]);
 
   const create = useCallback(
-    async (spec: string, topic: string) => {
-      const run = await apiClient.post<RunSummary>("/v1/orchestration/runs", { spec, topic });
+    async (spec: string, topic: string, models?: RunModels) => {
+      const run = await apiClient.post<RunSummary>("/v1/orchestration/runs", {
+        spec,
+        topic,
+        ...(models?.model ? { model: models.model } : {}),
+        ...(models?.agent_models && Object.keys(models.agent_models).length
+          ? { agent_models: models.agent_models }
+          : {}),
+      });
       await refresh();
       return run;
     },
