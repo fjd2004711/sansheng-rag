@@ -72,13 +72,29 @@ export function StatusDot({ status, className }: { status: string; className?: s
   return <span className={cn("inline-block h-2 w-2 shrink-0 rounded-full", dot, className)} />;
 }
 
-export function KindIcon({ kind, className }: { kind: GraphNode["kind"]; className?: string }) {
+export function KindIcon({
+  kind,
+  plain = false,
+  className,
+}: {
+  kind: GraphNode["kind"];
+  /** Just the coloured glyph, without the tinted tile behind it. */
+  plain?: boolean;
+  className?: string;
+}) {
   const meta = KIND_META[kind];
+  const tone = plain
+    ? meta.tone
+        .split(" ")
+        .filter((c) => !c.startsWith("bg-"))
+        .join(" ")
+    : meta.tone;
   return (
     <span
       className={cn(
-        "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
-        meta.tone,
+        "inline-flex shrink-0 items-center justify-center",
+        plain ? "h-4 w-4" : "h-8 w-8 rounded-sm",
+        tone,
         className,
       )}
     >

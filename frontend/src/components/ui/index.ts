@@ -83,3 +83,4 @@ export type { QuestionPromptProps } from "./question-prompt";
 
 export { DataTable, type Column } from "./data-table";
 export { ResizeHandle } from "./resize-handle";
+export { StatusMark, type MarkStatus } from "./status-mark";
