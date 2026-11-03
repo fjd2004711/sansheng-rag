@@ -1,4 +1,6 @@
-# 基于 LangChain 的可解释自纠错 RAG Agent
+# 三省：基于 LangChain 的可解释自纠错 RAG Agent 与多智能体编排平台
+
+> **三省（Sansheng）**：起草、审核、执行，各司其职。名字取自唐代三省制——中书省起草诏令，门下省审核并可“封驳”（退回），尚书省执行；写的人不审，审的人不写。对应到系统里：规划师、撰稿人、分析师负责起草；独立核查员与质量门负责审核并打回；调度器、检索员、修复员、主编负责执行。界面顶部名字旁的“ⓘ”可以看到这段说明。
 
 回答可追溯到 `claim -> evidence -> source`；检索或生成失败时，先诊断失败类型，再选择重检索、Query Rewrite、问题拆解、重生成或拒答，且所有纠错循环都有最大轮数限制。
 
@@ -16,9 +18,11 @@
 
 界面全部为中文。没有启动页：打开站点直接进入对话页，未登录时转到登录页。
 
-- `/chat`：对话，右侧展示 Agent Trace（React Flow）与 Evidence Viewer
+- `/chat`：对话，右侧展示 Agent Trace（React Flow）与 Evidence Viewer；可切换“资料问答 / 联网调研 / 分析报告”
 - `/rag`：知识库管理（上传、入库状态、检索验证），需要管理员账号
-- `/evaluation`：P5 评测与消融看板
+- `/reports`：调研报告（联网检索、逐条核验，导出 Word / PDF；底层走编排引擎）
+- `/orchestration`：编排平台（运行画布、调度时间线、质量门与自循环、报告阅读、工作流定义与模型选择）
+- `/evaluation`：回答质量与 P5 评测、消融看板
 - `/login`、`/register`
 
 第一个注册的用户自动成为管理员；公开部署前请先自行注册，或使用 `create-app-admin` 命令。
@@ -68,5 +72,8 @@ cd frontend && npm run type-check && npm run lint && npm run build
 | [HANDOFF_FOR_CLAUDE.md](HANDOFF_FOR_CLAUDE.md) | 当前真实状态、已知问题、下一步 |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | 冻结架构与不可破坏的边界 |
 | [ROADMAP.md](ROADMAP.md)、`docs/P*_ACCEPTANCE.md` | P0–P5 阶段门控 |
+| [docs/ORCHESTRATION.md](docs/ORCHESTRATION.md) | 编排平台的实现说明、实测与不足 |
+| [docs/COMPETITION_PLAN.md](docs/COMPETITION_PLAN.md) | 竞赛方案的最初构思 |
+| [docs/proposal/](docs/proposal/) | 初赛方案书（PDF，含系统截图） |
 | [ENV_VARS.md](ENV_VARS.md) | 环境变量 |
 | [UPSTREAM.md](UPSTREAM.md) | 底座模板来源 |
