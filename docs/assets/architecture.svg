@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 700" width="920" height="700" font-family="Songti SC, STSong, Noto Serif CJK SC, SimSun, serif">
+<rect width="920" height="700" fill="#F3EEE3"/>
+<rect x="8" y="8" width="904" height="684" fill="none" stroke="#2B2620" stroke-width="2"/>
+<rect x="14" y="14" width="892" height="672" fill="none" stroke="#2B2620" stroke-width="0.6"/>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#2B2620"/></marker><marker id="r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#A83A2C"/></marker></defs>
+<text x="460.0" y="48" font-size="22" fill="#2B2620" text-anchor="middle" font-weight="bold">系统总体架构</text>
+<text x="460.0" y="70" font-size="12.5" fill="#7A7064" text-anchor="middle" font-weight="normal">前端只读事件；后端分层，调度层与业务无关</text>
+<rect x="430.0" y="78" width="60" height="2" fill="#A83A2C"/>
+<rect x="40" y="100" width="840" height="70" fill="#FAF6EC" stroke="#2B2620" stroke-width="1.4"/>
+<rect x="43" y="103" width="834" height="64" fill="none" stroke="#2B2620" stroke-width="0.5"/>
+<text x="460.0" y="132.0" font-size="15" fill="#2B2620" text-anchor="middle" font-weight="bold">前端　Next.js 15 · React 19 · Tailwind</text>
+<text x="460.0" y="150.0" font-size="11.5" fill="#7A7064" text-anchor="middle" font-weight="normal">对话与证据　·　Agent Trace（React Flow）　·　编排画布与调度时间线　·　评测看板（ECharts）　·　报告阅读与导出</text>
+<line x1="460" y1="170" x2="460" y2="196" stroke="#2B2620" stroke-width="1.4" marker-end="url(#a)"/>
+<text x="560" y="189" font-size="11" fill="#7A7064" text-anchor="start" font-weight="normal">REST / WebSocket（结构化事件）</text>
+<rect x="40" y="200" width="840" height="54" fill="#FAF6EC" stroke="#2B2620" stroke-width="1.4"/>
+<rect x="43" y="203" width="834" height="48" fill="none" stroke="#2B2620" stroke-width="0.5"/>
+<text x="460.0" y="224.0" font-size="14" fill="#2B2620" text-anchor="middle" font-weight="bold">定义层　spec.py</text>
+<text x="460.0" y="242.0" font-size="11.5" fill="#7A7064" text-anchor="middle" font-weight="normal">YAML → Pydantic 校验 → PostgreSQL　·　知识库 / Agent 团队 / 工作流 / 策略（预算、质量门、轮次、并发）</text>
+<rect x="40" y="262" width="840" height="54" fill="#FAF6EC" stroke="#2B2620" stroke-width="1.4"/>
+<rect x="43" y="265" width="834" height="48" fill="none" stroke="#2B2620" stroke-width="0.5"/>
+<text x="460.0" y="286.0" font-size="14" fill="#2B2620" text-anchor="middle" font-weight="bold">编排层　engine.py</text>
+<text x="460.0" y="304.0" font-size="11.5" fill="#7A7064" text-anchor="middle" font-weight="normal">节点编译为调度组：agent · map（按数据扇出） · gate（质量门） · loop（有界修复） · merge</text>
+<rect x="40" y="324" width="840" height="54" fill="#FAF6EC" stroke="#2B2620" stroke-width="1.4"/>
+<rect x="43" y="327" width="834" height="48" fill="none" stroke="#2B2620" stroke-width="0.5"/>
+<text x="460.0" y="348.0" font-size="14" fill="#2B2620" text-anchor="middle" font-weight="bold">调度层　scheduler.py</text>
+<text x="460.0" y="366.0" font-size="11.5" fill="#7A7064" text-anchor="middle" font-weight="normal">asyncio 调度器　·　就绪集与优先级　·　搜索 / 模型资源池　·　重试、超时、预算　·　运行中插入任务</text>
+<rect x="40" y="386" width="840" height="54" fill="#FAF6EC" stroke="#2B2620" stroke-width="1.4"/>
+<rect x="43" y="389" width="834" height="48" fill="none" stroke="#2B2620" stroke-width="0.5"/>
+<text x="460.0" y="410.0" font-size="14" fill="#2B2620" text-anchor="middle" font-weight="bold">执行层　skills.py</text>
+<text x="460.0" y="428.0" font-size="11.5" fill="#7A7064" text-anchor="middle" font-weight="normal">规划　·　联网检索　·　分章撰写与数据核对　·　独立核查　·　修复　·　综合研判　·　统稿</text>
+<rect x="40" y="448" width="840" height="54" fill="#FAF6EC" stroke="#2B2620" stroke-width="1.4"/>
+<rect x="43" y="451" width="834" height="48" fill="none" stroke="#2B2620" stroke-width="0.5"/>
+<text x="460.0" y="472.0" font-size="14" fill="#2B2620" text-anchor="middle" font-weight="bold">验证与反馈层</text>
+<text x="460.0" y="490.0" font-size="11.5" fill="#7A7064" text-anchor="middle" font-weight="normal">数据点逐字核对　·　说法分级　·　逐条独立复核　·　质量门与失败诊断 → 修复路由</text>
+<rect x="40" y="510" width="840" height="54" fill="#FAF6EC" stroke="#2B2620" stroke-width="1.4"/>
+<rect x="43" y="513" width="834" height="48" fill="none" stroke="#2B2620" stroke-width="0.5"/>
+<text x="460.0" y="534.0" font-size="14" fill="#2B2620" text-anchor="middle" font-weight="bold">可观测层　orch_events</text>
+<text x="460.0" y="552.0" font-size="11.5" fill="#7A7064" text-anchor="middle" font-weight="normal">一切状态由事件日志推导：画布着色、调度时间线、质量门面板、事件日志，可完整回放</text>
+<rect x="40.0" y="576" width="132" height="56" fill="#FAF6EC" stroke="#A83A2C" stroke-width="1.4"/>
+<rect x="43.0" y="579" width="126" height="50" fill="none" stroke="#A83A2C" stroke-width="0.5"/>
+<text x="106.0" y="601.0" font-size="14" fill="#2B2620" text-anchor="middle" font-weight="bold">LangChain</text>
+<text x="106.0" y="619.0" font-size="11.5" fill="#7A7064" text-anchor="middle" font-weight="normal">模型与文档接口</text>
+<rect x="181.6" y="576" width="132" height="56" fill="#FAF6EC" stroke="#A83A2C" stroke-width="1.4"/>
+<rect x="184.6" y="579" width="126" height="50" fill="none" stroke="#A83A2C" stroke-width="0.5"/>
+<text x="247.6" y="601.0" font-size="14" fill="#2B2620" text-anchor="middle" font-weight="bold">LangGraph</text>
+<text x="247.6" y="619.0" font-size="11.5" fill="#7A7064" text-anchor="middle" font-weight="normal">问答纠错状态图</text>
+<rect x="323.2" y="576" width="132" height="56" fill="#FAF6EC" stroke="#A83A2C" stroke-width="1.4"/>
+<rect x="326.2" y="579" width="126" height="50" fill="none" stroke="#A83A2C" stroke-width="0.5"/>
+<text x="389.2" y="601.0" font-size="14" fill="#2B2620" text-anchor="middle" font-weight="bold">PostgreSQL</text>
+<text x="389.2" y="619.0" font-size="11.5" fill="#7A7064" text-anchor="middle" font-weight="normal">运行 · 事件 · 定义</text>
+<rect x="464.79999999999995" y="576" width="132" height="56" fill="#FAF6EC" stroke="#A83A2C" stroke-width="1.4"/>
+<rect x="467.79999999999995" y="579" width="126" height="50" fill="none" stroke="#A83A2C" stroke-width="0.5"/>
+<text x="530.8" y="601.0" font-size="14" fill="#2B2620" text-anchor="middle" font-weight="bold">Qdrant</text>
+<text x="530.8" y="619.0" font-size="11.5" fill="#7A7064" text-anchor="middle" font-weight="normal">稠密向量 · 临时集合</text>
+<rect x="606.4" y="576" width="132" height="56" fill="#FAF6EC" stroke="#A83A2C" stroke-width="1.4"/>
+<rect x="609.4" y="579" width="126" height="50" fill="none" stroke="#A83A2C" stroke-width="0.5"/>
+<text x="672.4" y="601.0" font-size="14" fill="#2B2620" text-anchor="middle" font-weight="bold">BM25 + RRF</text>
+<text x="672.4" y="619.0" font-size="11.5" fill="#7A7064" text-anchor="middle" font-weight="normal">独立稀疏召回与融合</text>
+<rect x="748.0" y="576" width="132" height="56" fill="#FAF6EC" stroke="#A83A2C" stroke-width="1.4"/>
+<rect x="751.0" y="579" width="126" height="50" fill="none" stroke="#A83A2C" stroke-width="0.5"/>
+<text x="814.0" y="601.0" font-size="14" fill="#2B2620" text-anchor="middle" font-weight="bold">Reranker</text>
+<text x="814.0" y="619.0" font-size="11.5" fill="#7A7064" text-anchor="middle" font-weight="normal">交叉编码重排</text>
+<text x="460.0" y="660" font-size="11.5" fill="#A83A2C" text-anchor="middle" font-weight="normal">基础设施与检索链（Dense + BM25 → RRF → Reranker）</text>
+</svg>

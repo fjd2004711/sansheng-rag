@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 470" width="920" height="470" font-family="Songti SC, STSong, Noto Serif CJK SC, SimSun, serif">
+<rect width="920" height="470" fill="#F3EEE3"/>
+<rect x="8" y="8" width="904" height="454" fill="none" stroke="#2B2620" stroke-width="2"/>
+<rect x="14" y="14" width="892" height="442" fill="none" stroke="#2B2620" stroke-width="0.6"/>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#2B2620"/></marker><marker id="r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#A83A2C"/></marker></defs>
+<text x="460.0" y="48" font-size="22" fill="#2B2620" text-anchor="middle" font-weight="bold">三省分立：写的人不审，审的人不写</text>
+<text x="460.0" y="70" font-size="12.5" fill="#7A7064" text-anchor="middle" font-weight="normal">取自唐代三省制，对应系统里的角色分工</text>
+<rect x="430.0" y="78" width="60" height="2" fill="#A83A2C"/>
+<rect x="40" y="105" width="270" height="270" fill="#FAF6EC" stroke="#2B2620" stroke-width="1.4"/>
+<rect x="44" y="109" width="262" height="262" fill="none" stroke="#2B2620" stroke-width="0.5"/>
+<rect x="150" y="122" width="50" height="50" fill="#2B2620"/>
+<text x="175" y="157" font-size="24" fill="#F3EEE3" text-anchor="middle" font-weight="bold">起草</text>
+<text x="175" y="195" font-size="13" fill="#7A7064" text-anchor="middle" font-weight="normal">中书省</text>
+<text x="58" y="235" font-size="13.5" fill="#2B2620" text-anchor="start" font-weight="normal">· 规划师：提纲与检索词</text>
+<text x="58" y="275" font-size="13.5" fill="#2B2620" text-anchor="start" font-weight="normal">· 撰稿人：分章取证与写作</text>
+<text x="58" y="315" font-size="13.5" fill="#2B2620" text-anchor="start" font-weight="normal">· 分析师：综合研判与建议</text>
+<rect x="325" y="105" width="270" height="270" fill="#FAF6EC" stroke="#A83A2C" stroke-width="1.4"/>
+<rect x="329" y="109" width="262" height="262" fill="none" stroke="#A83A2C" stroke-width="0.5"/>
+<rect x="435" y="122" width="50" height="50" fill="#A83A2C"/>
+<text x="460" y="157" font-size="24" fill="#F3EEE3" text-anchor="middle" font-weight="bold">审核</text>
+<text x="460" y="195" font-size="13" fill="#7A7064" text-anchor="middle" font-weight="normal">门下省</text>
+<text x="343" y="235" font-size="13.5" fill="#2B2620" text-anchor="start" font-weight="normal">· 独立核查员：只看草稿与证据</text>
+<text x="343" y="275" font-size="13.5" fill="#2B2620" text-anchor="start" font-weight="normal">· 质量门：四项指标，可“封驳”打回</text>
+<text x="343" y="315" font-size="13.5" fill="#2B2620" text-anchor="start" font-weight="normal">· 不读写作者的推理过程</text>
+<rect x="610" y="105" width="270" height="270" fill="#FAF6EC" stroke="#2B2620" stroke-width="1.4"/>
+<rect x="614" y="109" width="262" height="262" fill="none" stroke="#2B2620" stroke-width="0.5"/>
+<rect x="720" y="122" width="50" height="50" fill="#2B2620"/>
+<text x="745" y="157" font-size="24" fill="#F3EEE3" text-anchor="middle" font-weight="bold">执行</text>
+<text x="745" y="195" font-size="13" fill="#7A7064" text-anchor="middle" font-weight="normal">尚书省</text>
+<text x="628" y="235" font-size="13.5" fill="#2B2620" text-anchor="start" font-weight="normal">· 调度器：依赖、资源池、预算</text>
+<text x="628" y="275" font-size="13.5" fill="#2B2620" text-anchor="start" font-weight="normal">· 检索员：联网检索写入临时集合</text>
+<text x="628" y="315" font-size="13.5" fill="#2B2620" text-anchor="start" font-weight="normal">· 修复员 · 主编：补检索与统稿</text>
+<line x1="310" y1="240" x2="325" y2="240" stroke="#2B2620" stroke-width="1.4" marker-end="url(#a)"/>
+<line x1="595" y1="240" x2="610" y2="240" stroke="#2B2620" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M455 380 C455 410 200 410 175 380" stroke="#A83A2C" stroke-width="1.4" fill="none" stroke-dasharray="5 4" marker-end="url(#r)"/>
+<text x="460.0" y="432" font-size="12.5" fill="#A83A2C" text-anchor="middle" font-weight="normal">不达标：审核打回，补检索并逐章重写，复核后再过质量门（修复轮数有上限）</text>
+</svg>
