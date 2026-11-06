@@ -16,7 +16,7 @@ describe("resolveWsUrl", () => {
   });
 
   it("uses the page's own host when the baked address is another IP (the server moved)", async () => {
-    expect(await resolveFor("ws://222.23.213.245:8010", "100.65.199.107")).toBe("ws://100.65.199.107:8010");
+    expect(await resolveFor("ws://198.51.100.9:8010", "203.0.113.7")).toBe("ws://203.0.113.7:8010");
   });
 
   it("replaces a baked localhost when the page is opened from another machine", async () => {
@@ -24,7 +24,7 @@ describe("resolveWsUrl", () => {
   });
 
   it("keeps the configured address when it matches the page host", async () => {
-    expect(await resolveFor("ws://100.65.199.107:8010", "100.65.199.107")).toBe("ws://100.65.199.107:8010");
+    expect(await resolveFor("ws://203.0.113.7:8010", "203.0.113.7")).toBe("ws://203.0.113.7:8010");
   });
 
   it("keeps a real domain name as configured, and switches to wss on https pages", async () => {

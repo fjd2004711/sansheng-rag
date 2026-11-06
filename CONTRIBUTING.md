@@ -1,4 +1,4 @@
-# Contributing to self_correcting_rag
+# 参与贡献（Contributing）
 
 ## Development setup
 
