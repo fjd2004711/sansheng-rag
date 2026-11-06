@@ -111,3 +111,17 @@ Thumbs.db
 
 # Demo video is delivered as a file, not committed (regenerate with docs/demo/build_video.py)
 docs/demo/*.mp4
+# Demo video build products (frames, voice, cards) and the rendered mp4 — regenerate with docs/demo/voice.py,
+# frontend/scripts/demo-record.mjs and docs/demo/compose.py
+docs/demo/build/
+docs/submission/out/*.mp4
+docs/submission/proposal.html
+
+# Local assistant config and scratch (not part of the delivered project)
+.claude/
+CLAUDE.md
+AGENTS.md
+backend/media/
+docs/submission/out/
+docs/submission/shots/
+docs/proposal/*.pptx

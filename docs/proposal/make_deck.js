@@ -11,6 +11,12 @@ const SONG = "Songti SC", KAI = "Kaiti SC";
 const INK = "231F1A", VERM = "A83A2C", STONE = "2F5D73", PINE = "3E6B50", OCHRE = "9A6B1F";
 const BROWN = "6B6257", RULE = "A39886", DEEP = "E7DFCD", SLIP = "F2ECDF", LIGHT = "E8E2D2";
 const TOTAL = 15;
+// every number on the slides comes from docs/submission/data.json (built by docs/submission/build_data.py)
+const D = require(path.join(__dirname, "..", "submission", "data.json"));
+const R = D.by_file, P9 = R["p9-employment-latest.json"], P8 = R["p8-nev-pipeline.json"], P2 = R["p2-nev-parallel.json"];
+const VE = D.verification, SP = D.serial_vs_parallel, EVO = D.nev_evolution;
+const fp = (v) => `${Math.round(v.false_pass.rate * v.false_pass.n)} / ${v.false_pass.n}`;
+const pc = (x) => `${(x * 100).toFixed(1).replace(/\.0$/, "")}%`;
 
 const pres = new pptxgen();
 pres.layout = "LAYOUT_16x9"; // 10 x 5.625 in
@@ -245,28 +251,28 @@ const node = (s, x, y, w, h, text, color, size = 13) => {
 
 // 八　卷三 动态调度与流水线
 {
-  const s = page("卷三　关键技术", "关键技术二：动态调度与逐项流水线并行", "新能源题 {545 秒}内完成 27 个任务、430 次模型调用，并行加速比 {3.48}");
-  figure(s, "live", 0.65, 1.42, 4.05, 1799 / 1264, "就业题运行中：画布与调度时间线实时更新");
+  const s = page("卷三　关键技术", "关键技术二：动态调度与逐项流水线并行", `新能源题 {${P8.wall_seconds} 秒}内完成 ${P8.tasks} 个任务、${P8.llm_calls} 次模型调用，并行度 {${P8.speedup}}`);
+  figure(s, "live", 0.65, 1.42, 4.05, 1799 / 1264, "新能源题运行中：画布与调度时间线实时更新");
   const base = 3.05;
   line(s, 5.35, base, 8.7, base, { width: 0.75 });
-  [["就业", 3.29], ["收入", 2.95], ["新能源", 3.48]].forEach(([k, v], i) => {
+  [["新能源初版", P2.speedup], ["就业最新", P9.speedup], ["新能源最新", P8.speedup]].forEach(([k, v], i) => {
     const x = 5.65 + i * 1.08, h = v * 0.42;
     const c = i === 2 ? VERM : STONE;
     rect(s, x, base - h, 0.62, h, { fill: c, color: c, width: 0.5 });
     T(s, v.toFixed(2), { x: x - 0.2, y: base - h - 0.28, w: 1.02, h: 0.26, fontSize: 12, bold: true, color: c, align: "center", valign: "middle" });
     T(s, k, { x: x - 0.2, y: base + 0.05, w: 1.02, h: 0.24, fontSize: 11.5, align: "center", valign: "middle" });
   });
-  T(s, `图${CN[++figNo]}　三次真实运行的并行加速比（倍）`, { x: 5.0, y: 3.38, w: 4.05, h: 0.24, fontFace: KAI, fontSize: 11, color: BROWN, align: "center", valign: "middle" });
+  T(s, `图${CN[++figNo]}　真实运行的并行度（倍）；串行对照实测加速 ${SP.speedup} 倍`, { x: 5.0, y: 3.38, w: 4.05, h: 0.24, fontFace: KAI, fontSize: 11, color: BROWN, align: "center", valign: "middle" });
   T(s, [
     { text: "资源池分别限流：检索 3 路、模型 6 路；", options: { bullet: { code: "25CB" }, breakLine: true } },
     { text: "下游逐项只等上游对应项，上游失败则对应项明确标为失败。", options: { bullet: { code: "25CB" } } },
   ], { x: 5.25, y: 3.72, w: 3.6, h: 0.85, fontSize: 11.5, valign: "top", paraSpaceAfter: 4 });
-  s.addNotes("关键技术二是动态调度。依赖满足就启动，检索和模型调用各有资源池，失败重试、超时终止，预算分软硬两道线，模型额度耗尽时自动换备用模型。这一轮我们做了逐项流水线：每读完一条就核查一条，下游每一项只等它对应的上游那一项。左图是就业题运行中的真实画面，核查节点正在逐项并行，画布和时间线实时更新；右图是三次真实运行的并行加速比，分别是三点二九、二点九五和三点四八倍。");
+  s.addNotes("关键技术二是动态调度。依赖满足就启动，检索和模型调用各有资源池，失败重试、超时终止，预算分软硬两道线，模型额度耗尽时自动换备用模型。这一轮我们做了逐项流水线：每读完一条就核查一条，下游每一项只等它对应的上游那一项。左图是新能源题运行中的画面，核查节点正在逐项并行，画布和时间线实时更新；右图是真实运行的并行度：新能源题初版约二点五倍，最新的就业题和新能源题都在三点三到三点五倍。同一份定义只把并发改成一，起草阶段实测慢了一倍。");
 }
 
 // 九　卷三 独立核查
 {
-  const s = page("卷三　关键技术", "关键技术三：独立核查——核查员看不到起草者的推理", "合成集误放行 {0/46}，真实网页误放行 {0/15}（改进前为 3/17）");
+  const s = page("卷三　关键技术", "关键技术三：独立核查——核查员看不到起草者的推理", `合成集误放行 {${fp(VE.synthetic)}}，真实网页误放行 {${fp(VE.real)}}`);
   table(s, "说法的四级判定", [
     ["等级", "判定依据"],
     [{ text: "已核实", color: PINE, bold: true }, "权威来源原文支持，或两个以上独立来源一致"],
@@ -282,7 +288,7 @@ const node = (s, x, y, w, h, text, color, size = 13) => {
 
 // 十　卷三 有界自循环
 {
-  const s = page("卷三　关键技术", "关键技术四：有界自循环——只在确实变好时才采纳", "新能源题五次改写中{四次被驳回、一次被采纳}；门槛为已核实说法占比不低于 50%");
+  const s = page("卷三　关键技术", "关键技术四：有界自循环——只在确实变好时才采纳", `新能源题 ${P8.repairs.length} 次改写中{${P8.repairs_rejected} 次被驳回、${P8.repairs_accepted} 次被采纳}；门槛为已核实说法占比不低于 50%`);
   const code = [
     "输入：草稿 D，最大轮次 R，预算 B",
     "1　s ← 质量门(D)",
@@ -300,14 +306,14 @@ const node = (s, x, y, w, h, text, color, size = 13) => {
   line(s, 0.6, 1.78, 5.0, 1.78, { width: 0.6 });
   T(s, code.map((t, i) => ({ text: t, options: { breakLine: i < code.length - 1 } })), { x: 0.65, y: 1.86, w: 4.35, h: 2.5, fontSize: 11.5, valign: "top", lineSpacingMultiple: 1.08 });
   line(s, 0.6, 4.45, 5.0, 4.45, { width: 1.5 });
-  figure(s, "gate", 5.3, 1.42, 3.5, 1799 / 486, "新能源题质量门：首次 34%，修复后 51%");
-  table(s, "三次真实运行的自循环", [
+  figure(s, "gate", 5.3, 1.42, 3.5, 1799 / 486, `新能源题质量门：首次 ${P8.verified_first}%，修复后 ${P8.verified_final}%`);
+  table(s, "真实运行的自循环", [
     ["题目", "首轮已核实", "修复轮次", "终稿已核实"],
-    ["就业", "95%", "0", "95%"],
-    ["收入", "72%", "0", "72%"],
-    ["新能源", "34%", "1", { text: "51%", color: VERM, bold: true }],
+    ["就业最新", `${P9.verified_first}%`, `${P9.repair_rounds}`, `${P9.verified_final}%`],
+    ["新能源初版", `${P2.verified_first}%`, `${P2.repair_rounds}`, `${P2.verified_final}%（未过）`],
+    ["新能源最新", `${P8.verified_first}%`, `${P8.repair_rounds}`, { text: `${P8.verified_final}%`, color: VERM, bold: true }],
   ], 5.3, 2.75, [0.9, 0.9, 0.8, 0.9], { rowH: 0.34 });
-  s.addNotes("关键技术四是有界自循环。算法一给出了流程：质量门不达标，先诊断失败类型，再只修复失败的章节，然后独立复核；只有结果不劣于原稿才采纳。停止条件有三个：达标、预算用到六成、没有进展，再加最大轮次。真实运行里，就业和收入两题首轮就达标，没有多花一次修复；新能源题首轮只有百分之三十四，修复一轮后到百分之五十一，五次改写里四次被驳回、一次被采纳。");
+  s.addNotes("关键技术四是有界自循环。算法一给出了流程：质量门不达标，先诊断失败类型，再只修复失败的章节，然后独立复核；只有结果不劣于原稿才采纳。停止条件有三个：达标、预算用到六成、没有进展，再加最大轮次。真实运行里，最新的就业题首轮就达标，没有多花一次修复；新能源题首轮只有百分之三十四，修复一轮后到百分之五十一，五次改写里四次被驳回、一次被采纳。新能源题的初版修了两轮仍没达标，平台就如实标注未达标后交付。");
 }
 
 // 十一　卷四 资料问答
@@ -322,25 +328,27 @@ const node = (s, x, y, w, h, text, color, size = 13) => {
 {
   const s = page("卷四　实现与实验", "系统实现（二）：调研报告——逐条分级，图表由数据生成", "每章标注已核实说法数；图表随正文{导出 PDF 与 Word}");
   figure(s, "report-top", 0.65, 1.42, 4.1, 1799 / 1264, "报告首页：核实分级与核心结论");
-  figure(s, "report-diagrams", 5.4, 1.42, 2.6, 1080 / 1190, "报告结构与证据核实图");
-  s.addNotes("调研报告跑的是同一套编排引擎。左图是新能源报告的首页，顶部是这次运行的耗时、任务数、并行度和核实比例，标题下是已核实、单一来源、有争议的数量。右图是由数据自动生成的报告结构与证据核实图，每一章标出已核实的说法数。报告可以导出 PDF 和 Word，图随正文一起走。");
+  figure(s, "report-diagrams", 5.4, 1.42, 2.6, 1080 / 1190, "综合研判与行动建议");
+  s.addNotes("调研报告跑的是同一套编排引擎。左图是新能源报告的首页，顶部是这次运行的耗时、任务数、并行度和核实比例，标题下是已核实、单一来源、有争议的数量。右图是综合研判与行动建议：每条判断写明把握程度，每条建议标出依据强度、前提与风险。报告可以导出 PDF 和 Word，图随正文一起走。");
 }
 
 // 十三　卷四 实验结果
 {
-  const s = page("卷四　实现与实验", "实验结果：核查零误放行，三次真实运行加速 2.95–3.48 倍", "后端测试 487 项通过（4 项跳过），端到端界面用例 18 个；样本量有限，置信区间见方案书");
+  const s = page("卷四　实现与实验", `实验结果：核查零误放行，最新运行并行度 ${P9.speedup}–${P8.speedup} 倍`, `后端测试 ${D.tests.backend_passed} 项通过（${D.tests.backend_skipped} 项跳过），前端单元测试 ${D.tests.frontend_passed} 项；样本量有限，置信区间见方案书`);
   table(s, "核查评测", [
     ["数据集", "样本", "等级准确率", "误放行", "抽取召回"],
-    ["合成集", "48 例 / 100 条说法", "97.7%", { text: "0 / 46", color: VERM, bold: true }, "88%"],
-    ["真实网页", "28 例 / 60 条说法", "100%（n=46）", { text: "0 / 15", color: VERM, bold: true }, "76.7%"],
+    ["合成集", `${VE.synthetic.cases} 例 / ${VE.synthetic.gold_claims} 条说法`, pc(VE.synthetic.level_accuracy.rate), { text: fp(VE.synthetic), color: VERM, bold: true }, pc(VE.synthetic.extraction_recall.rate)],
+    ["真实网页", `${VE.real.cases} 例 / ${VE.real.gold_claims} 条说法`, `${pc(VE.real.level_accuracy.rate)}（n=${VE.real.level_accuracy.n}）`, { text: fp(VE.real), color: VERM, bold: true }, pc(VE.real.extraction_recall.rate)],
   ], 0.6, 1.38, [1.3, 2.2, 1.65, 1.4, 1.7], { rowH: 0.36 });
-  table(s, "三次真实运行", [
-    ["题目", "耗时", "任务", "模型调用", "token", "并行加速比"],
-    ["2025 届高校毕业生就业", "379 秒", "23", "244", "427,689", "3.29"],
-    ["2025 年居民人均可支配收入", "436 秒", "21", "265", "559,151", "2.95"],
-    ["2025 年新能源汽车销量", "545 秒", "27", "430", "778,209", { text: "3.48", color: VERM, bold: true }],
+  const row = (name, r, hi) => [name, `${r.wall_seconds} 秒`, `${r.tasks}`, `${r.llm_calls}`, r.tokens.toLocaleString("en-US"),
+    hi ? { text: `${r.speedup}`, color: VERM, bold: true } : `${r.speedup}`];
+  table(s, "真实运行（同一新能源题：初版与最新版）", [
+    ["题目", "耗时", "任务", "模型调用", "token", "并行度"],
+    row("2025 届高校毕业生就业（最新）", P9),
+    row("新能源汽车销量（初版）", P2),
+    row("新能源汽车销量（最新）", P8, true),
   ], 0.6, 2.9, [2.75, 1.0, 0.8, 1.1, 1.3, 1.3], { rowH: 0.33 });
-  s.addNotes("实验结果全部由评测脚本生成。表五是核查评测：合成集一百条说法，等级准确率百分之九十七点七，误放行为零；真实网页六十条说法，误放行也为零，改进前是十七条里放过三条。抽取召回在七十七到八十八之间，是我们承认的短板。表六是三次真实运行的耗时、任务数、模型调用和并行加速比。另外后端四百八十七项测试通过，端到端界面用例十八个。");
+  s.addNotes("实验结果全部由评测脚本生成。表五是核查评测：合成集一百条说法，等级准确率百分之九十七点七，误放行为零；真实网页六十条说法，误放行也为零，改进前是十七条里放过三条。抽取召回在七十七到八十八之间，是我们承认的短板。表六是真实运行的耗时、任务数、模型调用和并行度：同一个新能源题，从初版的二十二分钟降到九分钟。另外后端四百八十七项测试全部通过。");
 }
 
 // 十四　卷五 创新与不足
@@ -348,7 +356,7 @@ const node = (s, x, y, w, h, text, color, size = 13) => {
   const s = page("卷五　创新与展望", "创新点与不足", "可信不靠事后检查，而是{平台的默认行为}");
   [
     ["起草与审核分权", "核查员看不到起草推理，只凭证据判断。"],
-    ["逐项流水线并行", "读完一条核查一条，加速 2.95–3.48 倍。"],
+    ["逐项流水线并行", `写完一章核查一章，并行度 ${P9.speedup}–${P8.speedup} 倍。`],
     ["有界自循环", "先诊断再修复，不劣才采纳，三重停止条件。"],
     ["声明式且可回放", "YAML 定义、导入即校验，全程事件可回放。"],
   ].forEach(([head, body], i) => {

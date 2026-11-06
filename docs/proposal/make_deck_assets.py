@@ -11,7 +11,7 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 HERE = Path(__file__).parent
 OUT = HERE / "deck_assets"
-SHOTS = HERE / "shots"
+SHOTS = HERE.parent / "submission" / "shots"  # 1920x1080 captures at 2x, from frontend/scripts/submission-capture.mjs
 W, H = 1920, 1080
 PAPER = (242, 236, 223)
 INDIGO = (40, 52, 78)
@@ -20,17 +20,18 @@ VERMILION = (168, 58, 44)
 THREAD = (232, 226, 210)
 SONGTI = "/System/Library/Fonts/Supplemental/Songti.ttc"
 
-# name -> (source screenshot, crop box in its pixels); None keeps the whole image
+# name -> (source screenshot, crop box in CSS px of the 1920x1080 capture)
 FIGURES = {
-    "spec-yaml": ("spec-yaml.png", (361, 86, 2160, 1350)),
-    "live": ("c-live.png", None),
-    "gate": ("c-gate.png", None),
-    "inspector": ("orch-inspector.png", (1640, 230, 2160, 880)),
-    "chat-answer": ("chat-answer.png", None),
-    "chat-trace": ("chat-trace.png", (1150, 0, 2160, 1350)),
-    "report-top": ("report-orch-top.png", (361, 86, 2160, 1350)),
-    "report-diagrams": ("report-diagrams.png", (900, 160, 1980, 1350)),
-    "about": ("about.png", (715, 390, 1492, 1002)),
+    "spec-yaml": ("spec-graph.png", (330, 0, 1867, 1080)),
+    "live": ("run-live.png", (330, 0, 1867, 1080)),
+    "gate": ("gate-first.png", (330, 95, 1920, 525)),
+    "inspector": ("inspector.png", (1588, 108, 1912, 513)),
+    "report-top": ("report-top.png", (380, 56, 1830, 1075)),
+    "report-diagrams": ("report-synthesis.png", (860, 100, 1620, 938)),
+    "about": ("about.png", (700, 338, 1220, 746)),
+    # the chat module needs the real backend: captured from the local dev stack (an existing test conversation)
+    "chat-answer": ("chat-answer.png", (330, 0, 1570, 775)),
+    "chat-trace": ("chat-trace.png", (1250, 0, 1920, 896)),
 }
 
 
@@ -112,13 +113,15 @@ def seal(size: int = 480) -> Image.Image:
 def figures() -> None:
     (OUT / "fig").mkdir(parents=True, exist_ok=True)
     for name, (src, box) in FIGURES.items():
-        im = Image.open(SHOTS / src).convert("RGB")
-        (im.crop(box) if box else im).save(OUT / "fig" / f"{name}.png")
+        im = Image.open(SHOTS / src).convert("RGB").crop(tuple(v * 2 for v in box))
+        im.save(OUT / "fig" / f"{name}.png", optimize=True)
 
 
 if __name__ == "__main__":
     OUT.mkdir(exist_ok=True)
     for old in OUT.glob("*.png"):
+        old.unlink()
+    for old in (OUT / "fig").glob("*.png"):
         old.unlink()
     textured(PAPER, seed=7, fibres=700, amp=40).save(OUT / "paper.png")
     cover().save(OUT / "cover.png")
