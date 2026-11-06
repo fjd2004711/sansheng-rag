@@ -69,7 +69,6 @@ cd frontend && npm run type-check && npm run lint && npm run build
 
 | 文件 | 内容 |
 |---|---|
-| [HANDOFF_FOR_CLAUDE.md](HANDOFF_FOR_CLAUDE.md) | 当前真实状态、已知问题、下一步 |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | 冻结架构与不可破坏的边界 |
 | [ROADMAP.md](ROADMAP.md)、`docs/P*_ACCEPTANCE.md` | P0–P5 阶段门控 |
 | [docs/ORCHESTRATION.md](docs/ORCHESTRATION.md) | 编排平台的实现说明、实测与不足 |
@@ -77,3 +76,9 @@ cd frontend && npm run type-check && npm run lint && npm run build
 | [docs/proposal/](docs/proposal/) | 初赛方案书（PDF，含系统截图） |
 | [ENV_VARS.md](ENV_VARS.md) | 环境变量 |
 | [UPSTREAM.md](UPSTREAM.md) | 底座模板来源 |
+
+## 作者与许可
+
+作者：[fjd2004711](https://github.com/fjd2004711)（唯一贡献者）。
+
+本项目以 [MIT 许可证](LICENSE) 发布。工程底座基于 [full-stack-ai-agent-template](https://github.com/vstorm-co/full-stack-ai-agent-template)（MIT），详见 [UPSTREAM.md](UPSTREAM.md)。
