@@ -1,4 +1,17 @@
-# 三省：基于 LangChain 的可解释自纠错 RAG Agent 与多智能体编排平台
+<p align="center">
+  <img src="docs/assets/logo.svg" width="104" alt="三省 logo">
+</p>
+
+<h1 align="center">三省</h1>
+
+<p align="center"><strong>基于 LangChain 的可解释自纠错 RAG Agent 与多智能体编排平台</strong></p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/LangChain-LangGraph-1C3C3C?logo=langchain&logoColor=white" alt="LangChain">
+  <img src="https://img.shields.io/badge/FastAPI-PostgreSQL%20%7C%20Qdrant-009688?logo=fastapi&logoColor=white" alt="FastAPI">
+  <img src="https://img.shields.io/badge/Next.js-15-000000?logo=nextdotjs&logoColor=white" alt="Next.js 15">
+  <img src="https://img.shields.io/badge/License-MIT-60B932" alt="MIT license">
+</p>
 
 > **三省（Sansheng）**：起草、审核、执行，各司其职。名字取自唐代三省制——中书省起草诏令，门下省审核并可“封驳”（退回），尚书省执行；写的人不审，审的人不写。对应到系统里：规划师、撰稿人、分析师负责起草；独立核查员与质量门负责审核并打回；调度器、检索员、修复员、主编负责执行。界面顶部名字旁的“ⓘ”可以看到这段说明。
 
@@ -77,8 +90,6 @@ cd frontend && npm run type-check && npm run lint && npm run build
 | [ENV_VARS.md](ENV_VARS.md) | 环境变量 |
 | [UPSTREAM.md](UPSTREAM.md) | 底座模板来源 |
 
-## 作者与许可
-
-作者：[fjd2004711](https://github.com/fjd2004711)（唯一贡献者）。
+## 许可
 
 本项目以 [MIT 许可证](LICENSE) 发布。工程底座基于 [full-stack-ai-agent-template](https://github.com/vstorm-co/full-stack-ai-agent-template)（MIT），详见 [UPSTREAM.md](UPSTREAM.md)。
