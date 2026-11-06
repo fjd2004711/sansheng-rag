@@ -7,8 +7,8 @@
 <p align="center"><strong>基于 LangChain 的可解释自纠错 RAG Agent 与多智能体编排平台</strong></p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/LangChain-LangGraph-1C3C3C?logo=langchain&logoColor=white" alt="LangChain">
-  <img src="https://img.shields.io/badge/FastAPI-PostgreSQL%20%7C%20Qdrant-009688?logo=fastapi&logoColor=white" alt="FastAPI">
+  <img src="https://img.shields.io/badge/LangChain-LangGraph-1C3C3C" alt="LangChain">
+  <img src="https://img.shields.io/badge/FastAPI-Qdrant_%2B_PostgreSQL-009688" alt="FastAPI">
   <img src="https://img.shields.io/badge/Next.js-15-000000?logo=nextdotjs&logoColor=white" alt="Next.js 15">
   <img src="https://img.shields.io/badge/License-MIT-60B932" alt="MIT license">
 </p>
@@ -16,6 +16,46 @@
 > **三省（Sansheng）**：起草、审核、执行，各司其职。名字取自唐代三省制——中书省起草诏令，门下省审核并可“封驳”（退回），尚书省执行；写的人不审，审的人不写。对应到系统里：规划师、撰稿人、分析师负责起草；独立核查员与质量门负责审核并打回；调度器、检索员、修复员、主编负责执行。界面顶部名字旁的“ⓘ”可以看到这段说明。
 
 回答可追溯到 `claim -> evidence -> source`；检索或生成失败时，先诊断失败类型，再选择重检索、Query Rewrite、问题拆解、重生成或拒答，且所有纠错循环都有最大轮数限制。
+
+## 系统架构
+
+<p align="center">
+  <img src="docs/assets/architecture.svg" width="860" alt="三省系统总体架构">
+</p>
+
+前端不读调度器内存，一切状态由结构化事件日志推导，所以任何一次运行都能事后完整回放。分层说明见 [ARCHITECTURE.md](ARCHITECTURE.md) 与 [docs/ORCHESTRATION.md](docs/ORCHESTRATION.md)。
+
+## 可解释自纠错
+
+<p align="center">
+  <img src="docs/assets/correction-loop.svg" width="860" alt="自纠错回答流程">
+</p>
+
+回答不过关时不盲目重试：先诊断是证据不足、问题表述不清、生成幻觉还是回答不完整，再选择重检索、Query 改写、问题拆解、重生成或拒答；所有回路都有最大轮数。LangGraph 只负责这里的状态、条件路由和有界循环，不承载领域逻辑。
+
+## 三省分立
+
+<p align="center">
+  <img src="docs/assets/three-provinces.svg" width="860" alt="三省分立">
+</p>
+
+多智能体编排平台把“写的人不审，审的人不写”做成了硬约束：核查员只能读草稿与证据，不能读写作者的推理，工作流定义里写成可读推理会在导入时被直接拒绝。
+
+## 界面一览
+
+| 运行画布 | 调度时间线与质量门 |
+|---|---|
+| ![运行中的画布](docs/submission/fig/shots/run-live.jpg) | ![质量门](docs/submission/fig/shots/gate-first.jpg) |
+| **节点检查器** | **事实核查** |
+| ![节点检查器](docs/submission/fig/shots/inspector.jpg) | ![事实核查](docs/submission/fig/shots/fact-check.jpg) |
+| **工作流定义（YAML）** | **报告阅读** |
+| ![工作流定义](docs/submission/fig/shots/spec-graph.jpg) | ![报告阅读](docs/submission/fig/shots/report-top.jpg) |
+
+## 实测
+
+- 同一主题的报告，串行 875 秒，并行编排 435 秒，约 **2.0 倍**加速。
+- 后端 487 项测试通过，前端 67 项通过。
+- 所有指标由评测脚本从保存的运行记录生成，不手写；汇总见 [docs/submission/data.json](docs/submission/data.json)。
 
 ## 技术栈
 

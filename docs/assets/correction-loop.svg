@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 560" width="920" height="560" font-family="Songti SC, STSong, Noto Serif CJK SC, SimSun, serif">
+<rect width="920" height="560" fill="#F3EEE3"/>
+<rect x="8" y="8" width="904" height="544" fill="none" stroke="#2B2620" stroke-width="2"/>
+<rect x="14" y="14" width="892" height="532" fill="none" stroke="#2B2620" stroke-width="0.6"/>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#2B2620"/></marker><marker id="r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#A83A2C"/></marker></defs>
+<text x="460.0" y="48" font-size="22" fill="#2B2620" text-anchor="middle" font-weight="bold">可解释自纠错回答流程</text>
+<text x="460.0" y="70" font-size="12.5" fill="#7A7064" text-anchor="middle" font-weight="normal">先诊断失败类型，再选择纠错动作；每条回路都有最大轮数</text>
+<rect x="430.0" y="78" width="60" height="2" fill="#A83A2C"/>
+<rect x="40" y="110" width="120" height="54" fill="#FAF6EC" stroke="#2B2620" stroke-width="1.4"/>
+<rect x="43" y="113" width="114" height="48" fill="none" stroke="#2B2620" stroke-width="0.5"/>
+<text x="100.0" y="142.0" font-size="15" fill="#2B2620" text-anchor="middle" font-weight="bold">用户问题</text>
+<rect x="200" y="110" width="160" height="54" fill="#FAF6EC" stroke="#2B2620" stroke-width="1.4"/>
+<rect x="203" y="113" width="154" height="48" fill="none" stroke="#2B2620" stroke-width="0.5"/>
+<text x="280.0" y="134.0" font-size="15" fill="#2B2620" text-anchor="middle" font-weight="bold">混合检索</text>
+<text x="280.0" y="152.0" font-size="11.5" fill="#7A7064" text-anchor="middle" font-weight="normal">Dense + BM25 → RRF → 重排</text>
+<rect x="400" y="110" width="150" height="54" fill="#FAF6EC" stroke="#2B2620" stroke-width="1.4"/>
+<rect x="403" y="113" width="144" height="48" fill="none" stroke="#2B2620" stroke-width="0.5"/>
+<text x="475.0" y="134.0" font-size="15" fill="#2B2620" text-anchor="middle" font-weight="bold">证据评审</text>
+<text x="475.0" y="152.0" font-size="11.5" fill="#7A7064" text-anchor="middle" font-weight="normal">相关性 · 充分性</text>
+<rect x="590" y="110" width="130" height="54" fill="#FAF6EC" stroke="#2B2620" stroke-width="1.4"/>
+<rect x="593" y="113" width="124" height="48" fill="none" stroke="#2B2620" stroke-width="0.5"/>
+<text x="655.0" y="134.0" font-size="15" fill="#2B2620" text-anchor="middle" font-weight="bold">生成回答</text>
+<text x="655.0" y="152.0" font-size="11.5" fill="#7A7064" text-anchor="middle" font-weight="normal">claim → evidence</text>
+<rect x="760" y="110" width="120" height="54" fill="#FAF6EC" stroke="#2B2620" stroke-width="1.4"/>
+<rect x="763" y="113" width="114" height="48" fill="none" stroke="#2B2620" stroke-width="0.5"/>
+<text x="820.0" y="134.0" font-size="15" fill="#2B2620" text-anchor="middle" font-weight="bold">回答验证</text>
+<text x="820.0" y="152.0" font-size="11.5" fill="#7A7064" text-anchor="middle" font-weight="normal">逐条 claim 核对</text>
+<line x1="160" y1="137" x2="200" y2="137" stroke="#2B2620" stroke-width="1.4" marker-end="url(#a)"/>
+<line x1="360" y1="137" x2="400" y2="137" stroke="#2B2620" stroke-width="1.4" marker-end="url(#a)"/>
+<line x1="550" y1="137" x2="590" y2="137" stroke="#2B2620" stroke-width="1.4" marker-end="url(#a)"/>
+<line x1="720" y1="137" x2="760" y2="137" stroke="#2B2620" stroke-width="1.4" marker-end="url(#a)"/>
+<rect x="330" y="250" width="260" height="60" fill="#FAF6EC" stroke="#A83A2C" stroke-width="1.4"/>
+<rect x="333" y="253" width="254" height="54" fill="none" stroke="#A83A2C" stroke-width="0.5"/>
+<text x="460.0" y="277.0" font-size="15" fill="#2B2620" text-anchor="middle" font-weight="bold">失败诊断</text>
+<text x="460.0" y="295.0" font-size="11.5" fill="#7A7064" text-anchor="middle" font-weight="normal">判定失败类型，再选纠错动作</text>
+<line x1="475" y1="164" x2="475" y2="250" stroke="#A83A2C" stroke-width="1.4" marker-end="url(#r)"/>
+<text x="487" y="215" font-size="11" fill="#A83A2C" text-anchor="start" font-weight="normal">证据不足 / 不相关</text>
+<line x1="820" y1="164" x2="820" y2="280" stroke="#A83A2C" stroke-width="1.4" marker-end="url(#r)"/>
+<path d="M820 280 L590 280" stroke="#A83A2C" stroke-width="1.4" fill="none" marker-end="url(#r)"/>
+<text x="832" y="215" font-size="11" fill="#A83A2C" text-anchor="start" font-weight="normal">幻觉 / 不完整</text>
+<rect x="40" y="400" width="150" height="56" fill="#FAF6EC" stroke="#2B2620" stroke-width="1.4"/>
+<rect x="43" y="403" width="144" height="50" fill="none" stroke="#2B2620" stroke-width="0.5"/>
+<text x="115.0" y="425.0" font-size="15" fill="#2B2620" text-anchor="middle" font-weight="bold">重检索</text>
+<text x="115.0" y="443.0" font-size="11.5" fill="#7A7064" text-anchor="middle" font-weight="normal">扩大 Top-K / 换策略</text>
+<line x1="460" y1="310" x2="115" y2="400" stroke="#A83A2C" stroke-width="1.4" marker-end="url(#r)"/>
+<rect x="205" y="400" width="150" height="56" fill="#FAF6EC" stroke="#2B2620" stroke-width="1.4"/>
+<rect x="208" y="403" width="144" height="50" fill="none" stroke="#2B2620" stroke-width="0.5"/>
+<text x="280.0" y="425.0" font-size="15" fill="#2B2620" text-anchor="middle" font-weight="bold">Query 改写</text>
+<text x="280.0" y="443.0" font-size="11.5" fill="#7A7064" text-anchor="middle" font-weight="normal">补全指代与关键词</text>
+<line x1="460" y1="310" x2="280" y2="400" stroke="#A83A2C" stroke-width="1.4" marker-end="url(#r)"/>
+<rect x="370" y="400" width="150" height="56" fill="#FAF6EC" stroke="#2B2620" stroke-width="1.4"/>
+<rect x="373" y="403" width="144" height="50" fill="none" stroke="#2B2620" stroke-width="0.5"/>
+<text x="445.0" y="425.0" font-size="15" fill="#2B2620" text-anchor="middle" font-weight="bold">问题拆解</text>
+<text x="445.0" y="443.0" font-size="11.5" fill="#7A7064" text-anchor="middle" font-weight="normal">子问题分别检索</text>
+<line x1="460" y1="310" x2="445" y2="400" stroke="#A83A2C" stroke-width="1.4" marker-end="url(#r)"/>
+<rect x="535" y="400" width="150" height="56" fill="#FAF6EC" stroke="#2B2620" stroke-width="1.4"/>
+<rect x="538" y="403" width="144" height="50" fill="none" stroke="#2B2620" stroke-width="0.5"/>
+<text x="610.0" y="425.0" font-size="15" fill="#2B2620" text-anchor="middle" font-weight="bold">重生成</text>
+<text x="610.0" y="443.0" font-size="11.5" fill="#7A7064" text-anchor="middle" font-weight="normal">带上被打回的原因</text>
+<line x1="460" y1="310" x2="610" y2="400" stroke="#A83A2C" stroke-width="1.4" marker-end="url(#r)"/>
+<rect x="700" y="400" width="150" height="56" fill="#FAF6EC" stroke="#2B2620" stroke-width="1.4"/>
+<rect x="703" y="403" width="144" height="50" fill="none" stroke="#2B2620" stroke-width="0.5"/>
+<text x="775.0" y="425.0" font-size="15" fill="#2B2620" text-anchor="middle" font-weight="bold">拒答</text>
+<text x="775.0" y="443.0" font-size="11.5" fill="#7A7064" text-anchor="middle" font-weight="normal">知识库没有答案</text>
+<line x1="460" y1="310" x2="775" y2="400" stroke="#A83A2C" stroke-width="1.4" marker-end="url(#r)"/>
+<path d="M115 400 V200 H280 V164" stroke="#2B2620" stroke-width="1.2" fill="none" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<path d="M690 400 V164" stroke="#2B2620" stroke-width="1.2" fill="none" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<text x="125" y="330" font-size="11.5" fill="#7A7064" text-anchor="start" font-weight="normal">回到检索</text>
+<text x="125" y="346" font-size="11.5" fill="#7A7064" text-anchor="start" font-weight="normal">（最多 N 轮）</text>
+<text x="698" y="190" font-size="11.5" fill="#7A7064" text-anchor="start" font-weight="normal">回到生成与验证</text>
+<text x="698" y="206" font-size="11.5" fill="#7A7064" text-anchor="start" font-weight="normal">（最多 M 轮）</text>
+<text x="460.0" y="540" font-size="12" fill="#A83A2C" text-anchor="middle" font-weight="normal">达到最大轮数仍不过关 → 拒答并说明原因；全过程以结构化事件记录，供界面逐步回放</text>
+</svg>
