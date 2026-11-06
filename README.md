@@ -57,30 +57,19 @@
 
 ### 调研报告预览
 
-下面是系统自动生成的《2025年中国新能源汽车销量与渗透率调研报告》前三页（共 16 页，来源 49 个网页，逐条核验 67 条说法）：核心结论、数据表、带 `[n]` 编号的来源引用，以及“单一来源 / 有争议”等核验标注。
+下面是系统自动生成的《2025届高校毕业生规模与就业情况权威数据分析报告》（共 22 页，来源 34 个网页，逐条核验 93 条说法：已核实 91 条）。正文带 `[n]` 来源编号，图表由数据自动生成：报告结构与证据核实图、关键数据时间线、分指标对比柱状图。
 
-| 第 1 页 | 第 2 页 | 第 3 页 |
+| 第 1 页：核心结论与结构图 | 第 2 页：数据时间线 | 第 8 页：对比图表 |
 |---|---|---|
-| ![报告第 1 页](docs/assets/report-page-01.jpg) | ![报告第 2 页](docs/assets/report-page-02.jpg) | ![报告第 3 页](docs/assets/report-page-03.jpg) |
+| ![报告第 1 页](docs/assets/report-chart-01.jpg) | ![报告第 2 页](docs/assets/report-chart-02.jpg) | ![报告第 8 页](docs/assets/report-chart-08.jpg) |
 
 | 产物 | 说明 |
 |---|---|
-| [nev-report.pdf](artifacts/reports/nev-report.pdf) · [nev-report.docx](artifacts/reports/nev-report.docx) | 上面这份报告的 PDF 与 Word 导出 |
-| [report-sample-2025-employment.md](artifacts/report-sample-2025-employment.md) | 另一份报告：2025 届大学生就业状况（Markdown，含“需要留意的说法”） |
+| [employment-report.pdf](artifacts/reports/employment-report.pdf) · [employment-report.docx](artifacts/reports/employment-report.docx) | 上面这份报告的 PDF 与 Word 导出（含图） |
+| [nev-report.pdf](artifacts/reports/nev-report.pdf) · [nev-report.docx](artifacts/reports/nev-report.docx) | 另一份：2025 年新能源汽车销量与渗透率 |
+| [report-sample-2025-employment.md](artifacts/report-sample-2025-employment.md) | Markdown 版报告，含“需要留意的说法” |
 | [artifacts/orchestration-runs/](artifacts/orchestration-runs/) | 13 次真实运行的完整事件记录（含串行与并行对照），可在界面回放 |
 | [artifacts/p5-evaluation-report.json](artifacts/p5-evaluation-report.json) 等 | 各阶段门控与评测报告，由脚本生成 |
-| [docs/proposal/三省-初赛方案书.pdf](docs/proposal/三省-初赛方案书.pdf) | 初赛方案书 |
-| [docs/proposal/三省-方案讲解.pdf](docs/proposal/三省-方案讲解.pdf) | 方案讲解 PPT 的 PDF 版 |
-
-### 方案讲解 PPT 预览
-
-15 页，线装书风格：靛蓝封面、卷轴目录、双线边框、宋体正文配楷体批注，所有数字取自真实运行。完整版见 [docs/proposal/三省-方案讲解.pdf](docs/proposal/三省-方案讲解.pdf)。
-
-| | |
-|---|---|
-| ![封面](docs/assets/slide-01.jpg) | ![目录](docs/assets/slide-02.jpg) |
-| ![三省分权](docs/assets/slide-04.jpg) | ![总体设计](docs/assets/slide-05.jpg) |
-| ![关键技术：动态调度](docs/assets/slide-08.jpg) | ![调研报告](docs/assets/slide-11.jpg) |
 
 ## 实测
 
