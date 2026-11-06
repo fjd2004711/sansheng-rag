@@ -51,6 +51,27 @@
 | **工作流定义（YAML）** | **报告阅读** |
 | ![工作流定义](docs/submission/fig/shots/spec-graph.jpg) | ![报告阅读](docs/submission/fig/shots/report-top.jpg) |
 
+## 生成产物
+
+系统一次运行的产物都在仓库里，评委可以直接打开，不必先部署。
+
+### 调研报告预览
+
+下面是系统自动生成的《2025年中国新能源汽车销量与渗透率调研报告》前三页（共 16 页，来源 49 个网页，逐条核验 67 条说法）：核心结论、数据表、带 `[n]` 编号的来源引用，以及“单一来源 / 有争议”等核验标注。
+
+| 第 1 页 | 第 2 页 | 第 3 页 |
+|---|---|---|
+| ![报告第 1 页](docs/assets/report-page-01.jpg) | ![报告第 2 页](docs/assets/report-page-02.jpg) | ![报告第 3 页](docs/assets/report-page-03.jpg) |
+
+| 产物 | 说明 |
+|---|---|
+| [nev-report.pdf](artifacts/reports/nev-report.pdf) · [nev-report.docx](artifacts/reports/nev-report.docx) | 上面这份报告的 PDF 与 Word 导出 |
+| [report-sample-2025-employment.md](artifacts/report-sample-2025-employment.md) | 另一份报告：2025 届大学生就业状况（Markdown，含“需要留意的说法”） |
+| [artifacts/orchestration-runs/](artifacts/orchestration-runs/) | 13 次真实运行的完整事件记录（含串行与并行对照），可在界面回放 |
+| [artifacts/p5-evaluation-report.json](artifacts/p5-evaluation-report.json) 等 | 各阶段门控与评测报告，由脚本生成 |
+| [docs/proposal/三省-初赛方案书.pdf](docs/proposal/三省-初赛方案书.pdf) | 初赛方案书 |
+| [docs/proposal/三省-方案讲解.pdf](docs/proposal/三省-方案讲解.pdf) | 方案讲解 PPT 的 PDF 版 |
+
 ## 实测
 
 - 同一主题的报告，串行 875 秒，并行编排 435 秒，约 **2.0 倍**加速。
