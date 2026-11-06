@@ -57,17 +57,17 @@
 
 ### 调研报告预览
 
-下面是系统自动生成的《2025届高校毕业生规模与就业情况权威数据分析报告》（共 22 页，来源 34 个网页，逐条核验 93 条说法：已核实 91 条）。正文带 `[n]` 来源编号，图表由数据自动生成：报告结构与证据核实图、关键数据时间线、分指标对比柱状图。
+下面是系统在 `/reports` 页面里的阅读效果：《2025届中国大学生就业状况调研报告（基于权威公开数据）》，阅读网页 37 个，数据点 53 条（均与原文逐字核对），逐条核验 95 条说法：已核实 64 条、单一来源 31 条。正文带 `[n]` 来源编号，数据表逐格标注来源，趋势图由核对过的数据自动生成，每章标题旁显示该章的核验统计。
 
-| 第 1 页：核心结论与结构图 | 第 2 页：数据时间线 | 第 8 页：对比图表 |
+| 核心结论与数据表 | 趋势图：毕业去向落实率 | 趋势图：青年失业率 |
 |---|---|---|
-| ![报告第 1 页](docs/assets/report-chart-01.jpg) | ![报告第 2 页](docs/assets/report-chart-02.jpg) | ![报告第 8 页](docs/assets/report-chart-08.jpg) |
+| ![报告阅读页](docs/assets/report-view-1.jpg) | ![落实率趋势图](docs/assets/report-view-2.jpg) | ![失业率趋势图](docs/assets/report-view-3.jpg) |
 
 | 产物 | 说明 |
 |---|---|
-| [employment-report.pdf](artifacts/reports/employment-report.pdf) · [employment-report.docx](artifacts/reports/employment-report.docx) | 上面这份报告的 PDF 与 Word 导出（含图） |
+| [employment-report.pdf](artifacts/reports/employment-report.pdf) · [employment-report.docx](artifacts/reports/employment-report.docx) | 另一份就业报告（2025 届高校毕业生规模与就业情况，93 条说法）的 PDF 与 Word 导出，含图 |
 | [nev-report.pdf](artifacts/reports/nev-report.pdf) · [nev-report.docx](artifacts/reports/nev-report.docx) | 另一份：2025 年新能源汽车销量与渗透率 |
-| [report-sample-2025-employment.md](artifacts/report-sample-2025-employment.md) | Markdown 版报告，含“需要留意的说法” |
+| [report-sample-2025-employment.md](artifacts/report-sample-2025-employment.md) | 上面这份报告的 Markdown 版，含“需要留意的说法” |
 | [artifacts/orchestration-runs/](artifacts/orchestration-runs/) | 13 次真实运行的完整事件记录（含串行与并行对照），可在界面回放 |
 | [artifacts/p5-evaluation-report.json](artifacts/p5-evaluation-report.json) 等 | 各阶段门控与评测报告，由脚本生成 |
 
