@@ -2,14 +2,19 @@
 
 Lets the front end be designed and screenshotted against real data without a database, search service or model.
 Usage: uv run uvicorn scripts.orch_mock_server:app --port 8010   (then BACKEND_URL=http://localhost:8010 for Next.js)
+
+Starting a run (POST /runs) replays a saved run from now on, ORCH_MOCK_SPEED times faster than it really ran (default
+15), so the live canvas, timeline and quality gate can be recorded for the demo video.
 """
 
 from __future__ import annotations
 
 import json
+import os
+import time
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from uuid import NAMESPACE_URL, uuid5
+from uuid import NAMESPACE_URL, uuid4, uuid5
 
 from fastapi import FastAPI, HTTPException
 
@@ -23,17 +28,36 @@ RUNS_DIR = Path(__file__).resolve().parents[2] / "artifacts" / "orchestration-ru
 app = FastAPI()
 _BUNDLES = builtin_bundles()
 _FILES = {
-    "p1-employment-parallel.json": "verified-report",
-    "p2-nev-parallel.json": "verified-report",
+    "p9-employment-latest.json": "verified-report",
+    "p8-nev-pipeline.json": "verified-report",
+    "p3-nev-parallel.json": "verified-report",
     "s1-employment-serial.json": "verified-report-serial",
     "f1-fact-check.json": "fact-check",
     "p0-employment-old-loop.json": "verified-report",
 }
+_REPLAY_SOURCE = {"fact-check": "f1-fact-check.json"}
+_REPLAY_DEFAULT = "p8-nev-pipeline.json"
+_SPEED = float(os.environ.get("ORCH_MOCK_SPEED", "15"))
+_replays: list[dict] = []  # {"id", "file", "spec", "topic", "started"}
+
+
+def _replayed(r: dict) -> dict:
+    data = json.loads((RUNS_DIR / r["file"]).read_text(encoding="utf-8"))
+    elapsed = (time.monotonic() - r["started"]) * _SPEED
+    end = max(e["t"] for e in data["events"])
+    now = datetime.now(UTC)
+    data.update(id=r["id"], spec_name=r["spec"], topic=r["topic"] or data["topic"])
+    data["created_at"] = (now - timedelta(seconds=min(elapsed, end))).isoformat()
+    data["updated_at"] = now.isoformat()
+    if elapsed < end:
+        data["events"] = [e for e in data["events"] if e["t"] <= elapsed]
+        data.update(status="running", progress=min(99, int(elapsed / end * 100)), stage="运行中", result=None, metrics=None)
+    return data
 
 
 def _runs() -> list[dict]:
-    out = []
     now = datetime.now(UTC)
+    out = [_replayed(r) for r in reversed(_replays)]
     for i, (name, spec) in enumerate(_FILES.items()):
         data = json.loads((RUNS_DIR / name).read_text(encoding="utf-8"))
         data["id"] = str(uuid5(NAMESPACE_URL, name))
@@ -90,6 +114,15 @@ def validate(body: dict) -> dict:
 def runs() -> dict:
     items = [{k: v for k, v in r.items() if k not in ("events", "result", "graph")} for r in _runs()]
     return {"items": items, "total": len(items)}
+
+
+@app.post("/api/v1/orchestration/runs")
+def create_run(body: dict) -> dict:
+    spec = body.get("spec", "verified-report")
+    r = {"id": str(uuid4()), "file": _REPLAY_SOURCE.get(spec, _REPLAY_DEFAULT), "spec": spec,
+         "topic": body.get("topic") or body.get("text") or "", "started": time.monotonic()}  # fmt: skip
+    _replays.append(r)
+    return {k: v for k, v in _replayed(r).items() if k not in ("events", "result", "graph")}
 
 
 @app.get("/api/v1/orchestration/runs/{run_id}")

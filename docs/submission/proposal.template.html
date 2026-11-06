@@ -1,0 +1,644 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>三省 · 初赛方案书</title>
+<style>
+@page { size: A4; margin: 22mm 19mm 20mm 19mm;
+  @top-left { content: "三省 · 可验证的多智能体编排调度平台"; font: 8pt "Kaiti SC", KaiTi, serif; color: #8a8072; }
+  @top-right { content: "赛题一 · 初赛方案书"; font: 8pt "Kaiti SC", KaiTi, serif; color: #8a8072; }
+  @bottom-center { content: "— " counter(page) " —"; font: 8.5pt "Songti SC", serif; color: #6b6257; } }
+@page :first { margin: 0; @top-left { content: none; } @top-right { content: none; } @bottom-center { content: none; } }
+:root { --ink: #231F1A; --muted: #6B6257; --rule: #CFC6B4; --verm: #A83A2C; --stone: #1F6FA8; --pine: #3C8A5A; --paper: #FBF8F1; --slip: #F2ECDF; }
+* { box-sizing: border-box; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body { margin: 0; font-family: "Songti SC", "SimSong", serif; font-size: 10.3pt; line-height: 1.78; color: var(--ink); background: #fff; text-align: justify; }
+p { margin: 0 0 .55em; text-indent: 2em; }
+p.noi, .box p, li p { text-indent: 0; }
+h1 { font-size: 17pt; font-weight: 700; margin: 0 0 4mm; padding-bottom: 2.5mm; border-bottom: 2.4px double var(--ink); break-before: page; letter-spacing: .04em; }
+h1 .vol { font: 10pt "Kaiti SC", KaiTi, serif; color: var(--verm); display: block; letter-spacing: .3em; margin-bottom: 1mm; }
+h2 { font-size: 12.2pt; margin: 5.5mm 0 2mm; break-after: avoid; }
+h2::before { content: ""; display: inline-block; width: 6px; height: 6px; background: var(--verm); margin: 0 7px 2px 0; vertical-align: middle; }
+h3 { font-size: 10.6pt; margin: 3.5mm 0 1.2mm; break-after: avoid; }
+.k { font-family: "SF Mono", Menlo, monospace; font-size: 8.6pt; color: #4b4339; }
+code { font-family: "SF Mono", Menlo, monospace; font-size: 8.6pt; background: var(--slip); padding: 0 3px; }
+pre { font: 8.2pt/1.5 "SF Mono", Menlo, monospace; background: var(--slip); border-left: 2px solid var(--rule); padding: 2.5mm 3.5mm; margin: 2mm 0 3mm; white-space: pre-wrap; break-inside: avoid; text-align: left; }
+.box { border: 1px solid var(--ink); outline: 1px solid var(--ink); outline-offset: 2px; padding: 2.6mm 4mm; margin: 2mm 0 4mm; background: var(--paper); break-inside: avoid; }
+.box .t { font: 9.5pt "Kaiti SC", KaiTi, serif; color: var(--verm); letter-spacing: .25em; }
+.box ul { margin: 1mm 0 0; padding-left: 5mm; }
+.box li { margin: .4mm 0; }
+.note { font: 9.4pt/1.7 "Kaiti SC", KaiTi, serif; color: #4b4339; border-left: 2px solid var(--verm); padding: .5mm 0 .5mm 3.5mm; margin: 2mm 0 3mm; text-indent: 0; }
+table { width: 100%; border-collapse: collapse; margin: 1.5mm 0 1mm; font-size: 8.6pt; line-height: 1.5; break-inside: auto; text-align: left; }
+thead { display: table-header-group; }
+tr { break-inside: avoid; }
+th { border-top: 1.5px solid var(--ink); border-bottom: .8px solid var(--ink); padding: 1.3mm 1.6mm; font-weight: 700; background: var(--paper); }
+td { padding: 1.1mm 1.6mm; border-bottom: .4px solid var(--rule); vertical-align: top; }
+tbody tr:last-child td { border-bottom: 1.5px solid var(--ink); }
+table.num td { white-space: normal; }
+.cap { text-align: center; font: 9pt "Kaiti SC", KaiTi, serif; color: var(--muted); margin: 1mm 0 4mm; text-indent: 0; }
+.tcap { text-align: center; font: 9.4pt "Songti SC", serif; font-weight: 700; margin: 4mm 0 0; text-indent: 0; break-after: avoid; }
+figure { margin: 3mm 0 1mm; break-inside: avoid; text-align: center; }
+figure img { width: 100%; border: .6px solid var(--rule); display: block; }
+figure svg { width: 100%; height: auto; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
+.two figure { margin-top: 1mm; }
+ol.flow, ul.tight { margin: 1mm 0 3mm; padding-left: 6mm; }
+ol.flow li, ul.tight li { margin: .6mm 0; }
+.arch { border: 1.2px solid var(--ink); padding: 2mm; break-inside: avoid; margin: 2mm 0 1mm; }
+.layer { display: grid; grid-template-columns: 27mm 1fr; border: .6px solid var(--rule); margin: 1.4mm 0; background: var(--paper); }
+.layer .n { background: var(--ink); color: #f4efe4; font-weight: 700; padding: 1.6mm 2mm; font-size: 9pt; display: flex; flex-direction: column; justify-content: center; }
+.layer .n small { font: 7.5pt "Kaiti SC", KaiTi, serif; color: #d9cfbd; font-weight: 400; }
+.layer .c { padding: 1.4mm 2.5mm; font-size: 8.6pt; line-height: 1.55; }
+.layer .c b { color: var(--verm); font-weight: 700; }
+.chips span { display: inline-block; border: .6px solid var(--rule); background: #fff; padding: 0 1.6mm; margin: .5mm .8mm .5mm 0; font-size: 8pt; }
+.layer.side .n { background: var(--verm); }
+/* cover */
+.cover { height: 297mm; position: relative; background: #1F2A44; color: #F2ECDF; overflow: hidden; }
+.cover .frame { position: absolute; inset: 14mm; border: 1.5px solid #c9b98f; outline: .6px solid #c9b98f; outline-offset: -3mm; }
+.cover .slip { position: absolute; left: 30mm; top: 34mm; width: 30mm; height: 150mm; background: #F2ECDF; color: var(--ink); border: 1.2px solid var(--ink); outline: .5px solid var(--ink); outline-offset: -2mm; display: flex; flex-direction: column; align-items: center; padding-top: 12mm; }
+.cover .slip .big { writing-mode: vertical-rl; font-size: 44pt; font-weight: 700; letter-spacing: .25em; }
+.cover .slip .small { writing-mode: vertical-rl; font: 12pt "Kaiti SC", KaiTi, serif; margin-top: 8mm; letter-spacing: .3em; color: #4b4339; }
+.cover .seal { position: absolute; left: 63mm; top: 168mm; width: 17mm; height: 17mm; border: 1.6px solid var(--verm); color: var(--verm); background: rgba(168,58,44,.08); font: 700 11pt "Kaiti SC", KaiTi, serif; display: grid; grid-template-columns: 1fr 1fr; place-items: center; padding: 1mm; line-height: 1; }
+.cover .right { position: absolute; left: 96mm; right: 26mm; top: 40mm; }
+.cover .eyebrow { font: 11pt "Kaiti SC", KaiTi, serif; color: #c9b98f; letter-spacing: .35em; }
+.cover .title { font-size: 24pt; font-weight: 700; line-height: 1.45; margin: 8mm 0 6mm; letter-spacing: .04em; }
+.cover .sub { font: 12pt/1.8 "Kaiti SC", KaiTi, serif; color: #d9cfbd; }
+.cover dl { margin-top: 30mm; display: grid; grid-template-columns: 26mm 1fr; row-gap: 4mm; font-size: 11pt; }
+.cover dt { color: #c9b98f; font-family: "Kaiti SC", KaiTi, serif; letter-spacing: .3em; }
+.cover dd { margin: 0; border-bottom: .6px solid #6c7697; padding-bottom: 1mm; }
+.cover .foot { position: absolute; left: 96mm; right: 26mm; bottom: 26mm; font: 9.5pt "Kaiti SC", KaiTi, serif; color: #aeb3c4; }
+.toc { columns: 1; font-size: 10.3pt; }
+.toc div { display: flex; border-bottom: .4px dotted var(--rule); padding: .9mm 0; }
+.toc div span:first-child { flex: 1; }
+.toc .sub { padding-left: 7mm; font-size: 9.4pt; color: #4b4339; }
+.kw { font: 9.5pt "Kaiti SC", KaiTi, serif; text-indent: 0; }
+.stat { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3mm; margin: 3mm 0 4mm; break-inside: avoid; }
+.stat div { border: .8px solid var(--ink); padding: 2mm 2.5mm; background: var(--paper); }
+.stat b { display: block; font-size: 15pt; line-height: 1.2; }
+.stat span { font: 8.4pt/1.4 "Kaiti SC", KaiTi, serif; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<!-- ============ 封面 ============ -->
+<section class="cover">
+  <div class="frame"></div>
+  <div class="slip"><div class="big">三省</div><div class="small">起草 · 审核 · 执行</div></div>
+  <div class="seal"><span>三</span><span>省</span><span>核</span><span>验</span></div>
+  <div class="right">
+    <div class="eyebrow">赛题一 · Agent 编排创新应用</div>
+    <div class="title">面向复杂调研任务的<br>可验证多智能体<br>编排调度平台</div>
+    <div class="sub">写的人不审，审的人不写——<br>让多个 Agent 的“我做完了”经得起独立核查</div>
+    <dl>
+      <dt>文　档</dt><dd>初赛方案书</dd>
+      <dt>参赛队伍</dt><dd>【待填写】</dd>
+      <dt>队伍成员</dt><dd>【待填写】</dd>
+      <dt>指导教师</dt><dd>【待填写】</dd>
+      <dt>提交日期</dt><dd>2026 年 11 月</dd>
+    </dl>
+  </div>
+  <div class="foot">文中数据由仓库内的运行记录与评测脚本生成（版本 {{d.commit}}），未经手工填写。</div>
+</section>
+
+<!-- ============ 摘要 ============ -->
+<h1 style="break-before: page"><span class="vol">卷　首</span>摘　要</h1>
+<p>让多个大模型分工完成一件复杂的事，如今并不困难；难的是最后一步：负责写的 Agent 宣布“完成了，数据都有出处”，平台凭什么相信它？我们在做检索问答时吃过这样的亏：回答里的数字带着整齐的引用编号，逐条点开来源，却发现有的数字原文里根本没有，有的把“141178 万”读成了“1.41 亿”，有的把一所学校的数据写成了“全国”。多 Agent 协作会把这种“自己给自己打分”的问题层层放大。</p>
+<p>三省就是为这个问题设计的多智能体编排调度平台。它用一份 YAML 声明知识库、Agent、团队、工作流和策略；调度器按依赖、优先级和资源池并行执行，并在运行时按真实数据扇出任务、插入修复任务；执行者交出的成果不算数，要由与之隔离的<b>独立核查员</b>重新取证、逐条分级，再过一道由策略定义的<b>质量门</b>；不达标就先诊断失败类型、再按类型修复，修复只有“不比原稿差”才被采用，轮次、预算和“有没有进展”都设有上限，循环必然终止。全过程落成结构化事件，界面上可以实时观看，事后可以回放。名字取自唐代三省制：中书起草、门下审核（可“封驳”退回）、尚书执行。</p>
+<p>我们以“带分析与行动建议的调研报告”为主场景，并用同一套平台、换一份定义跑通了第二个场景“事实核查”，没有改动平台代码。仓库中保存的最新版本运行里，一份完整报告用时 {{p9.wall_text}}（无需修复）到 {{p8.wall_text}}（修复一轮），并行度 {{p9.speedup}}～{{p8.speedup}} 倍；同一主题从初版的 {{evo_first.wall_seconds}} 秒降到 {{evo_last.wall_seconds}} 秒。{{runs_n}} 次真实运行里，质量门最终通过 {{d.gate_passed_final}} 次，未通过的 {{gate_failed}} 次如实标注“未达标”后交付，而不是假装通过。说法分级在两套金标集上没有出现把错误说法判为“已核实”的情况，但样本量有限，文中给出区间与不足。</p>
+<p class="kw"><b>关键词：</b>多智能体编排；动态调度；有界自循环；独立核查；质量门；检索增强生成（RAG）；可追溯</p>
+
+<div class="stat">
+  <div><b>{{p8.wall_text}}</b><span>新能源汽车主题最新运行（初版 {{evo_first.wall_seconds}} 秒）</span></div>
+  <div><b>{{sp.speedup}}×</b><span>同一定义串行 {{sp.serial_seconds}} 秒 → 并行 {{sp.parallel_seconds}} 秒（起草阶段实测）</span></div>
+  <div><b>{{p8.verified_first}}% → {{p8.verified_final}}%</b><span>一轮有界修复后已核实比例，质量门放行</span></div>
+  <div><b>{{real_fp}} / {{ve.real.false_pass.n}}</b><span>真实网页金标集上错误说法被判“已核实”的次数</span></div>
+</div>
+
+<p class="tcap">表 0　赛题考察点与本方案的对应</p>
+<table>
+<thead><tr><th style="width:22%">赛题考察点</th><th>三省的做法</th><th style="width:12%">章节</th></tr></thead>
+<tbody>
+<tr><td>知识库定义与集成</td><td><code>KnowledgeBase</code> 声明检索来源、优先站点、检索链（稠密 + BM25 + RRF + 重排）与时效；每次运行建立独立的临时向量集合</td><td>3.1、8.3</td></tr>
+<tr><td>Agent 团队定义</td><td><code>Agent</code> / <code>Team</code> 声明角色、技能、模型档位、工具、可见信息；核查员“不得读执行者推理”在导入时强制校验</td><td>3.1–3.3</td></tr>
+<tr><td>工作流编排</td><td>五种节点（agent / map / gate / loop / merge），依赖、优先级、资源池、逐项流水线；界面画布编辑、校验、另存</td><td>3.4–3.6</td></tr>
+<tr><td>动态调度</td><td>就绪集 + 优先级 + 资源池；按运行时数据扇出；运行中插入修复任务；预算下丢弃非必要任务；模型降级</td><td>4.1–4.3</td></tr>
+<tr><td>自我循环（Self-Loop）</td><td>质量门不达标 → 失败诊断 → 按类型补证与重写 → 复核；“不比原稿差才采用”“无进展即停”，轮次与预算有界</td><td>4.4–4.5</td></tr>
+<tr><td>结果验证与反馈优化</td><td>数据点逐字核对 → 说法规则分级 → 逐条独立复核 → 质量门；失败类型与用户反馈聚合成改进建议</td><td>五</td></tr>
+</tbody></table>
+
+<!-- ============ 目录 ============ -->
+<h1><span class="vol">目　录</span>目　录</h1>
+<div class="toc">
+<div><span>一、选题背景与场景需求分析</span></div>
+<div class="sub"><span>1.1 问题：谁来说它做完了　1.2 场景　1.3 需求　1.4 对标与差距　1.5 名字的由来</span></div>
+<div><span>二、平台总体架构设计与技术选型</span></div>
+<div class="sub"><span>2.1 分层架构　2.2 一次运行的数据流　2.3 技术选型　2.4 为什么自研调度器</span></div>
+<div><span>三、Agent 角色定义、工作流设计与编排逻辑</span></div>
+<div class="sub"><span>3.1 声明式定义　3.2 定义校验　3.3 Agent 角色　3.4 工作流　3.5 编排逻辑　3.6 第二场景</span></div>
+<div><span>四、调度算法与自我循环机制</span></div>
+<div class="sub"><span>4.1 调度器　4.2 调度机制　4.3 调度实测　4.4 自我循环　4.5 采用条件的来历与作用</span></div>
+<div><span>五、结果验证策略与反馈优化逻辑</span></div>
+<div class="sub"><span>5.1 四层验证　5.2 分级规则　5.3 验证本身的评测　5.4 质量门实测　5.5 反馈与优化</span></div>
+<div><span>六、核心代码模块说明与系统截图</span></div>
+<div class="sub"><span>6.1 代码结构　6.2 接口　6.3 系统截图</span></div>
+<div><span>七、测试用例、运行效果与性能评估</span></div>
+<div class="sub"><span>7.1 自动化测试　7.2 典型测试用例　7.3 真实运行　7.4 性能　7.5 问答模块消融　7.6 局限</span></div>
+<div><span>八、人工智能使用说明</span></div>
+<div class="sub"><span>8.1 模型　8.2 各环节的作用　8.3 RAG　8.4 MCP　8.5 开发过程中的 AI 辅助　8.6 数据与安全</span></div>
+<div><span>附录　复现步骤与数据来源</span></div>
+</div>
+
+<!-- ============ 一 ============ -->
+<h1><span class="vol">卷　一</span>一、选题背景与场景需求分析</h1>
+<div class="box"><div class="t">本章要点</div><ul>
+<li>多 Agent 流水线里，每一环都“自报通过”，最终结果没人真正检查过——这是我们要解决的核心问题。</li>
+<li>主场景选“带分析与行动建议的调研报告”：真复杂、可量化验证、有现实需求；第二场景“事实核查”证明平台通用。</li>
+<li>差异化不在“能不能让多个 Agent 对话”，而在独立核查、有界自循环和动态调度三件事做成平台的默认行为。</li>
+</ul></div>
+
+<h2>1.1 问题：谁来说它做完了</h2>
+<p>让一组大模型分工协作已是常见做法：一个拆任务，几个查资料，一个写，一个汇总。写一个能跑起来的多 Agent 演示，大半天就够。但真正拿去交付一件事，比如一份会被引用的调研报告，最让人不踏实的不是“能不能跑通”，而是最后那一句“完成”可不可信。</p>
+<p>我们的体会来自自己做过的问答模块：检索和生成都很顺，每句话后面都有引用编号；逐条核对后才发现数字对不上、单位换算错、范围写大。模型并非有意，它只是在给自己的输出打高分。把这种结构放进多 Agent 流水线，规划员说提纲合理，检索员说资料充足，撰稿员说数据有出处，每一环都自报通过。因此平台的设计重心放在三件事上：<b>成果必须由与执行者隔离的角色独立核查</b>；<b>核查不通过时先诊断、再有针对性地修复，修复的次数、花费和是否有进展都有界</b>；<b>调度能根据资源和中间结果在运行时调整计划</b>。这三点正是赛题中“动态调度”“自我循环”“结果验证与反馈优化”的落脚点。</p>
+
+<h2>1.2 场景：政策与行业调研分析报告</h2>
+<p>典型输入是一句话主题，如“2025 届高校毕业生规模与就业情况”“2025 年中国新能源汽车销量与渗透率情况”。选它有三个原因。其一，它确实复杂：规划提纲、多路联网检索、摘取数据、分章撰写、逐条核验、补充证据、综合研判、给出建议，天然多角色、可并行、有依赖。其二，它可验证：每个数字都能逐字对到来源原文，每条说法可按“已核实 / 单一来源 / 有争议 / 未能核实”分级，好坏可以量化。其三，它有现实需求：学校、地方部门和行业研究者常要在短时间内拿出一份有出处的情况分析，既怕漏，更怕错。</p>
+<p>为证明平台不是为报告写死的，我们同时提供第二个场景<b>事实核查</b>：用户粘贴一段含数字的文字，平台逐条抽取事实性说法、联网查证，输出带出处和等级的核查表。两个场景共用同一套调度器、核查员和质量门，只是定义不同。</p>
+
+<h2>1.3 需求分析</h2>
+<p class="tcap">表 1　需求与对应设计</p>
+<table>
+<thead><tr><th style="width:6%">编号</th><th style="width:24%">需求</th><th style="width:32%">要解决的问题</th><th>对应设计</th></tr></thead>
+<tbody>
+<tr><td>R1</td><td>声明式定义知识库、Agent、团队、工作流、策略</td><td>流程写死在代码里，换场景就要改代码</td><td>YAML 定义层，导入时校验（3.1–3.2）</td></tr>
+<tr><td>R2</td><td>并行执行并尊重资源约束</td><td>串行太慢；搜索会限流，模型有并发与额度上限</td><td>就绪集调度、资源池、按数据扇出（4.1–4.2）</td></tr>
+<tr><td>R3</td><td>结果由独立角色验证</td><td>执行者自报完成不可信</td><td>隔离的核查员、确定性规则、质量门（五）</td></tr>
+<tr><td>R4</td><td>失败后有界地自我修复</td><td>无限重试浪费钱，修复还可能越改越差</td><td>失败诊断、按类型修复、采用条件、无进展即停（4.4）</td></tr>
+<tr><td>R5</td><td>全过程可观测、可回放</td><td>黑盒运行，出了问题无从查起</td><td>结构化事件日志，画布、时间线、质量门面板均由事件生成（6.3）</td></tr>
+<tr><td>R6</td><td>时间与成本可控</td><td>一份报告跑二十多分钟，花多少 token 不知道</td><td>token 与时长预算、非必要任务可丢弃、逐项流水线（4.2–4.3）</td></tr>
+<tr><td>R7</td><td>平台通用</td><td>只会写报告的“平台”没有意义</td><td>第二内置场景事实核查，同一引擎（3.6）</td></tr>
+<tr><td>R8</td><td>可复现、可部署</td><td>评审要能自己跑起来、核对数字</td><td>Docker Compose 部署；运行记录、评测脚本随仓库提供（附录）</td></tr>
+</tbody></table>
+
+<h2>1.4 对标框架与差距</h2>
+<p>下表是我们阅读公开文档与社区资料后的判断，没有逐一安装做对比实验，因此只作为设计取舍的背景。</p>
+<p class="tcap">表 2　对标框架的编排方式与本方案的取舍</p>
+<table>
+<thead><tr><th style="width:17%">框架</th><th style="width:28%">编排方式与强项</th><th style="width:28%">与赛题相关的空白</th><th>三省的对应做法</th></tr></thead>
+<tbody>
+<tr><td>LobeHub（Agent 群组）</td><td>主管按成员描述和对话历史决定下一位发言者；产品化好，团队定义直观</td><td>以对话轮转为核心，没有依赖图、并发调度与结果验证；何时结束由主管模型判断</td><td>显式依赖图 + 资源池并行；终止由轮次、预算、进展三条规则决定</td></tr>
+<tr><td>DeepSeek Harness（dsh）</td><td>插件化：模型、工具、会话、循环、调度均为插件；会话轨迹可回放</td><td>偏单 Agent 编码场景，多智能体以子 Agent 调度为主；没有把独立核查作为一等公民</td><td>核查员隔离写进定义校验；事件日志驱动回放</td></tr>
+<tr><td>LangGraph / CrewAI / AutoGen</td><td>状态图、角色-任务-团队、多种对话模式等成熟原语</td><td>验证、预算、调度策略需使用者自建；执行者自报即结果</td><td>把验证、预算与有界循环做成平台默认行为</td></tr>
+</tbody></table>
+<p>它们共同留下的空白可以概括为：<b>执行者的自我报告在流程里仍被当作结果</b>。三省把“经独立核验的完成”和“有上限、可证明终止的循环”做成平台默认，而不是留给使用者去补。</p>
+
+<h2>1.5 名字的由来</h2>
+<p>唐代三省制中，中书省起草诏令，门下省审核，认为不妥可以“封驳”，把诏令原样退回；尚书省执行。起草的不审，审的不执行，靠相互制衡立得住。这恰好回答了“谁来说它做完了”：不能是写它的人。平台中的分工与之对应如下；界面上名字旁的“ⓘ”可以看到这段说明。这只是帮助理解分工的类比：门下省封驳整份诏令，我们的核查员逐条说法地审；古代长官也不会因“预算用完”而停下，我们的调度器会。</p>
+<p class="tcap">表 3　三省与平台角色的对应</p>
+<table>
+<thead><tr><th style="width:16%">三省</th><th style="width:22%">职能</th><th>平台中的角色与机制</th></tr></thead>
+<tbody>
+<tr><td>中书省</td><td>起草</td><td>规划师（拟提纲与检索词）、撰稿人（分章写作）、分析师（综合研判与行动建议）：只管写，不管批</td></tr>
+<tr><td>门下省</td><td>审核、封驳</td><td>独立核查员（重新取证、逐条分级、劣于原稿则下调）、质量门（不达标即打回，触发修复）</td></tr>
+<tr><td>尚书省</td><td>执行</td><td>调度器、检索员、修复员、主编：排任务、跑检索、按失败类型修复、统稿交付</td></tr>
+</tbody></table>
+
+<!-- ============ 二 ============ -->
+<h1><span class="vol">卷　二</span>二、平台总体架构设计与技术选型</h1>
+<div class="box"><div class="t">本章要点</div><ul>
+<li>六层架构：上层只依赖下层接口；调度层只认“任务、依赖、资源池、预算”，不知道任务是写报告还是核查事实。</li>
+<li>前端不读调度器内存，一切由事件日志推导，所以运行可以事后完整回放。</li>
+<li>LangChain 是主框架；LangGraph 用在问答纠错；工作流编排改为自研 asyncio 调度器，原因见 2.4。</li>
+</ul></div>
+
+<h2>2.1 分层架构</h2>
+<div class="arch">
+  <div class="layer"><div class="n">定义层<small>spec.py</small></div><div class="c">YAML → Pydantic 校验 → 存 PostgreSQL（内置只读、用户可另存版本）<div class="chips"><span>知识库 KnowledgeBase</span><span>Agent</span><span>团队 Team</span><span>工作流 Workflow</span><span>策略 Policy：预算 / 质量门 / 轮次 / 并发</span></div></div></div>
+  <div class="layer"><div class="n">编排层<small>engine.py</small></div><div class="c">把节点编译成调度组：<b>agent</b> 单步 · <b>map</b> 按运行时数据扇出 · <b>gate</b> 质量门 · <b>loop</b> 有界修复 · <b>merge</b> 汇总；记录事件，计算运行指标</div></div>
+  <div class="layer"><div class="n">调度层<small>scheduler.py</small></div><div class="c">与业务无关的 asyncio 调度器<div class="chips"><span>就绪集 + 优先级</span><span>资源池：搜索 / 模型</span><span>重试与超时</span><span>预算：软上限 / 1.5 倍硬上限</span><span>模型降级</span><span>运行中插入任务</span><span>逐项依赖 needs</span></div></div></div>
+  <div class="layer"><div class="n">执行层<small>skills.py</small></div><div class="c">每个 Agent 的技能：规划、联网检索、分章撰写与数据核对、独立核查、修复、综合研判、统稿；事实核查四技能<div class="chips"><span>LangChain + OpenAI 兼容接口</span><span>SearXNG 联网检索</span><span>Qdrant 临时语料集合</span><span>稠密 + BM25 + RRF + 重排</span></div></div></div>
+  <div class="layer side"><div class="n">验证与反馈层<small>verification / audit / insights</small></div><div class="c">数据点逐字核对 · 说法规则分级 · 逐条独立复核 · 质量门与失败诊断 → 修复路由；失败类型与用户反馈 → 改进建议</div></div>
+  <div class="layer"><div class="n">可观测层<small>orch_events</small></div><div class="c">结构化事件 → 画布实时着色、调度时间线、质量门面板、事件日志、报告阅读与 Word / PDF 导出</div></div>
+</div>
+<p class="cap">图 1　三省的分层架构（左侧为对应的代码模块）</p>
+
+<h2>2.2 一次报告运行的数据流</h2>
+<ol class="flow">
+<li>用户在界面选择工作流、输入主题，可为整次运行或单个 Agent 指定模型；后端解析定义、写入运行记录，在后台任务中启动引擎。</li>
+<li>规划师产出提纲、每章检索词与全国口径补充检索词；检索员按批次并行搜索并抓取网页，写入<b>本次运行专用</b>的 Qdrant 临时集合。</li>
+<li>撰稿人按章并行取证、摘取数据点并与原文逐字核对后写作；同时，全国口径检索作为非必要旁支并行进行。</li>
+<li>核查员<b>按章流水线</b>跟进：第 i 章一写完就独立重新取证、逐条分级，不等其他章节。</li>
+<li>质量门汇总四项指标；不达标就在运行中插入“补检索”和“逐章重写并复核”两组任务，等它们完成后复查。</li>
+<li>分析师写核心结论、综合研判和行动建议（建议的事实性前提再核验一次）；主编统稿，披露范围与不确定，生成证据核实图。</li>
+<li>每一步都以事件落库；前端从事件推导画布、时间线、质量门面板，运行结束后可完整回放，报告可导出 Word / PDF。</li>
+</ol>
+
+<h2>2.3 技术选型</h2>
+<p class="tcap">表 4　主要技术选型、理由与代价</p>
+<table>
+<thead><tr><th style="width:13%">组件</th><th style="width:24%">选择</th><th style="width:33%">理由</th><th>代价或局限</th></tr></thead>
+<tbody>
+<tr><td>后端</td><td>FastAPI + asyncio；路由 / 服务 / 仓储分层</td><td>调度器本身是异步任务，与服务共用事件循环最直接</td><td>运行在 API 进程内执行，进程重启会中断运行</td></tr>
+<tr><td>关系库</td><td>PostgreSQL（asyncpg）</td><td>运行、事件、自定义定义、反馈都需持久化并可查询</td><td>—</td></tr>
+<tr><td>向量库</td><td>Qdrant；嵌入 nomic-embed-text（768 维，Ollama）</td><td>按集合隔离，每次运行独立临时集合、结束即删</td><td>并发创建集合曾有竞态，已加锁修复</td></tr>
+<tr><td>模型框架</td><td>LangChain + OpenAI 兼容接口</td><td>地址、模型名、密钥均来自配置，可换任意兼容服务</td><td>当前只有一个可用模型，强 / 快两档指向同一模型</td></tr>
+<tr><td>工作流编排</td><td>自研 asyncio 调度器</td><td>运行时按数据扇出、两类资源池、运行中插入任务</td><td>与最初“编译成 LangGraph”的计划不同，见 2.4</td></tr>
+<tr><td>问答纠错</td><td>LangGraph</td><td>状态、条件路由和有界循环正是它擅长的</td><td>只承载问答的两个纠错图，不承载领域逻辑</td></tr>
+<tr><td>联网检索</td><td>自建 SearXNG 元搜索</td><td>无需密钥，可指定权威站点优先</td><td>免费引擎会限流，冷查询偶发 20 秒以上</td></tr>
+<tr><td>前端</td><td>Next.js 15、React、Tailwind、React Flow、ECharts</td><td>画布、图表、流程图都有成熟组件</td><td>画布支持查看与 YAML 编辑，暂不支持拖拽拼装</td></tr>
+</tbody></table>
+
+<h2>2.4 为什么自研调度器，而不是把工作流编译成 LangGraph</h2>
+<p>起草方案时我们确实打算把工作流编译成 LangGraph 状态图。动手后发现，平台需要的几件事都要在<b>运行期改变图的形状</b>：map 节点要等上游产出后才知道扇出成几个任务（章节数、搜索批次数）；搜索和模型两类资源要分别限流；质量门不达标时要在运行中追加“补检索”“逐章重写”两组任务；核查要对撰写逐项流水线。这些用静态图表达都很别扭。于是 LangGraph 保留在它擅长的问答纠错状态机里，工作流层改为约 {{sched_lines}} 行的自研调度器。它换来了直接的并行与资源控制，也让调度器能脱离业务单独测试（4.1）。</p>
+
+<!-- ============ 三 ============ -->
+<h1><span class="vol">卷　三</span>三、Agent 角色定义、工作流设计与编排逻辑</h1>
+<div class="box"><div class="t">本章要点</div><ul>
+<li>五类声明对象写在同一份 YAML 里；导入时校验 9 类错误，其中“核查员读取执行者推理”会被直接拒绝。</li>
+<li>报告团队 7 个角色，原则是“一个角色一种责任、一类可见信息”；报告工作流 9 个节点，含两条旁支。</li>
+<li>换一份定义（4 个角色、4 个节点）就得到事实核查场景，平台代码不变。</li>
+</ul></div>
+
+<h2>3.1 声明式定义</h2>
+<p>平台用五类对象描述一个场景：<b>知识库</b>（检索来源、优先站点、检索链、时效）、<b>Agent</b>（角色、技能、模型档位、工具、可读信息、是否独立）、<b>团队</b>（成员与主管）、<b>工作流</b>（节点与依赖）和<b>策略</b>（预算、并发、修复轮次，作为工作流的一部分）。下面是内置报告定义的节选（完整定义见仓库 <code>builtin.py</code>）。</p>
+<pre>kind: KnowledgeBase
+name: official-web
+sources: [{type: web_search}]
+prefer_sites: [moe.gov.cn, mohrss.gov.cn, stats.gov.cn, gov.cn]
+retrieval: {dense: true, bm25: true, fusion: rrf, reranker: true}
+freshness_days: 365
+---
+kind: Agent
+name: verifier
+role: 独立核查员
+skill: verify_report
+model_tier: strong
+independent: true
+can_see: [draft, evidence]        # 写成 [draft, reasoning] 会在导入时被拒绝
+tools: [number_check, independence_check, claim_audit]
+---
+kind: Workflow
+name: verified-report
+policy: {max_tokens: 1500000, max_seconds: 2400, max_repair_rounds: 2, search_concurrency: 3, llm_concurrency: 6}
+nodes:
+  - {id: sections, kind: map, agent: writer,   depends_on: [search],   map_over: sections, pool: llm}
+  - {id: verify,   kind: map, agent: verifier, depends_on: [sections], map_over: sections, pipeline: true, pool: llm}
+  - id: gate_sections
+    kind: gate
+    depends_on: [verify, search_national]
+    on_fail: repair
+    gate: {min_verified_ratio: 0.5, max_unsupported_numbers: 0, require_scope_disclosed: true, min_authoritative_sections: 0.5}
+  - {id: repair, kind: loop, agent: repairer, essential: false, max_rounds: 2}</pre>
+
+<h2>3.2 定义校验：把“独立”写成强制规则</h2>
+<p>校验不只检查格式，还拦下会让运行失去意义的错误：节点 id 重复；依赖不存在的节点；<b>依赖成环</b>；质量门没有阈值；<code>on_fail</code> 指向不存在的节点或出现在非质量门节点上；团队成员没有 Agent 定义；节点使用的 Agent 不在团队里；Agent 引用了不存在的知识库；以及<b>独立核查员的可读信息里包含执行者的推理过程</b>。最后一条是“独立”不只是一个名字的保证：如果核查员读到撰稿人的推理，它很容易顺着同一思路得出同样结论，核查就成了复读。数值字段也有上下限，例如单个节点的修复轮次不超过 3、策略的修复轮次不超过 4、模型并发不超过 16。</p>
+<figure>{{IMG:spec-yaml-reject}}</figure>
+<p class="cap">图 2　在 YAML 里把核查员的可读信息改成包含 reasoning，点“校验”即被拒绝（右上角红字）</p>
+
+<h2>3.3 Agent 角色</h2>
+<p class="tcap">表 5　报告团队的 7 个角色</p>
+<table>
+<thead><tr><th style="width:14%">角色</th><th style="width:31%">职责</th><th style="width:15%">技能</th><th style="width:8%">档位</th><th>工具与约束</th></tr></thead>
+<tbody>
+<tr><td>规划师 planner</td><td>拆提纲、每章检索词、需要的指标；全国口径补充检索词</td><td>plan_outline</td><td>强</td><td>团队主管</td></tr>
+<tr><td>检索员 researcher</td><td>批次并行联网检索、抓取网页、写入本次运行语料</td><td>search_web</td><td>快</td><td>web_search、page_fetch；占“搜索”池</td></tr>
+<tr><td>撰稿人 writer</td><td>按章取证、摘取数据点并与原文逐字核对、写作</td><td>write_section</td><td>强</td><td>number_quote_check；占“模型”池，按章并行</td></tr>
+<tr><td>独立核查员 verifier</td><td>对每章重新取证、逐条分级；比撰稿时差则下调</td><td>verify_report</td><td>强</td><td><code>independent: true</code>，只能读成稿与证据</td></tr>
+<tr><td>修复员 repairer</td><td>按失败类型补检索、重写，交核查员复核</td><td>repair_report</td><td>强</td><td>非必要任务，预算不足时可丢弃</td></tr>
+<tr><td>分析师 analyst</td><td>核心结论、综合研判、行动建议及依据强度</td><td>write_synthesis</td><td>强</td><td>事实性前提进入核验，判断本身标为“推断”</td></tr>
+<tr><td>主编 editor</td><td>统稿、披露范围与不确定、生成图示</td><td>assemble_report</td><td>快</td><td>以确定性处理为主</td></tr>
+</tbody></table>
+<p>撰稿人同时负责“摘数据并核对”和“写作”，因为两步用同一批证据，拆开只会多一次传递；核查员必须单列，它的价值恰恰在于与写作者隔开。</p>
+
+<h2>3.4 工作流设计</h2>
+<figure>{{IMG:spec-graph}}</figure>
+<p class="cap">图 3　verified-report 工作流在平台画布上的样子（下方两条旁支：全国口径检索；质量门“未达标”触发的修复回路）</p>
+<p class="tcap">表 6　五种节点类型</p>
+<table>
+<thead><tr><th style="width:12%">类型</th><th style="width:38%">含义</th><th>本工作流中的节点</th></tr></thead>
+<tbody>
+<tr><td>agent</td><td>单个 Agent 执行一次</td><td>plan（规划）、synthesis（综合研判）</td></tr>
+<tr><td>map</td><td>上游完成后按其产出的列表逐项扇出，可声明逐项流水线</td><td>search（按检索批次）、sections（按章节）、verify（按章节，pipeline）、search_national（非必要）</td></tr>
+<tr><td>gate</td><td>按阈值检查指标，不达标沿 <code>on_fail</code> 触发修复，有最大轮次</td><td>gate_sections</td></tr>
+<tr><td>loop</td><td>被质量门触发的有界修复，可声明为非必要</td><td>repair</td></tr>
+<tr><td>merge</td><td>汇总上游产出</td><td>assemble（统稿）</td></tr>
+</tbody></table>
+
+<h2>3.5 编排逻辑</h2>
+<p><b>编译。</b>引擎把每个节点编译成调度器里的一个“组”（Group）：声明它依赖哪些组、如何展开成任务、用哪个资源池、优先级多少、是否必要。调度器只看这些属性，不认识任何业务概念。</p>
+<p><b>扇出时机。</b>章节数和检索批次数不是写死的，而是规划师产出后才知道，所以 map 节点要等上游完成才按真实数据展开。在保存的最新运行里，规划后展开了 {{p8.search_batches}} 个检索批次和 {{p8.sections}} 个章节。</p>
+<p><b>旁支。</b><code>search_national</code> 把“官方发布的全国口径数据”单独拉出来，与撰写并行，标记为非必要，预算吃紧时可被丢弃；质量门要等它，撰写不等它。这是针对早期运行里“只搜到单校数据却写成全国”的问题加的。</p>
+<p><b>逐项流水线。</b><code>pipeline: true</code> 让核查第 i 章只依赖撰写第 i 章：写完一章核一章，写作与核查交错进行；上游某一项失败时，下游对应项记为失败，整组不会被误判成功。</p>
+<p><b>用户可以调整什么。</b>在“工作流定义”页可直接编辑 YAML：增删节点、调依赖、改质量门阈值与修复轮次、为 Agent 指定模型，校验通过后画布刷新，另存为自己的版本即可在新建运行时选用。实验中的“串行对照”就是这样建的：同一定义，只把两类并发上限改为 1。</p>
+
+<h2>3.6 第二个场景：事实核查</h2>
+<p>内置的第二套定义 <code>fact-check</code> 只有 4 个角色（说法抽取员、检索员、独立核查员、汇总员）和 4 个节点，复用同一调度器和分级规则，平台代码不变。我们用一段刻意写错的文字测试：人均可支配收入原文为 39218 元，输入写成 41218 元。运行用时 {{fc.wall_seconds}} 秒，结果如下（由运行记录直接生成）。被抽取阶段漏掉的原始说法也会明确标为“未能核实”，不会悄悄消失。</p>
+<p class="tcap">表 7　事实核查场景的真实运行结果</p>
+{{TABLE:fact}}
+
+<!-- ============ 四 ============ -->
+<h1><span class="vol">卷　四</span>四、调度算法与自我循环机制</h1>
+<div class="box"><div class="t">本章要点</div><ul>
+<li>调度器只有“任务”和“组”两种对象：就绪集按（优先级，入队时间）排序，在资源池信号量下执行。</li>
+<li>同一定义起草阶段串行 {{sp.serial_seconds}} 秒、并行 {{sp.parallel_seconds}} 秒，实测加速 {{sp.speedup}} 倍；同一主题七个版本从 {{evo_first.wall_seconds}} 秒降到 {{evo_last.wall_seconds}} 秒。</li>
+<li>自循环由质量门触发、按失败类型修复；重写“不比原稿差才采用”，四条终止条件保证必然结束。</li>
+</ul></div>
+
+<h2>4.1 调度器</h2>
+<p>任务（Task）有优先级、资源池、重试次数、超时、是否必要以及逐项依赖 <code>needs</code>；组（Group）有依赖、展开函数、优先级与是否逐项流水线。主循环如下：</p>
+<pre>loop:
+  for g in groups:                                  # 展开：依赖满足的组按真实数据生成任务
+      if not g.expanded and deps_ok(g): g.tasks = await g.expand()
+  skip_blocked()                                    # 上游失败的组 / 逐项上游失败的任务直接跳过
+  ready = [t for t in tasks if t.pending and needs_done(t)]
+  for t in sorted(ready, key=(t.priority, t.queued_at)):
+      if not t.essential and not budget_ok(): skip(t, "budget"); continue
+      launch(execute(t))                            # 在 t.pool 的信号量下执行
+  if nothing running and nothing pending: break
+  await first_completed(running) or wake_event      # 任一任务结束，或有组被插入时醒来</pre>
+
+<h2>4.2 调度机制</h2>
+<p class="tcap">表 8　调度器的七项机制</p>
+<table>
+<thead><tr><th style="width:15%">机制</th><th style="width:47%">做法</th><th>为什么这样做</th></tr></thead>
+<tbody>
+<tr><td>资源池</td><td>搜索与模型两个信号量，大小来自策略（内置：搜索 3、模型 6），超限排队而非失败</td><td>免费搜索引擎请求多了会弹验证码；模型有并发上限</td></tr>
+<tr><td>优先级</td><td>就绪任务按（优先级，入队时间）派发；核查优先于新章节撰写</td><td>让写完的章节尽快被核查，缩短关键路径</td></tr>
+<tr><td>重试与超时</td><td>普通任务默认重试 1 次、超时 900 秒；质量门任务不重试，超时跟随整体预算</td><td>门内部会触发修复，重试会重复副作用；早期一次门超时被重试导致整个运行失败</td></tr>
+<tr><td>预算</td><td>token 与时长两项：超过预算只丢弃非必要任务；超过 1.5 倍硬上限时必要任务也失败；预算用掉 60% 后不再开始新一轮修复</td><td>成本可控，又不因修复耗尽预算而交不出报告</td></tr>
+<tr><td>模型降级</td><td>模型报额度或权限错误时摘除该模型，切到备选并无损重试，不消耗任务重试次数</td><td>免费额度会突然用完；单元测试覆盖，真实运行中尚未触发</td></tr>
+<tr><td>运行中插入</td><td>质量门任务可向调度器插入新组（补检索、逐章重写）并等待其完成</td><td>修复要做什么，只有检查后才知道</td></tr>
+<tr><td>逐项依赖</td><td>下游第 i 项在上游第 i 项完成后立即开始；上游单项失败，下游对应项失败</td><td>写作与核查交错，且不会把部分失败误判为成功</td></tr>
+</tbody></table>
+
+<h2>4.3 调度实测</h2>
+<p>图 4 是新能源汽车主题最新一次真实运行的调度时间线，由事件日志直接绘出，颜色按三省分工区分。可以看到：{{p8.search_batches}} 个检索批次并行；{{p8.sections}} 章撰写与全国口径检索同时进行；核查按章流水线跟进；首检未过后，补检索与 5 章重写复核被插入运行；复查通过后进入综合研判。总耗时 {{p8.wall_text}}，{{p8.tasks}} 个任务 0 失败，任务忙碌时间是总耗时的 {{p8.speedup}} 倍。</p>
+<figure>{{SVG:gantt}}</figure>
+<p class="cap">图 4　调度时间线（{{p8.topic}}，{{p8.file}}）</p>
+<p>并行的收益用平台自己的“另存定义”做了对照：主题“{{sp.topic}}”，同一份定义只把搜索与模型并发改为 1。起草阶段（规划、检索、撰写、核查，不含修复）串行 {{sp.serial_seconds}} 秒，并行 {{sp.parallel_seconds}} 秒，<b>实测加速 {{sp.speedup}} 倍</b>。注意“并行度”（任务忙碌时间 ÷ 总耗时）是另一个口径，二者不要混用。</p>
+<p>此后我们先量化瓶颈再优化：从保存的运行里统计，搜索累计耗时只有模型任务的两成左右，且大半与模型工作重叠，时间主要花在模型调用上（单次 10–30 秒、章内多步串行）。据此做了修复采用条件、模型并发 4→6、建议前提并行核验、全国口径检索前置并行、补证与逐章评分并行、撰写→核查逐项流水线等改动。同一主题七个版本的真实运行如图 5 与表 9。</p>
+<figure>{{SVG:evolution}}</figure>
+<p class="cap">图 5　同一主题七个版本的总耗时（蓝：起草阶段；紫：修复与综合研判、统稿）</p>
+<p class="tcap">表 9　七个版本的真实运行（每版一次，受模型与搜索波动影响）</p>
+{{TABLE:evolution}}
+<p class="note">总耗时强烈依赖修复轮数：V5、V6 各修复了 2 轮，所以比 V4 长。起草阶段由 {{evo_first.draft_seconds}} 秒降到 {{evo_last.draft_seconds}} 秒，受修复轮数影响小，是更可比的指标。每版只有一次运行，不具统计显著性。</p>
+
+<h2>4.4 自我循环</h2>
+<p>自循环由质量门触发。门的四项指标由纯函数计算：<b>已核实说法占比</b>、<b>有权威来源支持的章节占比</b>、<b>来源原文里找不到的数字个数</b>、<b>范围错置的章节数</b>（只有单个学校或地区的数据，却没声明不代表整体）。任一项不达标，门就不通过，并给出按章节归类的失败项。</p>
+<figure>
+<svg viewBox="0 0 720 230" xmlns="http://www.w3.org/2000/svg" font-family="Songti SC, serif" font-size="12">
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#231F1A"/></marker>
+<marker id="r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#A83A2C"/></marker></defs>
+<g fill="#FBF8F1" stroke="#231F1A" stroke-width="1.1">
+<rect x="8" y="30" width="120" height="50"/><rect x="170" y="30" width="140" height="50"/><rect x="560" y="30" width="150" height="50"/>
+<rect x="170" y="150" width="140" height="62"/><rect x="360" y="150" width="170" height="62"/><rect x="560" y="150" width="150" height="62" stroke="#A83A2C"/>
+</g>
+<polygon points="430,25 485,55 430,85 375,55" fill="#FBF8F1" stroke="#A83A2C" stroke-width="1.3"/>
+<g fill="#231F1A" text-anchor="middle">
+<text x="68" y="52">逐章撰写</text><text x="68" y="70" font-size="10.5" fill="#6B6257">按章流水线核查</text>
+<text x="240" y="52">质量门：计算</text><text x="240" y="70" font-size="10.5" fill="#6B6257">四项指标对照阈值</text>
+<text x="430" y="52" fill="#A83A2C">达标？</text>
+<text x="635" y="52">放行</text><text x="635" y="70" font-size="10.5" fill="#6B6257">进入综合研判</text>
+<text x="240" y="173">失败诊断（按章）</text><text x="240" y="190" font-size="10.5" fill="#6B6257">证据不足 / 缺权威 /</text><text x="240" y="204" font-size="10.5" fill="#6B6257">数字不符 / 范围错置</text>
+<text x="445" y="173">按类型修复</text><text x="445" y="190" font-size="10.5" fill="#6B6257">补检索 → 逐章重写 → 复核</text><text x="445" y="204" font-size="10.5" fill="#A83A2C">不比原稿差才采用</text>
+<text x="635" y="173" fill="#A83A2C">停止并披露</text><text x="635" y="190" font-size="10.5" fill="#6B6257">无进展 / 达轮次上限 /</text><text x="635" y="204" font-size="10.5" fill="#6B6257">预算已用 60%</text>
+</g>
+<g stroke="#231F1A" stroke-width="1.1" fill="none">
+<path d="M128 55H168" marker-end="url(#a)"/><path d="M310 55H373" marker-end="url(#a)"/><path d="M485 55H558" marker-end="url(#a)"/>
+<path d="M430 85V118H240V148" marker-end="url(#a)"/><path d="M310 181H358" marker-end="url(#a)"/>
+</g>
+<path d="M530 168C548 168 548 168 558 168" stroke="#A83A2C" stroke-width="1.1" fill="none" marker-end="url(#r)"/>
+<path d="M360 160C330 120 300 110 260 82" stroke="#A83A2C" stroke-width="1.1" stroke-dasharray="4 3" fill="none" marker-end="url(#r)"/>
+<g font-size="10.5" font-family="Kaiti SC, KaiTi, serif"><text x="520" y="47" fill="#3C8A5A">是</text><text x="438" y="104" fill="#A83A2C">否</text><text x="318" y="120" fill="#A83A2C">复查（轮次 + 1）</text><text x="560" y="142" fill="#A83A2C">任一停止条件</text></g>
+</svg>
+</figure>
+<p class="cap">图 6　质量门与有界自循环</p>
+<p class="tcap">表 10　失败类型决定修复动作</p>
+<table>
+<thead><tr><th style="width:18%">失败类型</th><th style="width:36%">判定</th><th>修复动作</th></tr></thead>
+<tbody>
+<tr><td>证据不足</td><td>带数字的说法只有单一来源或未能核实</td><td>为存疑说法补检索，再逐章重写并复核</td></tr>
+<tr><td>缺权威来源</td><td>章节没有政府、统计、教育科研、国际组织等权威来源支持</td><td>补搜官方发布与全国口径（只搜旁支没搜过的），再重写</td></tr>
+<tr><td>数字对不上原文</td><td>正文数字在任何来源原文中都找不到</td><td>重写，清除对不上的数字</td></tr>
+<tr><td>范围错置</td><td>只有单校 / 单地数据却未声明不代表整体</td><td>按“范围优先”重写；仍不行则在正文写明“不代表全国”</td></tr>
+</tbody></table>
+<p><b>终止条件</b>满足任一即结束：① 质量门通过；② 一轮修复后已核实比例提升不到 1 个百分点（无进展）；③ 达到最大修复轮数（节点与策略取较小者，内置为 2，校验上限分别为 3 和 4）；④ 预算已用掉 60%，不再开始新一轮。由于每轮都使有限的轮次计数加一，而上界在定义校验时已固定，循环<b>必然终止</b>，不依赖模型自己判断“差不多了”。没通过时，平台交付稿件并在“争议与不确定”中写明，而不是绕过。</p>
+
+<h2>4.5 采用条件的来历与实际作用</h2>
+<p>“重写不比原稿差才采用”和“无进展即停”不是一开始就有的。第一次用真实主题跑完整流程时，旧版自循环跑了 2 轮、多花约 14 分钟，已核实比例反而从 {{old.verified_first}}% 降到 {{old.verified_final}}%：重写把原本站得住的句子改坏了。这件事让我们把两条规则写进机制，而不是靠提示词劝模型“小心一点”。</p>
+<p>在最新一次运行里，这条规则确实起了作用：首检已核实 {{p8.verified_first}}%，低于 50% 的门槛；修复阶段对 5 章尝试重写，复核后 {{p8.repairs_rejected}} 章不如原稿被放弃，{{p8.repairs_accepted}} 章被采用；复查已核实 {{p8.verified_final}}%，放行。没有这条规则，那 {{p8.repairs_rejected}} 章会被改得更差（图 7）。</p>
+<figure>{{SVG:repairs}}</figure>
+<p class="cap">图 7　一轮修复中每章重写前后的复核结果（{{p8.file}}）</p>
+
+<!-- ============ 五 ============ -->
+<h1><span class="vol">卷　五</span>五、结果验证策略与反馈优化逻辑</h1>
+<div class="box"><div class="t">本章要点</div><ul>
+<li>验证分四层：数据点逐字核对 → 说法规则分级 → 逐条独立复核 → 质量门。模型只负责“提取事实”，等级由规则给出。</li>
+<li>验证本身也被验证：两套金标集上假通过为 0（样本有限），抽取召回 77%–88% 是目前的主要缺口。</li>
+<li>反馈优化目前做到“按失败类型与用户反馈给出改进提示”，不会自动改策略上线。</li>
+</ul></div>
+
+<h2>5.1 四层验证</h2>
+<p><b>第一层：数据点逐字核对。</b>撰稿人摘取数字时必须给出来源编号和来源里陈述它的那句原话；系统核对原话是否逐字出现在来源文本中，不过就丢弃。报告里的数据表、趋势图和证据核实图只用通过这一关的数据点，图里每个数字都能追到原文。</p>
+<p><b>第二层：说法规则分级。</b>正文被拆成原子说法，模型只指出“哪些来源支持、哪些反对、是否有时效”，等级由固定规则判定（表 11）。来源按权威、参考、一般、低四级分层；同一内容被多站转载算同一来源，不能凑数；来源文本必须带有说法中的数字才算支持。</p>
+<p><b>第三层：逐条独立复核。</b>“某来源支持某说法”是抽取时同一次模型调用给出的，等于自己给自己打分。所以每条说法再单独、带着来源完整段落问一次：是否陈述了同一个对象、指标、时间范围且数字一致。一个来源要<b>两次</b>被否决才剔除，以压住单次随机误判；被剔除的来源不算支持，但也不会被当成反对，避免制造假争议；调用失败则保留原判断。</p>
+<p><b>第四层：质量门。</b>汇总前三层结果算出四项指标，对照策略阈值，决定放行还是触发修复（4.4）。核查员对每一章重新取证分级，结果比撰稿时差就下调——最新运行里下调了 {{p8.downgrades}} 条。</p>
+
+<h2>5.2 分级规则</h2>
+<p class="tcap">表 11　说法等级的判定规则</p>
+<table>
+<thead><tr><th style="width:15%">等级</th><th>规则</th></tr></thead>
+<tbody>
+<tr><td>已核实</td><td>有权威来源并读过全文支持；或至少两个相互独立的站点支持，且其中至少一个可信度不低</td></tr>
+<tr><td>有争议</td><td>权威或参考类来源、或读过全文的一般来源与之矛盾（只读到摘要的一般站点或低可信来源的不同说法写进说明，但不改等级）</td></tr>
+<tr><td>单一来源</td><td>有支持，但只来自一个站点，或只来自低可信度站点</td></tr>
+<tr><td>未能核实</td><td>没有来源支持；有时效性的说法若最新支持来源过旧，另标“可能过时”</td></tr>
+</tbody></table>
+
+<h2>5.3 验证本身的评测</h2>
+<p>我们为说法分级维护了两套金标集：每个用例有待核查文字、若干来源和人工标好的“每条说法应是什么等级”，包含造假数字、张冠李戴、单位错置、过时、转载同源等类型；由 <code>eval/run_verification_eval.py</code> 在真实模型上每例跑 {{ve.real.runs_per_case}} 次统计。</p>
+<p class="tcap">表 12　说法分级的金标评测（讯飞星火 spark-x2.6）</p>
+{{TABLE:verification}}
+<p class="note">三点必须讲清：第一，样本小，假通过为 0 的区间并不窄，不能读成“不会出错”；第二，被评对象与复核用的是同一个模型，没有换更强模型交叉验证；第三，说法抽取召回只有 77%–88%，一到两成的事实性说法没被抽出来，也就没被核查，这是目前覆盖面上的缺口。</p>
+
+<h2>5.4 质量门实测</h2>
+<p>图 8 汇总了保存的 {{runs_n}} 次报告运行中质量门首次与最后一次检查的已核实比例。质量门对同一主题也有明显随机性；没通过的 {{gate_failed}} 次（均为早期版本）平台都交付了稿件，并在报告中披露“未达标”的原因。</p>
+<figure>{{SVG:gate}}</figure>
+<p class="cap">图 8　质量门首检与最终检查（空心 = 首检，实心绿 = 通过，实心朱 = 未通过）</p>
+
+<h2>5.5 反馈与优化</h2>
+<p>反馈有两个来源：用户对运行结果的“有用 / 没用”及原因（运行页右上角的拇指按钮），以及质量门和核查员记录的失败类型。平台把它们按类型聚合，生成“改进建议”页：平均耗时、自循环平均提升、最常见的首检失败类型，以及对应的建议（如为某类失败优先哪些权威站点、阈值是否合理）。需要如实说明：这一层目前只做到<b>提示</b>，不会自动改提示词或策略并上线；改动仍由人来做，并要求在两套金标集上指标不退步才发布。我们在复核提示词的迭代中就遇到过“第一版太严、误杀正确说法”的情况，正是靠两套金标集一起重测才发现，这也是坚持“回归门控”的原因。</p>
+<figure>{{IMG:insights}}</figure>
+<p class="cap">图 9　改进建议页：失败类型分布、自循环提升与建议</p>
+
+<!-- ============ 六 ============ -->
+<h1><span class="vol">卷　六</span>六、核心代码模块说明与系统截图</h1>
+<div class="box"><div class="t">本章要点</div><ul>
+<li>编排平台后端核心约 {{code.orchestration_total}} 行 Python（12 个模块），前端编排界面约 {{code.frontend_orchestration_lines}} 行 TSX（{{code.frontend_orchestration_files}} 个组件）。</li>
+<li>以下截图均来自真实界面，数据为仓库中保存的真实运行记录。</li>
+</ul></div>
+
+<h2>6.1 代码结构</h2>
+<p class="tcap">表 13　核心代码模块（行数为当前仓库实际统计）</p>
+{{TABLE:code}}
+<p>前端位于 <code>frontend/src/components/orchestration/</code>：外壳与侧栏、运行页（指标行、React Flow 画布、悬浮节点详情、底部面板：调度时间线 / 质量门与自循环 / 事件日志）、报告阅读视图、事实核查结果、定义页（画布 + 智能体 / 策略 / YAML）与改进建议页。数据辅助函数在 <code>lib/orchestration.ts</code>，均有单元测试。</p>
+
+<h2>6.2 接口</h2>
+<p class="tcap">表 14　编排平台接口（前缀 /api/v1/orchestration）</p>
+<table>
+<thead><tr><th style="width:36%">接口</th><th>作用</th></tr></thead>
+<tbody>
+<tr><td><code>GET /specs</code>　<code>POST /specs/validate</code></td><td>列出定义（含画布图）；校验 YAML 并返回节点图或错误</td></tr>
+<tr><td><code>POST /specs</code>　<code>DELETE /specs/{name}</code></td><td>保存 / 删除用户自己的定义（内置只读）</td></tr>
+<tr><td><code>POST /runs</code>　<code>GET /runs</code></td><td>新建运行（可指定统一模型或按 Agent 指定）；运行列表</td></tr>
+<tr><td><code>GET /runs/{id}</code></td><td>运行详情：结果、节点图与全部事件（前端由此推导一切）</td></tr>
+<tr><td><code>POST /runs/{id}/cancel</code>　<code>DELETE /runs/{id}</code></td><td>取消、删除（进行中的先取消）</td></tr>
+<tr><td><code>GET /runs/{id}/download?format=docx|pdf</code></td><td>导出报告</td></tr>
+<tr><td><code>POST /runs/{id}/feedback</code>　<code>GET /insights</code></td><td>运行反馈；改进建议聚合</td></tr>
+</tbody></table>
+
+<h2>6.3 系统截图</h2>
+<figure>{{IMG:run-live}}</figure>
+<p class="cap">图 10　运行中：节点实时着色，进度条显示扇出任务完成数，下方调度时间线随事件增长</p>
+<figure>{{IMG:run-done}}</figure>
+<p class="cap">图 11　运行结束：顶部指标行（总耗时、任务、并行度、自循环、核查员下调、模型调用与 token、已核实比例变化）</p>
+<div class="two">
+<figure>{{IMG:inspector}}<p class="cap">图 12　点击核查员节点：角色、技能、档位、资源池、独立核查标记与各任务耗时</p></figure>
+<figure>{{IMG:new-run}}<p class="cap">图 13　新建运行：选择工作流、输入主题、统一或按 Agent 指定模型</p></figure>
+</div>
+<figure>{{IMG:gate-first}}</figure><p class="cap">图 14　质量门首检：已核实 {{p8.verified_first}}%，未达 50% 门槛，左侧按章列出失败项，右侧为这一轮每章重写“采用 / 放弃”</p>
+<figure>{{IMG:gate-after}}</figure><p class="cap">图 15　修复后复查：已核实 {{p8.verified_final}}%，四项指标均达标，放行</p>
+<figure>{{IMG:report-top}}</figure>
+<p class="cap">图 16　报告阅读视图：目录、核实等级徽章、核心结论（全国口径优先）、逐章正文与关键数据表，可导出 Word / PDF</p>
+<div class="two">
+<figure>{{IMG:report-synthesis}}<p class="cap">图 17　综合研判与行动建议：每条判断带把握程度，每条建议标依据强度、前提与风险</p></figure>
+<figure>{{IMG:fact-check}}<p class="cap">图 18　事实核查结果：写错的收入数字被标为“未能核实，来源说法与之不同”</p></figure>
+</div>
+<div class="two">
+<figure>{{IMG:about}}<p class="cap">图 19　名字旁的“ⓘ”：三省由来与角色对应</p></figure>
+<figure>{{IMG:event-log}}<p class="cap">图 20　事件日志：每个任务的开始、结束、重试、质量门检查与修复结果</p></figure>
+</div>
+
+<!-- ============ 七 ============ -->
+<h1><span class="vol">卷　七</span>七、测试用例、运行效果与性能评估</h1>
+<div class="box"><div class="t">本章要点</div><ul>
+<li>后端 {{tests.backend_passed}} 项测试通过（{{tests.backend_skipped}} 项因环境跳过），前端 {{tests.frontend_passed}} 项单元测试通过；编排相关用例覆盖每一项调度与自循环机制。</li>
+<li>最新版本报告运行 {{p9.wall_text}}～{{p8.wall_text}}，任务 0 失败；问答模块完整自纠错在 {{qa.scenarios}} 道题上该答的答上、该拒的拒掉，代价是耗时约为基础检索的五倍。</li>
+</ul></div>
+
+<h2>7.1 自动化测试</h2>
+<p>后端 pytest 共 {{tests.backend_passed}} 项通过、{{tests.backend_skipped}} 项跳过；前端类型检查、静态检查通过，vitest {{tests.frontend_passed}} 项通过；端到端用 Playwright 在桌面与手机视口覆盖主要页面。与编排直接相关的测试如表 15，我们尽量让每条测试对应一个“真实运行里会看到什么问题”。</p>
+<p class="tcap">表 15　编排与验证相关的测试</p>
+{{TABLE:tests}}
+
+<h2>7.2 典型测试用例</h2>
+<p class="tcap">表 16　典型测试用例（单元测试用模拟技能与模型，结果为当前代码的运行结果）</p>
+<table>
+<thead><tr><th style="width:7%">编号</th><th style="width:22%">场景</th><th style="width:34%">输入 / 构造</th><th style="width:27%">期望</th><th>结果</th></tr></thead>
+<tbody>
+<tr><td>TC1</td><td>按数据并行扇出</td><td>上游产出 3 项，下游 map 组依赖它</td><td>上游完成后展开 3 个任务并同时运行</td><td>通过</td></tr>
+<tr><td>TC2</td><td>资源池上限</td><td>池大小 2，提交 5 个任务</td><td>任意时刻并发不超过 2</td><td>通过</td></tr>
+<tr><td>TC3</td><td>质量门失败触发修复</td><td>首检证据不足，修复后补齐</td><td>插入补检索与重写，复查通过</td><td>通过</td></tr>
+<tr><td>TC4</td><td>无进展停止</td><td>修复一轮后指标不变</td><td>不再开始第二轮，报告披露</td><td>通过</td></tr>
+<tr><td>TC5</td><td>劣化重写被拒</td><td>重写后复核比原稿差</td><td>保留原稿，记录“放弃重写”</td><td>通过</td></tr>
+<tr><td>TC6</td><td>模型失效降级</td><td>主模型返回额度错误</td><td>切换备选模型，不耗重试次数，运行完成</td><td>通过</td></tr>
+<tr><td>TC7</td><td>预算耗尽</td><td>预算用尽时仍有非必要任务</td><td>非必要任务被丢弃，必要任务继续</td><td>通过</td></tr>
+<tr><td>TC8</td><td>定义校验</td><td>循环依赖、未知 Agent、核查员可读 reasoning</td><td>导入时分别报出可读错误</td><td>通过</td></tr>
+<tr><td>TC9</td><td>逐项流水线</td><td>上游第 2 项失败</td><td>下游第 1、3 项照常运行，第 2 项记失败</td><td>通过</td></tr>
+<tr><td>TC10</td><td>复核两次否决</td><td>某来源只被否决一次</td><td>该来源仍算支持；两次否决才剔除</td><td>通过</td></tr>
+<tr><td>TC11</td><td>真实事实核查</td><td>3 句话、5 条说法，其中收入数字故意写错</td><td>写错的标为未能核实并指出来源不同</td><td>符合（表 7）</td></tr>
+<tr><td>TC12</td><td>真实报告运行</td><td>主题：{{p8.topic}}</td><td>首检不过则有界修复，最终放行或披露</td><td>{{p8.verified_first}}% → {{p8.verified_final}}%，放行</td></tr>
+</tbody></table>
+
+<h2>7.3 真实运行</h2>
+<p>环境：模型为讯飞星火 spark-x2.6；联网检索为自建 SearXNG；嵌入为 Ollama 上的 nomic-embed-text；每次运行在临时库与临时向量集合中进行。完整运行记录（含全部事件）保存在 <code>artifacts/orchestration-runs/</code>，表 17 由其中的 JSON 汇总。</p>
+<p class="tcap">表 17　报告场景的真实运行（前两行为最新版本）</p>
+{{TABLE:runs}}
+<p class="note">就业主题最新版本首检即通过（已核实 {{p9.verified_first}}%），没有修复，所以比新能源主题短得多；不能据此说“流水线让耗时减半”。不同主题能搜到多少权威来源差别很大，质量门首检是否通过也因此不同。</p>
+
+<h2>7.4 性能评估</h2>
+<ul class="tight">
+<li><b>耗时。</b>同一主题由 {{evo_first.wall_seconds}} 秒降到 {{evo_last.wall_seconds}} 秒；起草阶段由 {{evo_first.draft_seconds}} 秒降到 {{evo_last.draft_seconds}} 秒（表 9）。修复每轮仍需约 4–5 分钟，是最大的单项耗时。</li>
+<li><b>并行。</b>串行对照实测加速 {{sp.speedup}} 倍；最新版本并行度 {{p9.speedup}}～{{p8.speedup}} 倍，任务 0 失败。</li>
+<li><b>成本。</b>最新新能源运行 {{p8.llm_calls}} 次模型调用、约 {{p8.tokens_wan}} 万 token；逐条复核使 token 约翻倍，两种省 token 办法（多条合批、只给 700 字窗口）都在金标集上掉准确率，因而放弃，改为把预算从 90 万调到 150 万。</li>
+<li><b>可靠性。</b>保存的最新运行均 0 任务失败；早期发现并修复的问题包括：质量门超时被重试导致整个运行失败、并发创建向量集合的竞态、搜索冷查询踩在超时边界。</li>
+</ul>
+
+<h2>7.5 问答模块的消融评测</h2>
+<p>平台底座中的问答模块（界面“对话”）同样遵循“先核查、再修复、有上限”。为回答“自纠错到底有没有用”，固定评测集为 {{qa.scenarios}} 道题、{{qa.documents}} 份文档（含 40 份近主题干扰文档），其中 {{qa.answerable}} 题有答案、{{qa.abstain}} 题应拒答；题目故意让首轮检索词找不到答案，所以基础检索与混合检索召回为 0 是设计使然。表 18 由 <code>eval/run_p5_evaluation.py</code> 生成。</p>
+<p class="tcap">表 18　问答模块四种做法对比</p>
+{{TABLE:qa}}
+<p class="note">13 道题的样本很小，数字非 0 即 1，不能当作真实使用时的准确率。</p>
+
+<h2>7.6 局限与不足</h2>
+<ul class="tight">
+<li><b>样本量。</b>每个版本每个主题只有一次运行，金标集几十个用例，指标是实测值但不具统计显著性；没有做人工盲评。</li>
+<li><b>单一模型。</b>撰写、核查、复核、评测用同一个模型，模型自身的盲点可能被同时放过；强 / 快两档目前指向同一模型。</li>
+<li><b>验证覆盖面。</b>说法抽取召回 77%–88%，未被抽出的说法没有被核查。</li>
+<li><b>搜索。</b>免费搜索会限流；证据面窄时修复帮不上忙，质量门如实报“未通过”。</li>
+<li><b>断点续跑未做。</b>状态与事件已持久化，但中断后需整体重跑（服务启动时会把遗留运行标为中断，可一键重新运行）。</li>
+<li><b>不能拖拽拼装。</b>定义靠 YAML 编辑，可用的技能是内置的一组。</li>
+<li><b>反馈优化只到提示。</b>见 5.5。</li>
+</ul>
+
+<!-- ============ 八 ============ -->
+<h1><span class="vol">卷　八</span>八、人工智能使用说明</h1>
+<div class="box"><div class="t">本章要点</div><ul>
+<li>原则：需要理解语言的地方交给模型，需要一致、可复现的地方交给规则；质量门与调度完全由代码完成。</li>
+<li>RAG 是平台的知识底座；MCP 本版本没有使用，原因与接入方案见 8.4。</li>
+<li>开发中使用了 AI 编程助手，所有指标由脚本从真实运行计算，见 8.5。</li>
+</ul></div>
+
+<h2>8.1 用到的模型</h2>
+<p>运行时用到两个模型：对话、规划、撰写、核查、复核、重排等文本生成与判断使用<b>讯飞星火 spark-x2.6</b>，经 OpenAI 兼容接口调用，地址、模型名与密钥全部来自配置，可换成任何兼容服务，用户也可在界面为整次运行或单个 Agent 指定模型；文本嵌入使用 <b>nomic-embed-text</b>（768 维），由自部署的 Ollama 提供。知识库上传的扫描版 PDF 可选用视觉模型做文字识别。系统没有对模型做微调。</p>
+
+<h2>8.2 大模型在各环节的实际作用</h2>
+<p class="tcap">表 19　各环节中模型与规则的分工、贡献与局限</p>
+<table>
+<thead><tr><th style="width:11%">环节</th><th style="width:25%">LLM 做的事</th><th style="width:26%">规则 / 代码做的事</th><th style="width:19%">贡献</th><th>局限</th></tr></thead>
+<tbody>
+<tr><td>规划</td><td>拆提纲、写每章检索词、列所需指标与全国口径检索词</td><td>校验提纲结构、检索词去重与分批</td><td>决定检索面，直接影响能否找到权威数据</td><td>提纲质量因主题而异，未单独评测</td></tr>
+<tr><td>检索与重排</td><td>LLM 重排：从候选段落中挑出前 N 个</td><td>稠密 + BM25 + RRF 融合；来源可信度分层；同源转载归并</td><td>提升证据相关性</td><td>输出偶发截断，已做容错解析</td></tr>
+<tr><td>数据摘取</td><td>从证据里抽数字并给出出处原话</td><td>原话逐字核对，不过即丢弃</td><td>报告中的表和图都可追到原文</td><td>召回不稳定</td></tr>
+<tr><td>撰写与研判</td><td>分章写作、核心结论、综合研判、行动建议</td><td>清除来源里找不到的数字所在句；建议前提再核验并标依据强度</td><td>几分钟内产出可读的分析</td><td>仍可能措辞偏强；推理牵强处靠“依据强度”标出</td></tr>
+<tr><td>说法分级</td><td>抽取原子说法；指出支持与反对的来源</td><td>等级由固定规则判定</td><td>把“读起来对”变成可复现的等级</td><td>抽取召回 77%–88%</td></tr>
+<tr><td>独立复核</td><td>逐条判断来源是否真的支持该说法</td><td>两次否决才剔除；失败保留原判</td><td>真实网页集假通过由 3/17 降到 0/15（开发记录）</td><td>token 约翻倍，难以再压缩</td></tr>
+<tr><td>修复</td><td>按失败类型重写章节</td><td>是否采用由复核分数比较决定</td><td>首检不过的报告可被修到放行</td><td>证据面窄时帮不上忙</td></tr>
+<tr><td>质量门与调度</td><td>—</td><td>指标计算、阈值判断、轮次与预算、资源池与依赖</td><td>行为确定、可测试、可证明终止</td><td>—</td></tr>
+</tbody></table>
+
+<h2>8.3 检索增强（RAG）</h2>
+<p>平台的“知识库”有两种形态。<b>报告与事实核查</b>使用联网知识库：SearXNG 搜索（优先权威站点）、抓取网页正文、按可信度分层，并为每次运行建立一个临时 Qdrant 集合写入网页分段，运行结束即删除，避免不同运行互相污染；撰稿与核查都在这个集合上用稠密 + BM25 + RRF + 重排检索。<b>问答模块</b>使用用户上传的文档知识库，稠密向量与独立的 BM25 稀疏召回分别从完整索引取候选，再 RRF 融合、LLM 重排，证据不足时有界地改写检索词重检，仍不足则如实拒答。所有网页与文档内容在送入模型前都作为不可信数据处理，提示中明确要求不执行其中夹带的指令。</p>
+
+<h2>8.4 关于 MCP</h2>
+<p>本版本<b>没有使用 MCP</b>（模型上下文协议）。工具层是内部的技能与工具注册表：Agent 只能调用自己定义里声明的技能和工具（如 <code>web_search</code>、<code>page_fetch</code>、<code>number_check</code>），调用面可控、可测试，也减少了外部工具带来的攻击面；代价是接入新的外部工具需要改代码。后续接入思路是把 MCP 服务器的工具包装成技能，在 Agent 的 <code>tools</code> 中声明后由调度器同样纳入资源池与预算管理。这部分尚未实现，这里不作承诺。</p>
+
+<h2>8.5 开发过程中的 AI 辅助</h2>
+<p>项目开发中使用了 AI 编程助手（Claude Code）辅助编写代码、测试与文档，团队负责需求与架构决策、审阅改动、运行真实环境验证。为避免“AI 写报告、AI 自己说好”，本方案书中所有耗时、比例、计数都由 <code>docs/submission/build_data.py</code> 从保存的运行记录与评测报告计算，再填入文档；演示视频的旁白数字也来自同一份数据。</p>
+
+<h2>8.6 数据与使用范围</h2>
+<p>系统使用公开网页和用户自己上传的文档。报告统一披露方法、检索词、阅读网页数、数据点保留与丢弃数、使用的模型和时间；没有把握的内容写“公开资料中未找到”或“单一来源”，不用模型常识去补。用户账户、对话和运行记录保存在自部署的数据库中，系统不用它们训练模型；请求会发送给所配置的模型服务商，对方如何处理取决于其服务条款。平台里的“已核实”是系统按规则给出的判断，不是事实的终审；每条结论保留来源编号与原文出处，需要的人可以自己核对。</p>
+
+<!-- ============ 附录 ============ -->
+<h1><span class="vol">附　录</span>附录　复现步骤与数据来源</h1>
+<h2>A. 部署与运行</h2>
+<pre>docker compose up -d                                  # 后端、PostgreSQL、Qdrant、SearXNG
+docker compose -f docker-compose.frontend.yml up -d --build
+docker exec self_correcting_rag_backend alembic upgrade head   # 共 {{code.migrations}} 个迁移，编排表在 0036_orchestration
+# 打开 /orchestration → 新建运行 → 选择 verified-report 或 fact-check</pre>
+<h2>B. 测试与评测</h2>
+<pre>cd backend && uv run pytest -q                        # 后端测试
+cd frontend && npm run type-check && npm run test:run   # 前端检查与单元测试
+python eval/orchestration_eval.py artifacts/orchestration-runs/p8-nev-pipeline.json ... --serial artifacts/orchestration-runs/s1-employment-serial.json
+python eval/run_verification_eval.py                  # 说法分级金标评测
+python eval/run_p5_evaluation.py                      # 问答消融评测</pre>
+<h2>C. 本文数据的来源</h2>
+<pre>python docs/submission/build_data.py --pytest-summary "..." --vitest N   # 汇总为 docs/submission/data.json
+python docs/submission/figures.py                                          # 图 4、5、7、8
+python docs/submission/build_proposal.py                                   # 生成本 PDF
+artifacts/orchestration-runs/*.json      真实运行与全部事件
+artifacts/verification-eval-*.json       说法分级金标评测
+artifacts/p5-evaluation-report.json      问答消融评测</pre>
+<p class="note">文中耗时、token 与指标为上述环境下的实测值，受模型输出随机性、网络与搜索服务状态影响，复现时会有波动。代码仓库与在线演示地址将在正式提交材料中补充。</p>
+
+</body>
+</html>

@@ -1,0 +1,1338 @@
+{
+ "commit": "e299402",
+ "runs": [
+  {
+   "file": "p9-employment-latest.json",
+   "topic": "2025届高校毕业生规模与就业情况",
+   "status": "done",
+   "wall_seconds": 379,
+   "wall_text": "6 分 19 秒",
+   "draft_seconds": 264.8,
+   "busy_seconds": 1244,
+   "speedup": 3.29,
+   "tasks": 23,
+   "tasks_failed": 0,
+   "llm_calls": 244,
+   "tokens": 427689,
+   "tokens_wan": 42.8,
+   "repair_rounds": 0,
+   "downgrades": 2,
+   "sections": 6,
+   "search_batches": 4,
+   "gate_checks": 1,
+   "gate_first_passed": true,
+   "gate_final_passed": true,
+   "verified_first": 95,
+   "verified_final": 95,
+   "authority_first": 100,
+   "authority_final": 100,
+   "scope_first": 0,
+   "scope_final": 0,
+   "first_failures": [
+    "证据不足"
+   ],
+   "first_reasons": [],
+   "repairs": [],
+   "repairs_accepted": 0,
+   "repairs_rejected": 0,
+   "report_claims": 65,
+   "report_levels": {
+    "已核实": 64,
+    "未能核实": 1
+   },
+   "recommendations": 6,
+   "sources": 69
+  },
+  {
+   "file": "p8-nev-pipeline.json",
+   "topic": "2025年中国新能源汽车销量与渗透率情况",
+   "status": "done",
+   "wall_seconds": 545,
+   "wall_text": "9 分 5 秒",
+   "draft_seconds": 252.6,
+   "busy_seconds": 1895,
+   "speedup": 3.48,
+   "tasks": 27,
+   "tasks_failed": 0,
+   "llm_calls": 430,
+   "tokens": 778209,
+   "tokens_wan": 77.8,
+   "repair_rounds": 1,
+   "downgrades": 4,
+   "sections": 5,
+   "search_batches": 4,
+   "gate_checks": 2,
+   "gate_first_passed": false,
+   "gate_final_passed": true,
+   "verified_first": 34,
+   "verified_final": 51,
+   "authority_first": 100,
+   "authority_final": 100,
+   "scope_first": 0,
+   "scope_final": 0,
+   "first_failures": [
+    "证据不足"
+   ],
+   "first_reasons": [
+    "已核实比例 34% 低于 50%"
+   ],
+   "repairs": [
+    {
+     "section": "结构与分布",
+     "before": 0.364,
+     "after": 0.2,
+     "accepted": false
+    },
+    {
+     "section": "总体规模",
+     "before": 0.889,
+     "after": 0.333,
+     "accepted": false
+    },
+    {
+     "section": "原因与影响",
+     "before": 0.333,
+     "after": 0.417,
+     "accepted": true
+    },
+    {
+     "section": "变化趋势",
+     "before": 0.364,
+     "after": 0.333,
+     "accepted": false
+    },
+    {
+     "section": "关键指标",
+     "before": 0.583,
+     "after": 0.364,
+     "accepted": false
+    }
+   ],
+   "repairs_accepted": 1,
+   "repairs_rejected": 4,
+   "report_claims": 55,
+   "report_levels": {
+    "已核实": 32,
+    "单一来源": 22,
+    "有争议": 1
+   },
+   "recommendations": 5,
+   "sources": 79
+  },
+  {
+   "file": "p3-nev-parallel.json",
+   "topic": "2025年中国新能源汽车销量与渗透率情况",
+   "status": "done",
+   "wall_seconds": 787,
+   "wall_text": "13 分 7 秒",
+   "draft_seconds": 304.3,
+   "busy_seconds": 1857,
+   "speedup": 2.36,
+   "tasks": 24,
+   "tasks_failed": 0,
+   "llm_calls": 118,
+   "tokens": 447545,
+   "tokens_wan": 44.8,
+   "repair_rounds": 1,
+   "downgrades": 2,
+   "sections": 5,
+   "search_batches": 4,
+   "gate_checks": 2,
+   "gate_first_passed": false,
+   "gate_final_passed": true,
+   "verified_first": 17,
+   "verified_final": 55,
+   "authority_first": 20,
+   "authority_final": 80,
+   "scope_first": 0,
+   "scope_final": 0,
+   "first_failures": [
+    "缺权威来源",
+    "证据不足"
+   ],
+   "first_reasons": [
+    "已核实比例 17% 低于 50%",
+    "有权威来源支持的章节只占 20%，低于 50%"
+   ],
+   "repairs": [
+    {
+     "section": "结构与分布",
+     "before": 0.0,
+     "after": 0.417,
+     "accepted": true
+    },
+    {
+     "section": "关键指标表现",
+     "before": 0.0,
+     "after": 1.0,
+     "accepted": true
+    },
+    {
+     "section": "总体规模",
+     "before": 0.714,
+     "after": 0.3,
+     "accepted": false
+    },
+    {
+     "section": "变化趋势",
+     "before": 0.0,
+     "after": 0.0,
+     "accepted": true
+    },
+    {
+     "section": "原因与影响",
+     "before": 0.667,
+     "after": 0.636,
+     "accepted": false
+    }
+   ],
+   "repairs_accepted": 3,
+   "repairs_rejected": 2,
+   "report_claims": 53,
+   "report_levels": {
+    "已核实": 30,
+    "有争议": 5,
+    "单一来源": 18
+   },
+   "recommendations": 6,
+   "sources": 64
+  },
+  {
+   "file": "p1-employment-parallel.json",
+   "topic": "2025届大学生就业情况怎么样？",
+   "status": "done",
+   "wall_seconds": 1239,
+   "wall_text": "20 分 39 秒",
+   "draft_seconds": 435.3,
+   "busy_seconds": 3073,
+   "speedup": 2.48,
+   "tasks": 27,
+   "tasks_failed": 0,
+   "llm_calls": 135,
+   "tokens": 650048,
+   "tokens_wan": 65.0,
+   "repair_rounds": 2,
+   "downgrades": 3,
+   "sections": 5,
+   "search_batches": 4,
+   "gate_checks": 3,
+   "gate_first_passed": false,
+   "gate_final_passed": false,
+   "verified_first": 60,
+   "verified_final": 76,
+   "authority_first": 80,
+   "authority_final": 100,
+   "scope_first": 2,
+   "scope_final": 2,
+   "first_failures": [
+    "缺权威来源",
+    "范围错置",
+    "证据不足"
+   ],
+   "first_reasons": [
+    "2 章只有单校/单地区数据却没有说明不代表整体"
+   ],
+   "repairs": [
+    {
+     "section": "2025届高校毕业生总体规模与供给端概况",
+     "before": 0.8,
+     "after": 1.0,
+     "accepted": true
+    },
+    {
+     "section": "2025届大学生就业变化趋势：与2021-2024届及疫情前对比",
+     "before": 0.364,
+     "after": 0.583,
+     "accepted": true
+    },
+    {
+     "section": "2025届大学生就业关键指标：去向落实率、签约率与就业质量",
+     "before": 0.75,
+     "after": 0.417,
+     "accepted": false
+    },
+    {
+     "section": "2025届大学生就业结构与分布：行业、职业、地区与单位性质",
+     "before": 0.417,
+     "after": 0.0,
+     "accepted": false
+    },
+    {
+     "section": "2025届大学生就业关键指标：去向落实率、签约率与就业质量",
+     "before": 0.583,
+     "after": 0.6,
+     "accepted": true
+    },
+    {
+     "section": "2025届大学生就业结构与分布：行业、职业、地区与单位性质",
+     "before": 0.667,
+     "after": 0.167,
+     "accepted": false
+    },
+    {
+     "section": "2025届大学生就业变化趋势：与2021-2024届及疫情前对比",
+     "before": 0.583,
+     "after": 0.5,
+     "accepted": false
+    }
+   ],
+   "repairs_accepted": 3,
+   "repairs_rejected": 4,
+   "report_claims": 53,
+   "report_levels": {
+    "已核实": 41,
+    "单一来源": 10,
+    "有争议": 1,
+    "未能核实": 1
+   },
+   "recommendations": 6,
+   "sources": 54
+  },
+  {
+   "file": "p2-nev-parallel.json",
+   "topic": "中国新能源汽车产销与渗透率",
+   "status": "done",
+   "wall_seconds": 1338,
+   "wall_text": "22 分 18 秒",
+   "draft_seconds": 367.2,
+   "busy_seconds": 3388,
+   "speedup": 2.53,
+   "tasks": 30,
+   "tasks_failed": 0,
+   "llm_calls": 177,
+   "tokens": 817643,
+   "tokens_wan": 81.8,
+   "repair_rounds": 2,
+   "downgrades": 8,
+   "sections": 5,
+   "search_batches": 4,
+   "gate_checks": 3,
+   "gate_first_passed": false,
+   "gate_final_passed": false,
+   "verified_first": 17,
+   "verified_final": 45,
+   "authority_first": 60,
+   "authority_final": 80,
+   "scope_first": 0,
+   "scope_final": 0,
+   "first_failures": [
+    "缺权威来源",
+    "证据不足"
+   ],
+   "first_reasons": [
+    "已核实比例 17% 低于 50%"
+   ],
+   "repairs": [
+    {
+     "section": "总体规模与全球地位",
+     "before": 0.444,
+     "after": 0.5,
+     "accepted": true
+    },
+    {
+     "section": "结构分布与细分市场特征",
+     "before": 0.0,
+     "after": 0.364,
+     "accepted": true
+    },
+    {
+     "section": "政策环境与产业链协同驱动因素",
+     "before": 0.364,
+     "after": 0.167,
+     "accepted": false
+    },
+    {
+     "section": "关键产业指标与商业化进展",
+     "before": 0.0,
+     "after": 0.0,
+     "accepted": true
+    },
+    {
+     "section": "社会经济影响与长期趋势预测",
+     "before": 0.167,
+     "after": 0.5,
+     "accepted": true
+    },
+    {
+     "section": "总体规模与全球地位",
+     "before": 0.833,
+     "after": 0.455,
+     "accepted": false
+    },
+    {
+     "section": "政策环境与产业链协同驱动因素",
+     "before": 0.364,
+     "after": 0.25,
+     "accepted": false
+    },
+    {
+     "section": "关键产业指标与商业化进展",
+     "before": 0.0,
+     "after": 0.0,
+     "accepted": true
+    },
+    {
+     "section": "结构分布与细分市场特征",
+     "before": 0.545,
+     "after": 0.5,
+     "accepted": false
+    },
+    {
+     "section": "社会经济影响与长期趋势预测",
+     "before": 0.5,
+     "after": 0.0,
+     "accepted": false
+    }
+   ],
+   "repairs_accepted": 5,
+   "repairs_rejected": 5,
+   "report_claims": 58,
+   "report_levels": {
+    "已核实": 26,
+    "单一来源": 30,
+    "未能核实": 1,
+    "有争议": 1
+   },
+   "recommendations": 6,
+   "sources": 124
+  }
+ ],
+ "by_file": {
+  "p9-employment-latest.json": {
+   "file": "p9-employment-latest.json",
+   "topic": "2025届高校毕业生规模与就业情况",
+   "status": "done",
+   "wall_seconds": 379,
+   "wall_text": "6 分 19 秒",
+   "draft_seconds": 264.8,
+   "busy_seconds": 1244,
+   "speedup": 3.29,
+   "tasks": 23,
+   "tasks_failed": 0,
+   "llm_calls": 244,
+   "tokens": 427689,
+   "tokens_wan": 42.8,
+   "repair_rounds": 0,
+   "downgrades": 2,
+   "sections": 6,
+   "search_batches": 4,
+   "gate_checks": 1,
+   "gate_first_passed": true,
+   "gate_final_passed": true,
+   "verified_first": 95,
+   "verified_final": 95,
+   "authority_first": 100,
+   "authority_final": 100,
+   "scope_first": 0,
+   "scope_final": 0,
+   "first_failures": [
+    "证据不足"
+   ],
+   "first_reasons": [],
+   "repairs": [],
+   "repairs_accepted": 0,
+   "repairs_rejected": 0,
+   "report_claims": 65,
+   "report_levels": {
+    "已核实": 64,
+    "未能核实": 1
+   },
+   "recommendations": 6,
+   "sources": 69
+  },
+  "p8-nev-pipeline.json": {
+   "file": "p8-nev-pipeline.json",
+   "topic": "2025年中国新能源汽车销量与渗透率情况",
+   "status": "done",
+   "wall_seconds": 545,
+   "wall_text": "9 分 5 秒",
+   "draft_seconds": 252.6,
+   "busy_seconds": 1895,
+   "speedup": 3.48,
+   "tasks": 27,
+   "tasks_failed": 0,
+   "llm_calls": 430,
+   "tokens": 778209,
+   "tokens_wan": 77.8,
+   "repair_rounds": 1,
+   "downgrades": 4,
+   "sections": 5,
+   "search_batches": 4,
+   "gate_checks": 2,
+   "gate_first_passed": false,
+   "gate_final_passed": true,
+   "verified_first": 34,
+   "verified_final": 51,
+   "authority_first": 100,
+   "authority_final": 100,
+   "scope_first": 0,
+   "scope_final": 0,
+   "first_failures": [
+    "证据不足"
+   ],
+   "first_reasons": [
+    "已核实比例 34% 低于 50%"
+   ],
+   "repairs": [
+    {
+     "section": "结构与分布",
+     "before": 0.364,
+     "after": 0.2,
+     "accepted": false
+    },
+    {
+     "section": "总体规模",
+     "before": 0.889,
+     "after": 0.333,
+     "accepted": false
+    },
+    {
+     "section": "原因与影响",
+     "before": 0.333,
+     "after": 0.417,
+     "accepted": true
+    },
+    {
+     "section": "变化趋势",
+     "before": 0.364,
+     "after": 0.333,
+     "accepted": false
+    },
+    {
+     "section": "关键指标",
+     "before": 0.583,
+     "after": 0.364,
+     "accepted": false
+    }
+   ],
+   "repairs_accepted": 1,
+   "repairs_rejected": 4,
+   "report_claims": 55,
+   "report_levels": {
+    "已核实": 32,
+    "单一来源": 22,
+    "有争议": 1
+   },
+   "recommendations": 5,
+   "sources": 79
+  },
+  "p3-nev-parallel.json": {
+   "file": "p3-nev-parallel.json",
+   "topic": "2025年中国新能源汽车销量与渗透率情况",
+   "status": "done",
+   "wall_seconds": 787,
+   "wall_text": "13 分 7 秒",
+   "draft_seconds": 304.3,
+   "busy_seconds": 1857,
+   "speedup": 2.36,
+   "tasks": 24,
+   "tasks_failed": 0,
+   "llm_calls": 118,
+   "tokens": 447545,
+   "tokens_wan": 44.8,
+   "repair_rounds": 1,
+   "downgrades": 2,
+   "sections": 5,
+   "search_batches": 4,
+   "gate_checks": 2,
+   "gate_first_passed": false,
+   "gate_final_passed": true,
+   "verified_first": 17,
+   "verified_final": 55,
+   "authority_first": 20,
+   "authority_final": 80,
+   "scope_first": 0,
+   "scope_final": 0,
+   "first_failures": [
+    "缺权威来源",
+    "证据不足"
+   ],
+   "first_reasons": [
+    "已核实比例 17% 低于 50%",
+    "有权威来源支持的章节只占 20%，低于 50%"
+   ],
+   "repairs": [
+    {
+     "section": "结构与分布",
+     "before": 0.0,
+     "after": 0.417,
+     "accepted": true
+    },
+    {
+     "section": "关键指标表现",
+     "before": 0.0,
+     "after": 1.0,
+     "accepted": true
+    },
+    {
+     "section": "总体规模",
+     "before": 0.714,
+     "after": 0.3,
+     "accepted": false
+    },
+    {
+     "section": "变化趋势",
+     "before": 0.0,
+     "after": 0.0,
+     "accepted": true
+    },
+    {
+     "section": "原因与影响",
+     "before": 0.667,
+     "after": 0.636,
+     "accepted": false
+    }
+   ],
+   "repairs_accepted": 3,
+   "repairs_rejected": 2,
+   "report_claims": 53,
+   "report_levels": {
+    "已核实": 30,
+    "有争议": 5,
+    "单一来源": 18
+   },
+   "recommendations": 6,
+   "sources": 64
+  },
+  "p1-employment-parallel.json": {
+   "file": "p1-employment-parallel.json",
+   "topic": "2025届大学生就业情况怎么样？",
+   "status": "done",
+   "wall_seconds": 1239,
+   "wall_text": "20 分 39 秒",
+   "draft_seconds": 435.3,
+   "busy_seconds": 3073,
+   "speedup": 2.48,
+   "tasks": 27,
+   "tasks_failed": 0,
+   "llm_calls": 135,
+   "tokens": 650048,
+   "tokens_wan": 65.0,
+   "repair_rounds": 2,
+   "downgrades": 3,
+   "sections": 5,
+   "search_batches": 4,
+   "gate_checks": 3,
+   "gate_first_passed": false,
+   "gate_final_passed": false,
+   "verified_first": 60,
+   "verified_final": 76,
+   "authority_first": 80,
+   "authority_final": 100,
+   "scope_first": 2,
+   "scope_final": 2,
+   "first_failures": [
+    "缺权威来源",
+    "范围错置",
+    "证据不足"
+   ],
+   "first_reasons": [
+    "2 章只有单校/单地区数据却没有说明不代表整体"
+   ],
+   "repairs": [
+    {
+     "section": "2025届高校毕业生总体规模与供给端概况",
+     "before": 0.8,
+     "after": 1.0,
+     "accepted": true
+    },
+    {
+     "section": "2025届大学生就业变化趋势：与2021-2024届及疫情前对比",
+     "before": 0.364,
+     "after": 0.583,
+     "accepted": true
+    },
+    {
+     "section": "2025届大学生就业关键指标：去向落实率、签约率与就业质量",
+     "before": 0.75,
+     "after": 0.417,
+     "accepted": false
+    },
+    {
+     "section": "2025届大学生就业结构与分布：行业、职业、地区与单位性质",
+     "before": 0.417,
+     "after": 0.0,
+     "accepted": false
+    },
+    {
+     "section": "2025届大学生就业关键指标：去向落实率、签约率与就业质量",
+     "before": 0.583,
+     "after": 0.6,
+     "accepted": true
+    },
+    {
+     "section": "2025届大学生就业结构与分布：行业、职业、地区与单位性质",
+     "before": 0.667,
+     "after": 0.167,
+     "accepted": false
+    },
+    {
+     "section": "2025届大学生就业变化趋势：与2021-2024届及疫情前对比",
+     "before": 0.583,
+     "after": 0.5,
+     "accepted": false
+    }
+   ],
+   "repairs_accepted": 3,
+   "repairs_rejected": 4,
+   "report_claims": 53,
+   "report_levels": {
+    "已核实": 41,
+    "单一来源": 10,
+    "有争议": 1,
+    "未能核实": 1
+   },
+   "recommendations": 6,
+   "sources": 54
+  },
+  "p2-nev-parallel.json": {
+   "file": "p2-nev-parallel.json",
+   "topic": "中国新能源汽车产销与渗透率",
+   "status": "done",
+   "wall_seconds": 1338,
+   "wall_text": "22 分 18 秒",
+   "draft_seconds": 367.2,
+   "busy_seconds": 3388,
+   "speedup": 2.53,
+   "tasks": 30,
+   "tasks_failed": 0,
+   "llm_calls": 177,
+   "tokens": 817643,
+   "tokens_wan": 81.8,
+   "repair_rounds": 2,
+   "downgrades": 8,
+   "sections": 5,
+   "search_batches": 4,
+   "gate_checks": 3,
+   "gate_first_passed": false,
+   "gate_final_passed": false,
+   "verified_first": 17,
+   "verified_final": 45,
+   "authority_first": 60,
+   "authority_final": 80,
+   "scope_first": 0,
+   "scope_final": 0,
+   "first_failures": [
+    "缺权威来源",
+    "证据不足"
+   ],
+   "first_reasons": [
+    "已核实比例 17% 低于 50%"
+   ],
+   "repairs": [
+    {
+     "section": "总体规模与全球地位",
+     "before": 0.444,
+     "after": 0.5,
+     "accepted": true
+    },
+    {
+     "section": "结构分布与细分市场特征",
+     "before": 0.0,
+     "after": 0.364,
+     "accepted": true
+    },
+    {
+     "section": "政策环境与产业链协同驱动因素",
+     "before": 0.364,
+     "after": 0.167,
+     "accepted": false
+    },
+    {
+     "section": "关键产业指标与商业化进展",
+     "before": 0.0,
+     "after": 0.0,
+     "accepted": true
+    },
+    {
+     "section": "社会经济影响与长期趋势预测",
+     "before": 0.167,
+     "after": 0.5,
+     "accepted": true
+    },
+    {
+     "section": "总体规模与全球地位",
+     "before": 0.833,
+     "after": 0.455,
+     "accepted": false
+    },
+    {
+     "section": "政策环境与产业链协同驱动因素",
+     "before": 0.364,
+     "after": 0.25,
+     "accepted": false
+    },
+    {
+     "section": "关键产业指标与商业化进展",
+     "before": 0.0,
+     "after": 0.0,
+     "accepted": true
+    },
+    {
+     "section": "结构分布与细分市场特征",
+     "before": 0.545,
+     "after": 0.5,
+     "accepted": false
+    },
+    {
+     "section": "社会经济影响与长期趋势预测",
+     "before": 0.5,
+     "after": 0.0,
+     "accepted": false
+    }
+   ],
+   "repairs_accepted": 5,
+   "repairs_rejected": 5,
+   "report_claims": 58,
+   "report_levels": {
+    "已核实": 26,
+    "单一来源": 30,
+    "未能核实": 1,
+    "有争议": 1
+   },
+   "recommendations": 6,
+   "sources": 124
+  }
+ },
+ "gate_passed_final": 3,
+ "gate_passed_first": 1,
+ "nev_evolution": [
+  {
+   "file": "p2-nev-parallel.json",
+   "change": "并行调度（初版）",
+   "wall_seconds": 1338,
+   "draft_seconds": 367.2,
+   "repair_rounds": 2,
+   "speedup": 2.53,
+   "verified_final": 45,
+   "gate_final_passed": false
+  },
+  {
+   "file": "p3-nev-parallel.json",
+   "change": "并行调度 + 修复采用条件",
+   "wall_seconds": 787,
+   "draft_seconds": 304.3,
+   "repair_rounds": 1,
+   "speedup": 2.36,
+   "verified_final": 55,
+   "gate_final_passed": true
+  },
+  {
+   "file": "p4-nev-recheck.json",
+   "change": "加入逐条独立复核",
+   "wall_seconds": 884,
+   "draft_seconds": 371.2,
+   "repair_rounds": 1,
+   "speedup": 2.38,
+   "verified_final": 55,
+   "gate_final_passed": true
+  },
+  {
+   "file": "p5-nev-perf1.json",
+   "change": "模型并发 4→6、建议前提并行核验",
+   "wall_seconds": 782,
+   "draft_seconds": 295.3,
+   "repair_rounds": 1,
+   "speedup": 3.1,
+   "verified_final": 34,
+   "gate_final_passed": false
+  },
+  {
+   "file": "p6-nev-perf2.json",
+   "change": "全国口径检索前置并行",
+   "wall_seconds": 1065,
+   "draft_seconds": 293.3,
+   "repair_rounds": 2,
+   "speedup": 3.02,
+   "verified_final": 58,
+   "gate_final_passed": true
+  },
+  {
+   "file": "p7-nev-perf3.json",
+   "change": "补证与逐章评分并行",
+   "wall_seconds": 826,
+   "draft_seconds": 263.8,
+   "repair_rounds": 2,
+   "speedup": 3.29,
+   "verified_final": 48,
+   "gate_final_passed": false
+  },
+  {
+   "file": "p8-nev-pipeline.json",
+   "change": "撰写→核查逐项流水线",
+   "wall_seconds": 545,
+   "draft_seconds": 252.6,
+   "repair_rounds": 1,
+   "speedup": 3.48,
+   "verified_final": 51,
+   "gate_final_passed": true
+  }
+ ],
+ "serial_vs_parallel": {
+  "topic": "2025届大学生就业情况怎么样？",
+  "serial_seconds": 875,
+  "parallel_seconds": 435,
+  "speedup": 2.01
+ },
+ "old_loop": {
+  "file": "p0-employment-old-loop.json",
+  "topic": "2025届大学生就业情况怎么样？",
+  "status": "done",
+  "wall_seconds": 1374,
+  "wall_text": "22 分 54 秒",
+  "draft_seconds": 351.9,
+  "busy_seconds": 3710,
+  "speedup": 2.7,
+  "tasks": 30,
+  "tasks_failed": 0,
+  "llm_calls": 173,
+  "tokens": 763656,
+  "tokens_wan": 76.4,
+  "repair_rounds": 2,
+  "downgrades": 2,
+  "sections": 5,
+  "search_batches": 4,
+  "gate_checks": 3,
+  "gate_first_passed": false,
+  "gate_final_passed": false,
+  "verified_first": 38,
+  "verified_final": 34,
+  "authority_first": 80,
+  "authority_final": 80,
+  "scope_first": 0,
+  "scope_final": 0,
+  "first_failures": [
+   "缺权威来源",
+   "证据不足"
+  ],
+  "first_reasons": [
+   "已核实比例 38% 低于 50%"
+  ],
+  "repairs": [],
+  "repairs_accepted": 0,
+  "repairs_rejected": 0,
+  "report_claims": 56,
+  "report_levels": {
+   "已核实": 19,
+   "单一来源": 35,
+   "未能核实": 1,
+   "有争议": 1
+  },
+  "recommendations": 6,
+  "sources": 93
+ },
+ "timeline_p8": [
+  {
+   "task": "plan",
+   "group": "plan",
+   "label": "规划师",
+   "pool": "llm",
+   "start": 0.07,
+   "end": 21.935
+  },
+  {
+   "task": "search#0",
+   "group": "search",
+   "label": "site:stats.gov.cn 2026年 2025年国民经济和社会发展统计",
+   "pool": "search",
+   "start": 22.147,
+   "end": 72.049
+  },
+  {
+   "task": "search#1",
+   "group": "search",
+   "label": "2026年 中国汽车工业协会 2025年新能源汽车产销情况 发布会、2026年 ",
+   "pool": "search",
+   "start": 22.148,
+   "end": 71.337
+  },
+  {
+   "task": "search#2",
+   "group": "search",
+   "label": "2026年 乘用车市场信息联席会 2025年新能源汽车区域销量报告、2026年 ",
+   "pool": "search",
+   "start": 22.148,
+   "end": 72.744
+  },
+  {
+   "task": "search#3",
+   "group": "search",
+   "label": "2026年 财政部 2025年新能源汽车以旧换新补贴政策效果、2026年 工业和",
+   "pool": "search",
+   "start": 71.618,
+   "end": 96.897
+  },
+  {
+   "task": "sections#0",
+   "group": "sections",
+   "label": "总体规模",
+   "pool": "llm",
+   "start": 97.405,
+   "end": 168.116
+  },
+  {
+   "task": "sections#1",
+   "group": "sections",
+   "label": "关键指标",
+   "pool": "llm",
+   "start": 97.406,
+   "end": 168.685
+  },
+  {
+   "task": "sections#3",
+   "group": "sections",
+   "label": "变化趋势",
+   "pool": "llm",
+   "start": 97.407,
+   "end": 160.901
+  },
+  {
+   "task": "sections#2",
+   "group": "sections",
+   "label": "结构与分布",
+   "pool": "llm",
+   "start": 97.407,
+   "end": 197.641
+  },
+  {
+   "task": "sections#4",
+   "group": "sections",
+   "label": "原因与影响",
+   "pool": "llm",
+   "start": 97.408,
+   "end": 202.088
+  },
+  {
+   "task": "search_national#1",
+   "group": "search_national",
+   "label": "2025年中国新能源汽车销量与渗透率情况 2025年纯电动与插电式混合动力汽车销",
+   "pool": "search",
+   "start": 97.409,
+   "end": 128.359
+  },
+  {
+   "task": "search_national#0",
+   "group": "search_national",
+   "label": "2025年中国新能源汽车销量与渗透率情况 2025年中国新能源汽车销量（万辆） ",
+   "pool": "search",
+   "start": 97.409,
+   "end": 128.785
+  },
+  {
+   "task": "search_national#2",
+   "group": "search_national",
+   "label": "2025年中国新能源汽车销量与渗透率情况 2025年新能源汽车以旧换新补贴政策带",
+   "pool": "search",
+   "start": 97.41,
+   "end": 127.816
+  },
+  {
+   "task": "verify#3",
+   "group": "verify",
+   "label": "变化趋势",
+   "pool": "llm",
+   "start": 161.039,
+   "end": 193.24
+  },
+  {
+   "task": "verify#0",
+   "group": "verify",
+   "label": "总体规模",
+   "pool": "llm",
+   "start": 168.263,
+   "end": 205.839
+  },
+  {
+   "task": "verify#1",
+   "group": "verify",
+   "label": "关键指标",
+   "pool": "llm",
+   "start": 168.938,
+   "end": 216.205
+  },
+  {
+   "task": "verify#2",
+   "group": "verify",
+   "label": "结构与分布",
+   "pool": "llm",
+   "start": 197.778,
+   "end": 241.035
+  },
+  {
+   "task": "verify#4",
+   "group": "verify",
+   "label": "原因与影响",
+   "pool": "llm",
+   "start": 202.368,
+   "end": 252.108
+  },
+  {
+   "task": "gate_sections",
+   "group": "gate_sections",
+   "label": "质量门：独立核查结果是否达标",
+   "pool": "none",
+   "start": 252.498,
+   "end": 474.621
+  },
+  {
+   "task": "repair#r1:search",
+   "group": "repair#r1:search",
+   "label": "补检索：存疑说法找权威来源",
+   "pool": "search",
+   "start": 252.64,
+   "end": 336.971
+  },
+  {
+   "task": "repair#r1:rewrite#0",
+   "group": "repair#r1:rewrite",
+   "label": "重写并复核：总体规模",
+   "pool": "llm",
+   "start": 337.094,
+   "end": 454.744
+  },
+  {
+   "task": "repair#r1:rewrite#1",
+   "group": "repair#r1:rewrite",
+   "label": "重写并复核：关键指标",
+   "pool": "llm",
+   "start": 337.094,
+   "end": 474.17
+  },
+  {
+   "task": "repair#r1:rewrite#2",
+   "group": "repair#r1:rewrite",
+   "label": "重写并复核：结构与分布",
+   "pool": "llm",
+   "start": 337.095,
+   "end": 440.658
+  },
+  {
+   "task": "repair#r1:rewrite#3",
+   "group": "repair#r1:rewrite",
+   "label": "重写并复核：变化趋势",
+   "pool": "llm",
+   "start": 337.095,
+   "end": 467.398
+  },
+  {
+   "task": "repair#r1:rewrite#4",
+   "group": "repair#r1:rewrite",
+   "label": "重写并复核：原因与影响",
+   "pool": "llm",
+   "start": 337.096,
+   "end": 458.1
+  },
+  {
+   "task": "synthesis",
+   "group": "synthesis",
+   "label": "分析师（核心结论、综合研判、行动建议）",
+   "pool": "llm",
+   "start": 474.76,
+   "end": 543.957
+  },
+  {
+   "task": "assemble",
+   "group": "assemble",
+   "label": "统稿与披露",
+   "pool": "none",
+   "start": 544.38,
+   "end": 544.604
+  }
+ ],
+ "fact_check": {
+  "input": "2023年我国国内生产总值为126万亿元，同比增长5.2%。全国居民人均可支配收入为41218元，比上年增长6.3%。2023年年末全国人口为140967万人。",
+  "wall_seconds": 106,
+  "tasks": 4,
+  "claims": [
+   {
+    "text": "2023年我国国内生产总值为126万亿元。",
+    "level": "已核实",
+    "reason": "权威来源 [3] 原文支持，另有 3 个独立来源印证"
+   },
+   {
+    "text": "2023年我国国内生产总值同比增长5.2%。",
+    "level": "已核实",
+    "reason": "权威来源 [3] 原文支持，另有 3 个独立来源印证"
+   },
+   {
+    "text": "2023年全国居民人均可支配收入为41218元。",
+    "level": "未能核实",
+    "reason": "没有资料支持，[7] 说法与之不同"
+   },
+   {
+    "text": "2023年全国居民人均可支配收入比上年名义增长6.3%。",
+    "level": "单一来源",
+    "reason": "只有 gmw.cn（参考来源）一个独立来源提到"
+   },
+   {
+    "text": "2023年年末全国人口为140967万人。",
+    "level": "已核实",
+    "reason": "4 个独立来源一致：dahe.cn、xueqiu.com、weibo.com、jrj.com.cn"
+   }
+  ]
+ },
+ "verification": {
+  "synthetic": {
+   "cases": 48,
+   "gold_claims": 100,
+   "runs_per_case": 2,
+   "level_accuracy": {
+    "n": 88,
+    "rate": 0.9773,
+    "ci95": [
+     0.9432,
+     1.0
+    ]
+   },
+   "false_pass": {
+    "n": 46,
+    "rate": 0.0,
+    "ci95": [
+     0.0,
+     0.0
+    ]
+   },
+   "verified_precision": {
+    "n": 30,
+    "rate": 1.0,
+    "ci95": [
+     1.0,
+     1.0
+    ]
+   },
+   "extraction_recall": {
+    "n": 100,
+    "rate": 0.88,
+    "ci95": [
+     0.81,
+     0.94
+    ]
+   },
+   "generated_at": "2026-10-31"
+  },
+  "real": {
+   "cases": 28,
+   "gold_claims": 60,
+   "runs_per_case": 2,
+   "level_accuracy": {
+    "n": 46,
+    "rate": 1.0,
+    "ci95": [
+     1.0,
+     1.0
+    ]
+   },
+   "false_pass": {
+    "n": 15,
+    "rate": 0.0,
+    "ci95": [
+     0.0,
+     0.0
+    ]
+   },
+   "verified_precision": {
+    "n": 29,
+    "rate": 1.0,
+    "ci95": [
+     1.0,
+     1.0
+    ]
+   },
+   "extraction_recall": {
+    "n": 60,
+    "rate": 0.7667,
+    "ci95": [
+     0.65,
+     0.8667
+    ]
+   },
+   "generated_at": "2026-10-31"
+  }
+ },
+ "qa": {
+  "scenarios": 13,
+  "documents": 97,
+  "answerable": 10,
+  "abstain": 3,
+  "modes": [
+   {
+    "name": "基础检索",
+    "recall5": 0.0,
+    "grounded": 0.0,
+    "complete": 0.0,
+    "citation": 0.0,
+    "abstain": 0.0,
+    "latency_s": 8.9
+   },
+   {
+    "name": "混合检索（BM25 + RRF + 重排）",
+    "recall5": 0.0,
+    "grounded": 0.0,
+    "complete": 0.0,
+    "citation": 0.0,
+    "abstain": 0.0,
+    "latency_s": 12.6
+   },
+   {
+    "name": "检索纠错",
+    "recall5": 0.8,
+    "grounded": 0.795,
+    "complete": 0.8,
+    "citation": 0.85,
+    "abstain": 0.0,
+    "latency_s": 35.3
+   },
+   {
+    "name": "完整自纠错（检索纠错 + 回答纠错）",
+    "recall5": 1.0,
+    "grounded": 1.0,
+    "complete": 1.0,
+    "citation": 1.0,
+    "abstain": 1.0,
+    "latency_s": 42.7
+   }
+  ]
+ },
+ "code": {
+  "orchestration": {
+   "builtin.py": 169,
+   "engine.py": 328,
+   "exceptions.py": 11,
+   "facade.py": 280,
+   "insights.py": 91,
+   "registry.py": 36,
+   "scheduler.py": 335,
+   "skills.py": 496,
+   "spec.py": 220,
+   "state.py": 112,
+   "store.py": 42,
+   "verification.py": 142,
+   "research/audit.py": 501,
+   "research/report_builder.py": 543,
+   "research/report_diagrams.py": 242
+  },
+  "orchestration_total": 2262,
+  "tests": {
+   "test_orchestration_cancel": 3,
+   "test_orchestration_engine": 10,
+   "test_orchestration_models": 4,
+   "test_orchestration_national_search": 4,
+   "test_orchestration_scheduler": 8,
+   "test_report_diagrams": 5,
+   "test_report_via_orchestration": 3,
+   "test_support_recheck": 6
+  },
+  "frontend_orchestration_lines": 2605,
+  "frontend_orchestration_files": 16,
+  "migrations": 33
+ },
+ "tests": {
+  "backend_passed": 487,
+  "backend_skipped": 4,
+  "frontend_passed": 67
+ },
+ "specs": {
+  "verified-report": "kind: KnowledgeBase\nname: official-web\ndescription: 联网检索，优先权威发布方（政府、统计、教育科研、国际组织），按可信度分级\nsources:\n  - type: web_search\nprefer_sites: [moe.gov.cn, mohrss.gov.cn, stats.gov.cn, gov.cn]\nretrieval: {dense: true, bm25: true, fusion: rrf, reranker: true}\nfreshness_days: 365\n---\nkind: Agent\nname: planner\nrole: 规划师\nskill: plan_outline\nmodel_tier: strong\ntools: [outline]\n---\nkind: Agent\nname: researcher\nrole: 检索员\nskill: search_web\nmodel_tier: fast\ntools: [web_search, page_fetch, corpus_retrieve]\nknowledge: [official-web]\n---\nkind: Agent\nname: writer\nrole: 撰稿人（数据核对 + 分章写作）\nskill: write_section\nmodel_tier: strong\ntools: [corpus_retrieve, number_quote_check]\nknowledge: [official-web]\n---\nkind: Agent\nname: verifier\nrole: 独立核查员\nskill: verify_report\nmodel_tier: strong\nindependent: true\ncan_see: [draft, evidence]\ntools: [number_check, independence_check, claim_audit]\nknowledge: [official-web]\n---\nkind: Agent\nname: repairer\nrole: 修复员（按失败类型补证、改写）\nskill: repair_report\nmodel_tier: strong\ntools: [web_search, corpus_retrieve, rewrite_section]\nknowledge: [official-web]\n---\nkind: Agent\nname: analyst\nrole: 分析师（核心结论、综合研判、行动建议）\nskill: write_synthesis\nmodel_tier: strong\ntools: [corpus_retrieve]\n---\nkind: Agent\nname: editor\nrole: 主编（统稿与披露）\nskill: assemble_report\nmodel_tier: fast\n---\nkind: Team\nname: research-report-team\ndescription: 调研分析报告团队：规划 → 并行检索 → 并行分章 → 独立核查 → 自循环修复 → 综合研判\nmembers: [planner, researcher, writer, verifier, repairer, analyst, editor]\nsupervisor: planner\n---\nkind: Workflow\nname: verified-report\ndescription: 带独立核查与有界自循环的调研分析报告\nteam: research-report-team\npolicy:\n  max_tokens: 1500000\n  max_seconds: 2400\n  max_repair_rounds: 2\n  search_concurrency: 3\n  llm_concurrency: 6\nnodes:\n  - {id: plan, kind: agent, agent: planner, priority: 1}\n  - {id: search, kind: map, agent: researcher, depends_on: [plan], map_over: query_batches, pool: search, priority: 2}\n  - {id: sections, kind: map, agent: writer, depends_on: [search], map_over: sections, pool: llm, priority: 3}\n  - {id: search_national, kind: map, agent: researcher, depends_on: [search], map_over: national_batches, pool: search, priority: 5, essential: false}\n  - {id: verify, kind: map, agent: verifier, depends_on: [sections], map_over: sections, pipeline: true, pool: llm, priority: 2}\n  - id: gate_sections\n    kind: gate\n    depends_on: [verify, search_national]\n    on_fail: repair\n    max_rounds: 2\n    pool: none\n    gate: {min_verified_ratio: 0.5, max_unsupported_numbers: 0, require_scope_disclosed: true, min_authoritative_sections: 0.5}\n  - {id: repair, kind: loop, agent: repairer, essential: false, max_rounds: 2}\n  - {id: synthesis, kind: agent, agent: analyst, depends_on: [gate_sections], priority: 5}\n  - {id: assemble, kind: merge, agent: editor, depends_on: [synthesis], pool: none, priority: 6}\n",
+  "fact-check": "kind: KnowledgeBase\nname: official-web\nsources:\n  - type: web_search\nprefer_sites: [gov.cn, stats.gov.cn]\n---\nkind: Agent\nname: extractor\nrole: 说法抽取员\nskill: extract_input_claims\nmodel_tier: fast\n---\nkind: Agent\nname: researcher\nrole: 检索员\nskill: search_claims\nmodel_tier: fast\ntools: [web_search, page_fetch]\nknowledge: [official-web]\n---\nkind: Agent\nname: verifier\nrole: 独立核查员\nskill: verify_claims\nmodel_tier: strong\nindependent: true\ncan_see: [draft, evidence]\nknowledge: [official-web]\n---\nkind: Agent\nname: editor\nrole: 汇总员\nskill: assemble_fact_check\nmodel_tier: fast\n---\nkind: Team\nname: fact-check-team\nmembers: [extractor, researcher, verifier, editor]\nsupervisor: extractor\n---\nkind: Workflow\nname: fact-check\ndescription: 把一段文字里的事实性说法逐条联网查证，输出带出处和等级的核查表\nteam: fact-check-team\npolicy:\n  max_tokens: 200000\n  max_seconds: 900\n  search_concurrency: 3\nnodes:\n  - {id: extract, kind: agent, agent: extractor, priority: 1}\n  - {id: search, kind: agent, agent: researcher, depends_on: [extract], pool: search, priority: 2}\n  - {id: verify, kind: agent, agent: verifier, depends_on: [search], priority: 3}\n  - {id: assemble, kind: merge, agent: editor, depends_on: [verify], pool: none, priority: 4}\n"
+ }
+}

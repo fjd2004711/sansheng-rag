@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>实测数据</title>
+<style>
+html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:#F2ECDF;color:#231F1A;font-family:"Songti SC",serif}
+.frame{position:absolute;inset:48px;border:3px solid #231F1A;outline:1px solid #231F1A;outline-offset:-12px}
+h1{position:absolute;left:150px;top:120px;margin:0;font-size:64px;letter-spacing:6px}
+h1 small{display:block;font:30px "Kaiti SC",serif;color:#A83A2C;letter-spacing:14px;margin-bottom:14px}
+.rule{position:absolute;left:150px;right:150px;top:285px;border-top:4px double #231F1A}
+.grid{position:absolute;left:150px;right:150px;top:340px;display:grid;grid-template-columns:repeat(3,1fr);gap:48px}
+.c{border:2px solid #231F1A;outline:1px solid #231F1A;outline-offset:6px;padding:40px 40px 34px;background:#FBF8F1;opacity:0;animation:in .8s forwards}
+.c:nth-child(1){animation-delay:.6s}.c:nth-child(2){animation-delay:5.2s}.c:nth-child(3){animation-delay:10.5s}
+.k{font:30px "Kaiti SC",serif;color:#6B6257;letter-spacing:4px}
+.v{font-size:88px;font-weight:700;margin:22px 0 12px;line-height:1.1}
+.v em{font-style:normal;color:#A83A2C}
+.v span{font-size:40px;font-weight:400;color:#6B6257}
+.d{font:28px/1.6 "Kaiti SC",serif;color:#4b4339}
+.foot{position:absolute;left:150px;bottom:110px;font:26px "Kaiti SC",serif;color:#6B6257}
+@keyframes in{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+</style></head><body>
+<div class="frame"></div>
+<h1><small>实 测 数 据</small>数字由脚本从真实运行记录中算出</h1>
+<div class="rule"></div>
+<div class="grid">
+<div class="c"><div class="k">同一新能源题 · 总耗时</div><div class="v">{{nev_first}}<span> → </span><em>{{nev_last}}</em><span> 秒</span></div><div class="d">初版并行调度 → 撰写与核查逐项流水线</div></div>
+<div class="c"><div class="k">同一定义 · 起草阶段</div><div class="v">{{serial}}<span> → </span><em>{{parallel}}</em><span> 秒</span></div><div class="d">只把并发改成 1 作串行对照，实测加速 {{speedup}} 倍</div></div>
+<div class="c"><div class="k">错说法被判“已核实”</div><div class="v"><em>{{fp_real}}</em><span> / {{fp_real_n}}</span>　<em>{{fp_syn}}</em><span> / {{fp_syn_n}}</span></div><div class="d">真实网页金标集　合成疑难金标集<br>样本有限，不等于“不会出错”</div></div>
+</div>
+<div class="foot">环境：讯飞星火 spark-x2.6 · 自建 SearXNG · 运行记录见 artifacts/orchestration-runs/ · 后端测试 {{tests}} 项通过</div>
+</body></html>
