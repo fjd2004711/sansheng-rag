@@ -72,6 +72,16 @@
 | [docs/proposal/三省-初赛方案书.pdf](docs/proposal/三省-初赛方案书.pdf) | 初赛方案书 |
 | [docs/proposal/三省-方案讲解.pdf](docs/proposal/三省-方案讲解.pdf) | 方案讲解 PPT 的 PDF 版 |
 
+### 方案讲解 PPT 预览
+
+15 页，线装书风格：靛蓝封面、卷轴目录、双线边框、宋体正文配楷体批注，所有数字取自真实运行。完整版见 [docs/proposal/三省-方案讲解.pdf](docs/proposal/三省-方案讲解.pdf)。
+
+| | |
+|---|---|
+| ![封面](docs/assets/slide-01.jpg) | ![目录](docs/assets/slide-02.jpg) |
+| ![三省分权](docs/assets/slide-04.jpg) | ![总体设计](docs/assets/slide-05.jpg) |
+| ![关键技术：动态调度](docs/assets/slide-08.jpg) | ![调研报告](docs/assets/slide-11.jpg) |
+
 ## 实测
 
 - 同一主题的报告，串行 875 秒，并行编排 435 秒，约 **2.0 倍**加速。
