@@ -11,7 +11,8 @@ Run these from the project root directory.
 
 | Command | Description |
 |---------|-------------|
-| `make quickstart` | Install deps, start Docker, run migrations, create admin user |
+| `make bootstrap` | `make dev` + `make seed`: builds and starts the dev stack, runs migrations, creates the default admin user (`Makefile:66`) |
+| `make quickstart` | Legacy alias for `make dev` — installs no dependencies and creates no admin user (`Makefile:116`) |
 | `make install` | Install backend dependencies with uv + pre-commit hooks |
 
 ### Development
@@ -201,6 +202,8 @@ uv run self_correcting_rag cmd rag-drop my_collection --yes
 
 #### Sync Source Management
 
+> **Not implemented yet**: `backend/app/commands/rag.py` registers only `rag-collections`, `rag-ingest`, `rag-search`, `rag-drop` and `rag-stats`. There is no `rag-sources` / `rag-source-add` / `rag-source-remove` / `rag-source-sync`, so running them returns click's `No such command`. Treat the examples below as a proposed interface until they are registered in `app/commands/rag.py`.
+
 ```bash
 # List configured sync sources
 uv run self_correcting_rag cmd rag-sources
@@ -247,4 +250,7 @@ Run it:
 uv run self_correcting_rag cmd my-command --name test
 ```
 
-For more details, see `docs/adding_features.md`.
+For more details, read `backend/app/commands/__init__.py` (the `command`
+decorator and `discover_commands`) and `backend/app/commands/rag.py` as a
+working example. (`docs/adding_features.md`, referenced here before, does not
+exist in this repo.)

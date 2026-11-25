@@ -114,7 +114,7 @@ AI_AVAILABLE_MODELS=["gpt-5.5","gpt-5.4","claude-opus-4-7"]
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `EMBEDDING_MODEL` | `text-embedding-3-small` | OpenAI embedding model |
+| `EMBEDDING_MODEL` | `text-embedding-3-large` | OpenAI embedding model. Code default is large/3072-D (`config.py:149,152`), while `backend/.env.example` ships `text-embedding-3-small`/1536 — check the Qdrant collection dimension before switching |
 
 ### Chunking & Retrieval
 
