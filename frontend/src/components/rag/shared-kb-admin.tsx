@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Database, FolderPlus, Layers, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { KbDocuments, type KbDocument } from "./kb-documents";
@@ -29,6 +30,7 @@ import {
 } from "@/components/ui";
 import { useLibrary } from "@/hooks/use-library";
 import { apiClient } from "@/lib/api-client";
+import { qk } from "@/lib/query-keys";
 import {
   createCollection,
   deleteCollection,
@@ -39,11 +41,42 @@ import {
   listCollections,
   listDocuments,
   listTrackedDocuments,
-  type RAGCollectionInfo,
+  retryTrackedDocument,
 } from "@/lib/rag-api";
 import { getErrorMessage } from "@/lib/utils";
 
 const DEFAULT_FORMATS = [".pdf", ".docx", ".md", ".txt"];
+
+async function loadCollectionDetails(name: string) {
+  const [info, tracked] = await Promise.all([getCollectionInfo(name), listTrackedDocuments(name)]);
+  if (tracked.items.length > 0) {
+    const documents: KbDocument[] = tracked.items.map((doc) => ({
+      key: doc.id,
+      name: doc.filename,
+      type: doc.filetype,
+      sizeBytes: doc.filesize,
+      chunks: doc.chunk_count,
+      status: doc.status,
+      error: doc.error_message,
+      hasStoredFile: doc.has_file,
+      createdAt: doc.created_at,
+      viewUrl: doc.has_file ? getDocumentDownloadUrl(doc.id) : undefined,
+    }));
+    return { info, documents, untracked: false };
+  }
+
+  // Collections populated by the CLI may only have metadata in the vector store.
+  const stored = info.total_vectors > 0 ? await listDocuments(name).catch(() => null) : null;
+  const documents: KbDocument[] = (stored?.items ?? []).map((doc) => ({
+    key: `vector:${doc.document_id}`,
+    name: doc.filename ?? doc.document_id,
+    type: doc.filetype ?? "",
+    sizeBytes: doc.filesize || undefined,
+    chunks: doc.chunk_count,
+    status: "done",
+  }));
+  return { info, documents, untracked: documents.length > 0 };
+}
 
 function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
@@ -58,12 +91,10 @@ function Stat({ label, value, hint }: { label: string; value: string; hint?: str
 export function SharedKbAdmin() {
   const { library, loading: libraryLoading } = useLibrary();
   const chatCollection = library?.collection;
+  const queryClient = useQueryClient();
 
   const [collections, setCollections] = useState<string[]>([]);
   const [selected, setSelected] = useState("");
-  const [info, setInfo] = useState<RAGCollectionInfo | null>(null);
-  const [documents, setDocuments] = useState<KbDocument[]>([]);
-  const [untracked, setUntracked] = useState(false);
   const [formats, setFormats] = useState(DEFAULT_FORMATS);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -81,45 +112,21 @@ export function SharedKbAdmin() {
     }
   }, []);
 
-  const loadSelected = useCallback(async (name: string) => {
-    if (!name) return;
-    try {
-      const [collectionInfo, tracked] = await Promise.all([getCollectionInfo(name), listTrackedDocuments(name)]);
-      setInfo(collectionInfo);
-      if (tracked.items.length > 0) {
-        setUntracked(false);
-        setDocuments(
-          tracked.items.map((doc) => ({
-            key: doc.id,
-            name: doc.filename,
-            type: doc.filetype,
-            sizeBytes: doc.filesize,
-            chunks: doc.chunk_count,
-            status: doc.status,
-            error: doc.error_message,
-            createdAt: doc.created_at,
-            viewUrl: doc.has_file ? getDocumentDownloadUrl(doc.id) : undefined,
-          })),
-        );
-        return;
-      }
-      // Imported by a script: no upload records, but the vector store still knows the files.
-      const stored = collectionInfo.total_vectors > 0 ? await listDocuments(name).catch(() => null) : null;
-      setUntracked(Boolean(stored?.items.length));
-      setDocuments(
-        (stored?.items ?? []).map((doc) => ({
-          key: `vector:${doc.document_id}`,
-          name: doc.filename ?? doc.document_id,
-          type: doc.filetype ?? "",
-          sizeBytes: doc.filesize || undefined,
-          chunks: doc.chunk_count,
-          status: "done" as const,
-        })),
-      );
-    } catch {
-      toast.error("加载资料失败");
-    }
-  }, []);
+  const { data: details, isLoading: detailsLoading, errorUpdatedAt } = useQuery({
+    queryKey: qk.rag.collectionDetails(selected),
+    queryFn: ({ queryKey: [, , name] }) => loadCollectionDetails(name),
+    enabled: Boolean(selected),
+    staleTime: 0,
+    refetchInterval: (query) =>
+      query.state.data?.documents.some((doc) => doc.status === "processing") ? 3000 : false,
+    refetchIntervalInBackground: true,
+  });
+  const documents = details?.documents ?? [];
+  const info = details?.info;
+
+  useEffect(() => {
+    if (errorUpdatedAt) toast.error("加载资料失败");
+  }, [errorUpdatedAt]);
 
   useEffect(() => {
     // Wait for the chat's collection so it can be the default selection.
@@ -131,32 +138,19 @@ export function SharedKbAdmin() {
   }, [loadCollections, chatCollection, libraryLoading]);
 
   useEffect(() => {
-    void loadSelected(selected);
-  }, [selected, loadSelected]);
-
-  useEffect(() => {
     apiClient
       .get<{ formats: string[] }>("/v1/rag/supported-formats")
       .then((data) => data?.formats?.length && setFormats(data.formats))
       .catch(() => {});
   }, []);
 
-  // The backend has no push channel for ingestion status, so poll while anything is still parsing.
-  const hasProcessing = documents.some((doc) => doc.status === "processing");
-  useEffect(() => {
-    if (!hasProcessing || !selected) return;
-    const timer = setInterval(() => void loadSelected(selected), 3000);
-    return () => clearInterval(timer);
-  }, [hasProcessing, selected, loadSelected]);
-
-  const totals = useMemo(
-    () => ({ files: documents.filter((doc) => doc.status === "done").length, chunks: info?.total_vectors ?? 0 }),
-    [documents, info],
+  const refreshDetails = useCallback(
+    () => queryClient.invalidateQueries({ queryKey: qk.rag.collectionDetails(selected), exact: true }),
+    [queryClient, selected],
   );
-
   const refresh = useCallback(async () => {
-    await Promise.all([loadCollections(), loadSelected(selected)]);
-  }, [loadCollections, loadSelected, selected]);
+    await Promise.all([loadCollections(), refreshDetails()]);
+  }, [loadCollections, refreshDetails]);
 
   const handleCreate = async () => {
     const name = newName.trim().toLowerCase().replace(/\s+/g, "_");
@@ -184,9 +178,15 @@ export function SharedKbAdmin() {
     }
   };
 
+  const handleRetryDocument = async (doc: KbDocument) => {
+    await retryTrackedDocument(doc.key);
+    await refreshDetails();
+  };
+
   const handleDropCollection = async () => {
     try {
       await deleteCollection(selected);
+      queryClient.removeQueries({ queryKey: qk.rag.collectionDetails(selected), exact: true });
       toast.success(`已删除资料集「${selected}」`);
       setSelected("");
       setConfirmDrop(false);
@@ -247,8 +247,8 @@ export function SharedKbAdmin() {
           </div>
 
           <div className="grid gap-3 sm:grid-cols-3">
-            <Stat label="已入库文件" value={String(totals.files)} />
-            <Stat label="资料段数" value={String(totals.chunks)} hint="文件会被切成若干段，回答时按段引用" />
+            <Stat label="已入库文件" value={String(documents.filter((doc) => doc.status === "done").length)} />
+            <Stat label="资料段数" value={String(info?.total_vectors ?? 0)} hint="文件会被切成若干段，回答时按段引用" />
             <Stat label="处理中" value={String(documents.filter((doc) => doc.status === "processing").length)} />
           </div>
 
@@ -262,13 +262,20 @@ export function SharedKbAdmin() {
             </TabsList>
             <TabsContent value="files" className="mt-4 space-y-4">
               {selected && <KbUpload collection={selected} formats={formats} onUploaded={() => void refresh()} />}
-              {untracked && (
+              {details?.untracked && (
                 <p className="text-muted-foreground rounded-lg border border-dashed px-3 py-2 text-xs leading-relaxed">
                   这些文件是用脚本导入的，没有上传记录，所以看不到上传时间，也不能下载原文件，但可以正常用于回答。
                 </p>
               )}
-              {documents.length > 0 ? (
-                <KbDocuments documents={documents} onDelete={handleDeleteDocument} />
+              {detailsLoading ? (
+                <Skeleton className="h-24 w-full rounded-xl" />
+              ) : documents.length > 0 ? (
+                <KbDocuments
+                  key={selected}
+                  documents={documents}
+                  onDelete={handleDeleteDocument}
+                  onRetry={handleRetryDocument}
+                />
               ) : (
                 <div className="text-muted-foreground rounded-xl border border-dashed py-10 text-center text-sm">
                   {info && info.total_vectors > 0 ? "这个资料集里有内容，但无法列出文件。" : "这个资料集还是空的，先上传几个文件吧。"}

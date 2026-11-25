@@ -9,6 +9,8 @@ const MESSAGES: Array<[RegExp, string]> = [
   [/not found/i, "没有找到对应的内容"],
   [/too large|exceeds/i, "文件太大"],
   [/unsupported/i, "不支持这种文件格式"],
+  [/only failed documents can be retried/i, "只能重试入库失败的文件"],
+  [/original file is missing/i, "找不到原文件，请重新上传"],
   [/validation|string should have at least|value is not a valid/i, "填写的内容不符合要求，请检查后重试"],
 ];
 

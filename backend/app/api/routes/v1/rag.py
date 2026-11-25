@@ -8,8 +8,9 @@ mapped to HTTP responses by the global exception handlers in
 
 import contextlib
 from typing import Any
+from uuid import UUID
 
-from fastapi import APIRouter, File, Query, UploadFile, status
+from fastapi import APIRouter, BackgroundTasks, File, Query, UploadFile, status
 from fastapi.responses import FileResponse
 
 from app.api.deps import (
@@ -318,10 +319,25 @@ async def delete_rag_document(
 
 @router.post("/documents/{doc_id}/retry", response_model=RAGRetryResponse)
 async def retry_ingestion(
-    doc_id: str,
+    doc_id: UUID,
     rag_doc_svc: RAGDocumentSvc,
+    background_tasks: BackgroundTasks,
     _: CurrentAdmin,
-) -> Any:
-    """Retry a failed document ingestion."""
-    doc = await rag_doc_svc.retry_ingestion(doc_id)
-    return RAGRetryResponse(id=str(doc.id), status="processing", message="Retry queued")
+) -> RAGRetryResponse:
+    """Retry a failed document in a shared collection."""
+    return await rag_doc_svc.retry_ingestion(str(doc_id), background_tasks)
+
+
+@router.post("/my/documents/{doc_id}/retry", response_model=RAGRetryResponse)
+async def retry_my_ingestion(
+    doc_id: UUID,
+    rag_doc_svc: RAGDocumentSvc,
+    background_tasks: BackgroundTasks,
+    user: CurrentUser,
+) -> RAGRetryResponse:
+    """Retry a failed personal document from its stored original."""
+    return await rag_doc_svc.retry_ingestion(
+        str(doc_id),
+        background_tasks,
+        personal_collection_name=personal_collection(user.id),
+    )

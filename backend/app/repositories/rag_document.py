@@ -7,7 +7,7 @@ from typing import Any
 from uuid import UUID
 
 from sqlalchemy import delete as sql_delete
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models.rag_document import RAGDocument
@@ -80,6 +80,17 @@ async def update_status(
         doc.completed_at = completed_at
     await db.flush()
     return doc
+
+
+async def reset_failed_ingestion(db: AsyncSession, doc_id: UUID) -> bool:
+    """Claim a failed document for retry, even if several requests race."""
+    result = await db.execute(
+        update(RAGDocument)
+        .where(RAGDocument.id == doc_id, RAGDocument.status == "error")
+        .values(status="processing", error_message=None, completed_at=None)
+        .returning(RAGDocument.id)
+    )
+    return result.scalar_one_or_none() is not None
 
 
 async def delete(db: AsyncSession, doc_id: UUID) -> bool:

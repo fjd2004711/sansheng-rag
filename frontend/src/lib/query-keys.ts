@@ -18,5 +18,6 @@ export const qk = {
   },
   rag: {
     collections: () => ["rag", "collections"] as const,
+    collectionDetails: (name: string) => ["rag", "collections", name] as const,
   },
 } as const;

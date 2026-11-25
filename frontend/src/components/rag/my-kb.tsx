@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { apiClient } from "@/lib/api-client";
-import { deleteMyDocument, listMyDocuments, uploadMyFile } from "@/lib/rag-api";
+import { deleteMyDocument, listMyDocuments, retryMyDocument, uploadMyFile } from "@/lib/rag-api";
 import { getErrorMessage } from "@/lib/utils";
 
 import { KbDocuments, type KbDocument } from "./kb-documents";
@@ -27,8 +27,9 @@ export function MyKb() {
           type: doc.filetype,
           sizeBytes: doc.filesize,
           chunks: doc.chunk_count,
-          status: doc.status as KbDocument["status"],
+          status: doc.status,
           error: doc.error_message,
+          hasStoredFile: doc.has_file,
           createdAt: doc.created_at,
         })),
       );
@@ -63,6 +64,11 @@ export function MyKb() {
     }
   };
 
+  const retry = async (doc: KbDocument) => {
+    await retryMyDocument(doc.key);
+    await load();
+  };
+
   return (
     <div className="space-y-4">
       <p className="text-muted-foreground text-sm">
@@ -70,7 +76,7 @@ export function MyKb() {
       </p>
       <KbUpload collection="" formats={formats} upload={uploadMyFile} onUploaded={() => void load()} />
       {documents.length > 0 ? (
-        <KbDocuments documents={documents} onDelete={remove} />
+        <KbDocuments documents={documents} onDelete={remove} onRetry={retry} />
       ) : (
         <div className="text-muted-foreground rounded-xl border border-dashed py-10 text-center text-sm">还没有上传过资料。</div>
       )}

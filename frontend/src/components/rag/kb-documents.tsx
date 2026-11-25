@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { CircleAlert, CircleCheck, Eye, FileText, Loader2, Trash2 } from "lucide-react";
+import { CircleAlert, CircleCheck, Eye, FileText, Loader2, RotateCcw, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { ConfirmDialog } from "@/components/ui";
-import { cn } from "@/lib/utils";
+import { cn, getErrorMessage } from "@/lib/utils";
 
 export interface KbDocument {
   key: string;
@@ -14,6 +15,7 @@ export interface KbDocument {
   chunks: number;
   status: "done" | "processing" | "error";
   error?: string | null;
+  hasStoredFile?: boolean;
   createdAt?: string | null;
   viewUrl?: string;
 }
@@ -35,12 +37,32 @@ const formatDate = (value?: string | null) => (value ? new Date(value).toLocaleS
 export function KbDocuments({
   documents,
   onDelete,
+  onRetry,
 }: {
   documents: KbDocument[];
   /** Omit for a read-only list (no delete button). */
   onDelete?: (doc: KbDocument) => Promise<void>;
+  onRetry?: (doc: KbDocument) => Promise<void>;
 }) {
   const [pending, setPending] = useState<KbDocument | null>(null);
+  const [retrying, setRetrying] = useState<Set<string>>(() => new Set());
+
+  const retry = async (doc: KbDocument) => {
+    if (!onRetry || retrying.has(doc.key)) return;
+    setRetrying((current) => new Set(current).add(doc.key));
+    try {
+      await onRetry(doc);
+      toast.success("已重新提交入库");
+    } catch (error) {
+      toast.error(getErrorMessage(error, "重新入库失败"));
+    } finally {
+      setRetrying((current) => {
+        const next = new Set(current);
+        next.delete(doc.key);
+        return next;
+      });
+    }
+  };
 
   return (
     <>
@@ -60,6 +82,7 @@ export function KbDocuments({
             {documents.map((doc) => {
               const status = STATUS[doc.status];
               const StatusIcon = status.icon;
+              const isRetrying = retrying.has(doc.key);
               return (
                 <tr key={doc.key} className="hover:bg-muted/30">
                   <td className="px-4 py-3">
@@ -95,15 +118,32 @@ export function KbDocuments({
                           <Eye className="h-4 w-4" />
                         </a>
                       )}
+                      {onRetry && doc.status === "error" && doc.hasStoredFile && (
+                        <button
+                          type="button"
+                          aria-label={`重试入库：${doc.name}`}
+                          title="重试入库"
+                          disabled={isRetrying}
+                          onClick={() => void retry(doc)}
+                          className="text-muted-foreground hover:text-foreground hover:bg-accent rounded-md p-2 disabled:opacity-50"
+                        >
+                          {isRetrying ? (
+                            <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <RotateCcw aria-hidden="true" className="h-4 w-4" />
+                          )}
+                        </button>
+                      )}
                       {onDelete && (
-                      <button
-                        type="button"
-                        title="删除"
-                        onClick={() => setPending(doc)}
-                        className="text-muted-foreground hover:text-destructive hover:bg-accent rounded-md p-2"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                        <button
+                          type="button"
+                          title="删除"
+                          disabled={isRetrying}
+                          onClick={() => setPending(doc)}
+                          className="text-muted-foreground hover:text-destructive hover:bg-accent rounded-md p-2 disabled:opacity-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
                       )}
                     </span>
                   </td>

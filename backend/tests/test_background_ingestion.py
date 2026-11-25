@@ -1,5 +1,6 @@
 """The background ingestion task must record what actually happened to the file."""
 
+from contextlib import ExitStack
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -73,4 +74,65 @@ async def test_ingest_with_done_result_marks_document_done(tmp_path: Path) -> No
     service.fail_ingestion.assert_not_awaited()
     service.complete_ingestion.assert_awaited_once_with(
         "doc-1", vector_document_id="vec-1", chunk_count=3
+    )
+
+
+@pytest.mark.anyio
+async def test_retry_ingests_a_copy_with_the_original_extension(tmp_path: Path) -> None:
+    result = IngestionResult(status=IngestionStatus.DONE, document_id="vec-2", chunk_count=2)
+    service, patches = _run_patches(result)
+    original = tmp_path / "stored-without-a-suffix"
+    original.write_bytes(b"original markdown")
+    attempted_files = []
+
+    async def ingest_copy(*, filepath: Path, source_path: str, **kwargs) -> IngestionResult:
+        assert source_path == "report.MD"
+        assert filepath != original
+        assert filepath.suffix == ".md"
+        assert filepath.read_bytes() == original.read_bytes()
+        attempted_files.append(filepath)
+        return result
+
+    with ExitStack() as stack:
+        ingestion_factory = stack.enter_context(patches[0])
+        ingestion_factory.return_value.ingest_file.side_effect = ingest_copy
+        for patcher in patches[1:]:
+            stack.enter_context(patcher)
+        await background.ingest_document_in_background(
+            rag_document_id="doc-2",
+            collection_name="documents",
+            filepath=str(original),
+            source_path="report.MD",
+            replace=False,
+            use_stored_original=True,
+        )
+
+    assert original.read_bytes() == b"original markdown"
+    assert len(attempted_files) == 1
+    assert not attempted_files[0].exists()
+    service.complete_ingestion.assert_awaited_once_with(
+        "doc-2", vector_document_id="vec-2", chunk_count=2
+    )
+
+
+@pytest.mark.anyio
+async def test_retry_records_a_copy_failure(tmp_path: Path) -> None:
+    service, patches = _run_patches(IngestionResult(status=IngestionStatus.DONE))
+
+    with ExitStack() as stack:
+        ingestion_factory = stack.enter_context(patches[0])
+        for patcher in patches[1:]:
+            stack.enter_context(patcher)
+        await background.ingest_document_in_background(
+            rag_document_id="doc-2",
+            collection_name="documents",
+            filepath=str(tmp_path / "missing.md"),
+            source_path="report.md",
+            replace=False,
+            use_stored_original=True,
+        )
+
+    ingestion_factory.assert_not_called()
+    service.fail_ingestion.assert_awaited_once_with(
+        "doc-2", error_message="无法读取原文件，请重新上传"
     )

@@ -98,6 +98,12 @@ export interface RAGIngestResult {
   message: string;
 }
 
+export interface RAGRetryResult {
+  id: string;
+  status: "processing";
+  message: string;
+}
+
 export interface RAGTrackedDocument {
   id: string;
   collection_name: string;
@@ -133,6 +139,10 @@ export async function deleteTrackedDocument(docId: string): Promise<void> {
   return apiClient.delete(`/v1/rag/documents/${docId}`);
 }
 
+export async function retryTrackedDocument(docId: string): Promise<RAGRetryResult> {
+  return apiClient.post<RAGRetryResult>(`/v1/rag/documents/${docId}/retry`);
+}
+
 export async function listDocuments(collectionName: string): Promise<RAGDocumentList> {
   return apiClient.get<RAGDocumentList>(RAG_API_ROUTES.COLLECTIONS_DOCUMENTS(collectionName));
 }
@@ -163,4 +173,8 @@ export async function uploadMyFile(file: File): Promise<RAGIngestResult> {
 
 export async function deleteMyDocument(docId: string): Promise<void> {
   return apiClient.delete(`/v1/rag/my/documents/${docId}`);
+}
+
+export async function retryMyDocument(docId: string): Promise<RAGRetryResult> {
+  return apiClient.post<RAGRetryResult>(`/v1/rag/my/documents/${docId}/retry`);
 }

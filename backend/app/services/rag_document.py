@@ -9,13 +9,20 @@ from typing import Any
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.background import BackgroundTasks
 
 from app.core.config import settings
 from app.core.exceptions import BadRequestError, NotFoundError
+from app.core.kb_scope import is_personal_collection
 from app.db.models.rag_document import RAGDocument
 from app.services.rag.config import get_supported_formats
 from app.repositories import rag_document_repo
-from app.schemas.rag import RAGIngestResponse, RAGTrackedDocumentItem, RAGTrackedDocumentList
+from app.schemas.rag import (
+    RAGIngestResponse,
+    RAGRetryResponse,
+    RAGTrackedDocumentItem,
+    RAGTrackedDocumentList,
+)
 from app.services.file_storage import get_file_storage
 from app.worker.background import fire_and_forget
 from app.worker.background.rag import ingest_document_in_background
@@ -193,26 +200,41 @@ class RAGDocumentService:
             completed_at=datetime.now(UTC),
         )
 
-    async def retry_ingestion(self, doc_id: str) -> RAGDocument:
-        """Reset a failed document for re-ingestion.
-
-        Raises:
-            NotFoundError: If document does not exist.
-            ValueError: If document status is not 'error'.
-        """
+    async def retry_ingestion(
+        self,
+        doc_id: str,
+        background_tasks: BackgroundTasks,
+        *,
+        personal_collection_name: str | None = None,
+    ) -> RAGRetryResponse:
+        """Claim a failed document and queue it for ingestion from its stored original."""
         doc = await self.get_document(doc_id)
-        if doc.status != "error":
-            raise ValueError("Only failed documents can be retried")
-        updated = await rag_document_repo.update_status(
-            self.db,
-            doc.id,
-            status="processing",
-            error_message="",
-            completed_at=None,
-        )
-        if updated is None:
+        if personal_collection_name is None:
+            allowed = not is_personal_collection(doc.collection_name)
+        else:
+            allowed = doc.collection_name == personal_collection_name
+        if not allowed:
             raise NotFoundError(message="Document not found", details={"doc_id": doc_id})
-        return updated
+
+        if doc.status != "error":
+            raise BadRequestError(message="Only failed documents can be retried")
+        filepath = get_file_storage().get_full_path(doc.storage_path) if doc.storage_path else None
+        if filepath is None or not filepath.is_file():
+            raise BadRequestError(message="The original file is missing. Upload it again to retry.")
+        if not await rag_document_repo.reset_failed_ingestion(self.db, doc.id):
+            raise BadRequestError(message="Only failed documents can be retried")
+
+        # Run after the request's function-scoped DB session commits the retry status.
+        background_tasks.add_task(
+            ingest_document_in_background,
+            rag_document_id=doc_id,
+            collection_name=doc.collection_name,
+            filepath=str(filepath),
+            source_path=doc.filename,
+            replace=personal_collection_name is not None,
+            use_stored_original=True,
+        )
+        return RAGRetryResponse(id=doc_id, status="processing", message="Retry queued")
 
     async def delete_document(
         self,
